@@ -1,227 +1,300 @@
 # CC Trace Viewer Implementation Plan
 
-## Overview
+## Project Overview
 
-Create a TypeScript + Vite + React + Tailwind CSS + React Router starter project for a trace viewer application. The project will use React Router's Data Mode for future data loading capabilities and follow a type-based project structure. This will establish the foundation for a request explorer that can eventually display and analyze trace data.
+The CC Trace Viewer is a React-based web application for visualizing and analyzing Claude API trace logs from `.claude-trace` directories. The app enables developers to understand their Claude API usage patterns, debug requests, and analyze performance metrics.
 
-## Architecture Decisions
+**Current Status:** UI foundation complete (Phases 1-5). Ready to implement core data functionality.
 
-- **Build Tool**: Vite for fast development and optimized builds
-- **Framework**: React 18 with TypeScript for type safety
-- **Styling**: Tailwind CSS with Vite plugin integration
-- **Routing**: React Router v7 Data Mode with `createBrowserRouter` for data loading capabilities
-- **Project Structure**: Type-based organization (`/pages`, `/components`, `/layouts`)
-- **Package Manager**: npm
+**Technology Stack:** React 19 + TypeScript + Vite + React Router 7 + Tailwind CSS 4
 
-## Implementation Phases
+**Selected Architecture:**
+- **File Access:** File System Access API (Chromium browsers only)
+- **Data Strategy:** Lazy load sessions on demand (lower memory usage)
+- **Response Display:** Show final reconstructed responses in structured format
 
-### Phase 1: Project Setup
-**Deliverable**: Basic Vite + React + TypeScript project structure
+## Phase Implementation Plan
 
-**Context & Files**:
-- Reference: `docs/vite/getting-started.md:40-93` for Vite project creation
-- Command: `npm create vite@latest . -- --template react-ts`
+### Phase 6: File System Integration & Data Models ⏳
+**Goal:** Enable directory selection and establish core data structures for trace parsing.
 
-**Tasks**:
-- [x] Initialize Vite project with React + TypeScript template
-- [x] Clean up default Vite template files
-- [x] Configure basic project structure with folders: `/src/components`, `/src/pages`, `/src/layouts`
-- [x] Update `package.json` with project name "cc-trace-viewer"
-- [x] Install dependencies with `npm install`
+**Context & Files:**
+- Current HomePage (`/src/pages/HomePage.tsx`) has placeholder content
+- Router structure already supports `/sessions/:sessionId/requests` pattern
+- Need to integrate with File System Access API for `.claude-trace` directory selection
 
-**Implementation Notes**:
-- Used `npx degit vitejs/vite/packages/create-vite/template-react-ts . --force` due to vite-hook requirements
-- Removed default template assets: `src/assets/`, `public/vite.svg`, `src/App.css`
-- Updated `src/App.tsx` to show basic "CC Trace Viewer" welcome message
-- All programmatic verification tests passed: TypeScript compilation, folder structure, Vite CLI
+**Key Requirements:**
+- [ ] Create TypeScript interfaces based on analyzed JSONL structure
+- [ ] Implement File System Access API for directory selection
+- [ ] Build JSONL parsing utilities with streaming support
+- [ ] Add session discovery and metadata extraction from filenames
+- [ ] Create React hooks for directory management
 
-**Verification Steps**:
-1. Run `npm run dev` and verify development server starts
-2. Confirm TypeScript compilation works without errors
-3. Check that basic React app renders in browser at `http://localhost:5173`
-4. Verify folder structure exists: `src/components/`, `src/pages/`, `src/layouts/`
+**Files to Create/Modify:**
+- `/src/types/trace.ts` - Core data interfaces (ClaudeTraceEntry, SessionData, etc.)
+- `/src/services/fileSystem.ts` - Directory access and file reading logic
+- `/src/services/traceParser.ts` - JSONL parsing utilities
+- `/src/hooks/useFileSystem.ts` - React hooks for directory state management
+- `/src/pages/HomePage.tsx` - Add directory picker UI
 
----
-
-### Phase 2: Tailwind CSS Integration
-**Deliverable**: Fully configured Tailwind CSS with Vite integration
-
-**Context & Files**:
-- Reference: `docs/tailwindcss/installation.md:27-34` for Tailwind + Vite setup
-- Reference: `docs/tailwindcss/installation.md:42-52` for Vite config
-- Reference: `docs/tailwindcss/installation.md:62-65` for CSS import
-
-**Tasks**:
-- [x] Install Tailwind CSS dependencies: `npm install tailwindcss @tailwindcss/vite`
-- [x] Configure `vite.config.ts` with Tailwind plugin
-- [x] Create or update main CSS file with `@import "tailwindcss"`
-- [x] Remove default Vite CSS styles
-- [x] Add basic Tailwind utility test to verify setup
-
-**Implementation Notes**:
-- Added `@tailwindcss/vite` plugin to `vite.config.ts` with proper import and configuration
-- Replaced entire `src/index.css` with single Tailwind import: `@import "tailwindcss"`
-- Updated `src/App.tsx` with comprehensive Tailwind utility classes to test functionality
-- All programmatic verification tests passed: build, TypeScript compilation, dev server startup
-
-**Verification Steps**:
-1. Run `npm run dev` and confirm no CSS compilation errors
-2. Add test element with Tailwind classes (e.g., `text-3xl font-bold text-blue-600`)
-3. Verify Tailwind styles are applied in browser
-4. Check that Vite HMR works with CSS changes
+**Verification Steps:**
+- [ ] TypeScript compilation passes without errors
+- [ ] File System Access API works in Chrome/Edge
+- [ ] Successfully parses sample .jsonl files from `.claude-trace` directory
+- [ ] Directory picker UI functional and responsive
+- [ ] Session metadata extracted correctly from filenames
 
 ---
 
-### Phase 3: React Router Data Mode Setup
-**Deliverable**: React Router configured with Data Mode and basic routing structure
+### Phase 7: Session Management & Navigation ⏳
+**Goal:** Implement session listing with lazy loading and navigation to session details.
 
-**Context & Files**:
-- Reference: `docs/react-router/picking-a-mode.md:36-48` for Data Mode setup
-- Reference: `docs/react-router/data-mode/installation.md` for detailed setup
-- API: `createBrowserRouter`, `RouterProvider` from `react-router`
+**Context & Files:**
+- Router configured for `/sessions/:sessionId/requests` route
+- RequestListPage (`/src/pages/RequestListPage.tsx`) currently shows mock data
+- Need to display real session metadata and support navigation
 
-**Tasks**:
-- [x] Install React Router: `npm install react-router`
-- [x] Create router configuration with `createBrowserRouter`
-- [x] Define route structure for three pages:
-  - `/` - Home page
-  - `/sessions/:sessionId/requests` - Request list for a session
-  - `/sessions/:sessionId/requests/:requestId` - Request detail page
-- [x] Replace default React render with `<RouterProvider>`
-- [x] Create basic route configuration file `src/routes.tsx`
+**Key Requirements:**
+- [ ] Update HomePage with session directory selection and session listing
+- [ ] Implement session listing with metadata (token counts, duration, request count)
+- [ ] Add lazy loading pattern for session data (load metadata first, details on demand)
+- [ ] Update routing to handle real session IDs extracted from JSONL filenames
+- [ ] Create session preview cards with key metrics
 
-**Implementation Notes**:
-- Successfully installed React Router package
-- Created `src/routes.tsx` with `createBrowserRouter` and route structure for all three pages
-- Replaced default App.tsx content with `RouterProvider` using the configured router
-- Updated file extension from `.ts` to `.tsx` for JSX support in routes configuration
-- Created placeholder components for all three routes with basic Tailwind styling
-- All programmatic verification tests passed: TypeScript compilation, build process, dev server startup
+**Files to Create/Modify:**
+- `/src/services/sessionManager.ts` - Session data management and caching
+- `/src/components/SessionCard.tsx` - Individual session preview components
+- `/src/components/DirectoryPicker.tsx` - Directory selection component
+- `/src/pages/HomePage.tsx` - Integrate session listing after directory selection
+- `/src/hooks/useSessionData.ts` - React hooks for session management
 
-**Verification Steps**:
-1. Verify router renders without errors
-2. Test navigation to each route (manually enter URLs)
-3. Confirm route parameters work (`sessionId`, `requestId`)
-4. Check that invalid routes show appropriate behavior
+**Verification Steps:**
+- [ ] Directory selection persists between page reloads
+- [ ] Session list displays correctly with real metadata
+- [ ] Navigation to session detail page works with real session IDs
+- [ ] Session cards show accurate token counts and duration
+- [ ] Loading states work correctly during session discovery
 
 ---
 
-### Phase 4: Page Components and Navigation
-**Deliverable**: Three functional stub pages with basic navigation
+### Phase 8: Request List Implementation ⏳
+**Goal:** Parse and display individual requests within sessions with filtering and metrics.
 
-**Context & Files**:
-- Structure: `src/pages/HomePage.tsx`, `src/pages/RequestListPage.tsx`, `src/pages/RequestDetailPage.tsx`
-- Navigation: `src/components/Navigation.tsx`
-- Layout: `src/layouts/AppLayout.tsx`
+**Context & Files:**
+- RequestListPage (`/src/pages/RequestListPage.tsx`) needs real data integration
+- Current implementation shows mock table data
+- Need to parse JSONL entries and extract request metrics
 
-**Tasks**:
-- [x] Create `HomePage.tsx` with welcome message and navigation links
-- [x] Create `RequestListPage.tsx` with session parameter display and mock request list
-- [x] Create `RequestDetailPage.tsx` with session and request parameter display
-- [x] Create `Navigation.tsx` component with links between pages
-- [x] Create `AppLayout.tsx` for consistent page structure
-- [x] Add proper TypeScript interfaces for route parameters
-- [x] Style pages with basic Tailwind classes
+**Key Requirements:**
+- [ ] Parse individual JSONL entries to extract request data
+- [ ] Display requests with key metrics (tokens, duration, model, tools used)
+- [ ] Add filtering capabilities (by model, tool usage, date range)
+- [ ] Implement sorting (by timestamp, duration, token usage)
+- [ ] Show conversation flow reconstruction within sessions
+- [ ] Add request status indicators (success, error, streaming)
 
-**Implementation Notes**:
-- Created comprehensive HomePage with welcome message, navigation cards, and getting started guide
-- Built RequestListPage with session parameter display and mock request table with proper styling
-- Implemented RequestDetailPage with detailed request information, headers, query params, response body, and execution trace
-- Developed Navigation component with active state highlighting and responsive design
-- Created AppLayout with consistent header and main content structure
-- Added TypeScript interfaces in `src/types/router.ts` for type safety
-- All pages use Tailwind CSS for professional styling with responsive design
-- All programmatic verification tests passed: TypeScript compilation, build process, dev server startup
+**Files to Create/Modify:**
+- `/src/pages/RequestListPage.tsx` - Replace mock data with real parsed data
+- `/src/components/RequestCard.tsx` - Individual request preview components
+- `/src/components/SessionSummary.tsx` - Session-level metrics display
+- `/src/components/RequestFilters.tsx` - Filtering and sorting controls
+- `/src/services/requestAnalyzer.ts` - Request metrics calculation utilities
+- `/src/hooks/useRequestList.ts` - React hooks for request data management
 
-**Verification Steps**:
-1. Navigate to home page and verify content displays
-2. Navigate to `/sessions/test-session/requests` and verify session ID displays
-3. Navigate to `/sessions/test-session/requests/123` and verify both parameters display
-4. Test navigation links work between all pages
-5. Verify responsive design with basic mobile/desktop layouts
+**Verification Steps:**
+- [ ] All requests within session display correctly
+- [ ] Request metrics calculate accurately (duration, token counts)
+- [ ] Filtering and sorting functions work properly
+- [ ] Navigation to individual request details functional
+- [ ] Session summary shows aggregated metrics correctly
 
 ---
 
-### Phase 5: Enhanced UX and Polish
-**Deliverable**: Professional-looking starter with proper error handling and loading states
+### Phase 9: Request Detail View ⏳
+**Goal:** Implement detailed request/response viewing with structured data display and copy functionality.
 
-**Context & Files**:
-- Error handling: React Router error boundaries
-- Loading states: Skeleton components for future data loading
-- 404 handling: Catch-all route
+**Context & Files:**
+- RequestDetailPage (`/src/pages/RequestDetailPage.tsx`) currently shows mock structured data
+- Need to parse streaming responses from `body_raw` field
+- Must handle both regular and streaming response formats
 
-**Tasks**:
-- [x] Add error boundary component for route errors
-- [x] Create 404 Not Found page
-- [x] Add loading skeleton components for future use
-- [x] Implement breadcrumb navigation
-- [x] Add proper page titles and meta tags
-- [x] Create responsive header with app branding
-- [x] Add basic hover and active states for navigation
+**Key Requirements:**
+- [ ] Parse streaming responses from SSE format in `body_raw`
+- [ ] Display structured request data (headers, body, tools, messages)
+- [ ] Show reconstructed final response in readable format
+- [ ] Add copyable text blocks for system prompts, user messages, and responses
+- [ ] Display performance metrics (request duration, token usage breakdown)
+- [ ] Show rate limiting information and API metadata
+- [ ] Handle tool usage display and tool call/response pairs
 
-**Implementation Notes**:
-- Created comprehensive ErrorBoundary component with error details, reload and home buttons
-- Built professional 404 NotFoundPage with navigation options back to home and demo session
-- Developed flexible LoadingSkeleton components (TableSkeleton, CardSkeleton, DetailSkeleton) for future data loading states
-- Implemented smart Breadcrumbs component that dynamically builds navigation based on current route and parameters
-- Added DocumentHead component for proper SEO with dynamic page titles and descriptions
-- Created responsive Header component with app branding, logo, and mobile-friendly navigation
-- Enhanced Navigation component with improved hover, active, and focus states plus better transitions
-- Updated routes configuration with ErrorBoundary wrapping and catch-all 404 route
-- Integrated Header and Breadcrumbs into AppLayout for consistent user experience
-- Added DocumentHead to all pages with descriptive titles and descriptions
-- All programmatic verification tests passed: TypeScript compilation, build process, dev server startup
+**Files to Create/Modify:**
+- `/src/pages/RequestDetailPage.tsx` - Complete implementation with real data
+- `/src/components/CopyableText.tsx` - Copyable text blocks with copy-to-clipboard
+- `/src/components/StreamingResponse.tsx` - SSE parsing and response reconstruction
+- `/src/components/RequestMetrics.tsx` - Performance and usage metrics display
+- `/src/components/ToolUsageDisplay.tsx` - Tool call visualization
+- `/src/services/responseParser.ts` - SSE parsing utilities and response reconstruction
+- `/src/utils/formatters.ts` - Data formatting utilities for display
 
-**Verification Steps**:
-1. Test invalid route shows 404 page
-2. Verify breadcrumb navigation works correctly
-3. Check responsive design on different screen sizes
-4. Confirm page titles update correctly
-5. Test keyboard navigation accessibility
-6. Verify error boundaries catch and display errors appropriately
+**Verification Steps:**
+- [ ] Streaming responses parse and display correctly
+- [ ] All request/response data visible in structured format
+- [ ] Copy functionality works for long text blocks
+- [ ] Performance metrics display accurately
+- [ ] Tool usage visualization shows tool calls and responses
+- [ ] Navigation breadcrumbs work correctly
 
 ---
 
-## Project Structure Overview
+### Phase 10: Polish & Performance ⏳
+**Goal:** Add advanced features, performance optimizations, and production-ready polish.
 
+**Context & Files:**
+- All core functionality implemented in previous phases
+- Focus on user experience improvements and performance optimization
+- Add advanced features like search and export
+
+**Key Requirements:**
+- [ ] Add comprehensive loading states and error handling throughout app
+- [ ] Implement global search across all sessions and requests
+- [ ] Add export functionality for individual requests (JSON, text formats)
+- [ ] Performance optimizations for large trace files (virtualization, pagination)
+- [ ] Add keyboard shortcuts for common actions
+- [ ] Implement dark/light theme support
+- [ ] Add session comparison features
+- [ ] Create help/documentation overlay
+
+**Files to Create/Modify:**
+- `/src/components/GlobalSearch.tsx` - Search across sessions and requests
+- `/src/components/ExportDialog.tsx` - Export functionality
+- `/src/components/LoadingStates.tsx` - Comprehensive loading components
+- `/src/components/ErrorBoundary.tsx` - Enhanced error handling (already exists, enhance)
+- `/src/services/searchEngine.ts` - Search indexing and query utilities
+- `/src/services/exportService.ts` - Data export utilities
+- `/src/hooks/useVirtualization.ts` - Performance optimizations for large lists
+- `/src/contexts/ThemeContext.tsx` - Theme management
+- `/src/components/HelpOverlay.tsx` - User guidance and documentation
+
+**Verification Steps:**
+- [ ] App handles large trace files (>100MB) without performance issues
+- [ ] Global search returns accurate results quickly
+- [ ] Export functionality works for various formats
+- [ ] All error states handled gracefully with user-friendly messages
+- [ ] Loading states provide clear feedback during operations
+- [ ] App works consistently across different Chromium browsers
+- [ ] Keyboard shortcuts functional and documented
+- [ ] Theme switching works throughout entire app
+
+---
+
+## Data Model Reference
+
+### Core TypeScript Interfaces
+
+```typescript
+// Core trace entry from JSONL files
+export interface ClaudeTraceEntry {
+  request: TraceRequest;
+  response: TraceResponse;
+  logged_at: string;
+}
+
+export interface TraceRequest {
+  timestamp: number;
+  method: "POST";
+  url: string;
+  headers: Record<string, string>;
+  body: {
+    model: string;
+    max_tokens: number;
+    messages: Array<{
+      role: "user" | "assistant";
+      content: string | Array<{type: string; [key: string]: any}>;
+    }>;
+    system?: Array<{
+      type: "text";
+      text: string;
+      cache_control?: {type: "ephemeral"};
+    }>;
+    temperature?: number;
+    metadata: {user_id: string};
+    stream?: boolean;
+    tools?: Array<{
+      name: string;
+      description: string;
+      input_schema: any;
+    }>;
+  };
+}
+
+export interface TraceResponse {
+  timestamp: number;
+  status_code: number;
+  headers: Record<string, string>;
+  body?: {
+    model: string;
+    id: string;
+    type: "message";
+    role: "assistant";
+    content: Array<{type: string; text?: string; [key: string]: any}>;
+    stop_reason: string | null;
+    usage: TokenUsage;
+  };
+  body_raw?: string; // SSE format for streaming responses
+}
+
+export interface TokenUsage {
+  input_tokens: number;
+  output_tokens: number;
+  cache_creation_input_tokens: number;
+  cache_read_input_tokens: number;
+  cache_creation: {
+    ephemeral_5m_input_tokens: number;
+    ephemeral_1h_input_tokens: number;
+  };
+  service_tier: string;
+}
+
+// Processed session data
+export interface SessionData {
+  sessionId: string;
+  userId: string;
+  filename: string;
+  requests: ClaudeTraceEntry[];
+  totalTokensUsed: number;
+  totalInputTokens: number;
+  totalOutputTokens: number;
+  totalRequests: number;
+  duration: number; // milliseconds
+  startTime: number;
+  endTime: number;
+  modelsUsed: string[];
+  toolsUsed: string[];
+  hasErrors: boolean;
+}
 ```
-src/
-├── components/           # Reusable UI components
-│   ├── Navigation.tsx
-│   ├── Breadcrumbs.tsx
-│   └── LoadingSkeleton.tsx
-├── pages/               # Route-specific page components
-│   ├── HomePage.tsx
-│   ├── RequestListPage.tsx
-│   ├── RequestDetailPage.tsx
-│   └── NotFoundPage.tsx
-├── layouts/             # Layout components
-│   └── AppLayout.tsx
-├── routes.ts           # Router configuration
-├── types/              # TypeScript type definitions
-│   └── router.ts
-├── App.tsx            # Main app component
-├── main.tsx          # Entry point
-└── index.css         # Global styles with Tailwind imports
-```
+
+### Key Implementation Notes
+
+1. **Session ID Extraction:** Extract from user_id metadata field: `user_[hash]_account_[uuid]_session_[uuid]`
+
+2. **File Naming Pattern:** `.claude-trace/log-YYYY-MM-DD-HH-mm-ss.jsonl`
+
+3. **Streaming Response Parsing:** Parse `body_raw` field containing SSE events to reconstruct final response
+
+4. **Token Cost Calculation:** Based on model pricing and token usage from response.body.usage
+
+5. **Performance Considerations:** Use lazy loading, virtualization for large files, and efficient JSON parsing
+
+6. **Error Handling:** Handle malformed JSONL, file access errors, and API response errors gracefully
 
 ## Success Criteria
 
-- ✅ Development server starts and runs without errors
-- ✅ All three main routes are accessible and display correctly
-- ✅ Navigation between pages works seamlessly
-- ✅ Route parameters are properly parsed and displayed
-- ✅ Responsive design works on mobile and desktop
-- ✅ TypeScript compilation passes without errors
-- ✅ Tailwind CSS classes apply correctly
-- ✅ Error handling for invalid routes
-- ✅ Professional appearance suitable for a request explorer tool
-
-## Future Integration Points
-
-This starter provides hooks for future features:
-- **Data Loading**: Router loaders can be added to fetch session/request data
-- **State Management**: Context providers can be added to layouts
-- **API Integration**: Loader functions ready for backend integration
-- **Real Data**: Mock data can be replaced with actual trace data
-- **Advanced UI**: Component library can be built on Tailwind foundation
+- [ ] Successfully loads and displays `.claude-trace` directories
+- [ ] Shows session list with accurate metadata and metrics
+- [ ] Displays individual requests with full context and formatting
+- [ ] Provides copy functionality for all text content
+- [ ] Handles large trace files (>50MB) with good performance
+- [ ] Works reliably in Chrome, Edge, and other Chromium browsers
+- [ ] Provides intuitive navigation and search capabilities
+- [ ] Includes comprehensive error handling and loading states
