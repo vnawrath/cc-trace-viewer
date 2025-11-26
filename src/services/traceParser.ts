@@ -207,7 +207,9 @@ export class TraceParserService {
       totalCacheReadTokens,
       totalCacheCreation5mTokens,
       totalCacheCreation1hTokens,
-      duration: lastEntry.response.timestamp - firstEntry.request.timestamp,
+      // Convert duration from seconds to milliseconds for consistent formatting
+      duration: (lastEntry.response.timestamp - firstEntry.request.timestamp) * 1000,
+      // Keep timestamps in seconds for metadata (will be converted when creating SessionData)
       startTime: firstEntry.request.timestamp,
       endTime: lastEntry.response.timestamp,
       modelsUsed,
@@ -238,9 +240,10 @@ export class TraceParserService {
       totalCacheCreation5mTokens: metadata.totalCacheCreation5mTokens,
       totalCacheCreation1hTokens: metadata.totalCacheCreation1hTokens,
       totalRequests: metadata.requestCount,
-      duration: metadata.duration,
-      startTime: metadata.startTime,
-      endTime: metadata.endTime,
+      duration: metadata.duration, // Already converted to milliseconds in calculateSessionMetadata
+      // Convert timestamps to milliseconds for consistent usage
+      startTime: metadata.startTime * 1000,
+      endTime: metadata.endTime * 1000,
       modelsUsed: Array.from(metadata.modelsUsed),
       toolsUsed: Array.from(metadata.toolsUsed),
       hasErrors: metadata.hasErrors
@@ -347,7 +350,8 @@ export class TraceParserService {
   }
 
   getRequestDuration(entry: ClaudeTraceEntry): number {
-    return entry.response.timestamp - entry.request.timestamp;
+    // Convert from seconds to milliseconds for consistent formatting
+    return (entry.response.timestamp - entry.request.timestamp) * 1000;
   }
 
   formatDuration(milliseconds: number): string {

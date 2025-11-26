@@ -10,7 +10,8 @@ export function SessionCard({ session }: SessionCardProps) {
   const { sessionId, metadata } = session;
 
   const formatDate = (timestamp: number): string => {
-    return new Date(timestamp).toLocaleString();
+    // Convert from Unix epoch seconds to milliseconds
+    return new Date(timestamp * 1000).toLocaleString();
   };
 
   const formatDuration = traceParserService.formatDuration;
