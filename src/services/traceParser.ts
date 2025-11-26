@@ -8,16 +8,34 @@ export class TraceParserService {
         return null;
       }
 
+      // Skip lines that don't look like JSON (should start with '{' and end with '}')
+      if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) {
+        console.warn('Skipping non-JSON line:', trimmed.substring(0, 100) + (trimmed.length > 100 ? '...' : ''));
+        return null;
+      }
+
+      // Check if the line is too long (potential truncation issue)
+      if (trimmed.length > 1000000) { // 1MB limit
+        console.warn('Skipping extremely long JSON line (potential truncation):', trimmed.length, 'characters');
+        return null;
+      }
+
       const parsed = JSON.parse(trimmed) as ClaudeTraceEntry;
 
       if (!this.isValidTraceEntry(parsed)) {
-        console.warn('Invalid trace entry:', parsed);
+        console.warn('Invalid trace entry structure:', typeof parsed, Object.keys(parsed || {}));
         return null;
       }
 
       return parsed;
     } catch (error) {
-      console.warn('Failed to parse JSON line:', line, error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const previewLength = 200;
+      const linePreview = line.length > previewLength
+        ? line.substring(0, previewLength) + '...'
+        : line;
+
+      console.warn(`Failed to parse JSON line (${errorMessage}):`, linePreview);
       return null;
     }
   }
@@ -43,8 +61,10 @@ export class TraceParserService {
   parseJsonlContent(content: string): ClaudeTraceEntry[] {
     const lines = content.split('\n');
     const entries: ClaudeTraceEntry[] = [];
+    let lineNumber = 0;
 
     for (const line of lines) {
+      lineNumber++;
       const entry = this.parseJsonLine(line);
       if (entry) {
         entries.push(entry);
@@ -68,6 +88,7 @@ export class TraceParserService {
         buffer += value;
         const lines = buffer.split('\n');
 
+        // Keep the last potentially incomplete line in buffer
         buffer = lines.pop() || '';
 
         for (const line of lines) {
@@ -78,6 +99,7 @@ export class TraceParserService {
         }
       }
 
+      // Process any remaining content in buffer
       if (buffer.trim()) {
         const entry = this.parseJsonLine(buffer);
         if (entry) {

@@ -1,26 +1,58 @@
-import { Link } from 'react-router';
+import { useState, useEffect } from 'react';
 import { DocumentHead } from '../components/DocumentHead';
-import { useFileSystem } from '../hooks/useFileSystem';
-import { traceParserService } from '../services/traceParser';
+import { DirectoryPicker, BrowserUnsupportedMessage } from '../components/DirectoryPicker';
+import { SessionCard, SessionCardSkeleton } from '../components/SessionCard';
+import { useSessionData } from '../hooks/useSessionData';
+import { fileSystemService } from '../services/fileSystem';
 
 export function HomePage() {
   const {
-    directoryHandle,
-    directoryInfo,
+    selectedDirectory,
+    isDirectorySelected,
     sessions,
-    isLoading,
-    error,
-    browserSupport,
+    isDiscoveringSessions,
+    discoveryError,
     selectDirectory,
-    clearDirectory
-  } = useFileSystem();
+    refreshSessions,
+    clearError
+  } = useSessionData();
 
-  const handleSelectDirectory = async () => {
+  const [browserSupport, setBrowserSupport] = useState<{
+    supported: boolean;
+    reason?: string;
+  }>({ supported: true });
+
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkSupport = async () => {
+      const support = await fileSystemService.checkBrowserSupport();
+      setBrowserSupport(support);
+    };
+    checkSupport();
+  }, []);
+
+  useEffect(() => {
+    setError(discoveryError);
+  }, [discoveryError]);
+
+  const handleDirectorySelected = async (handle: FileSystemDirectoryHandle) => {
     try {
-      await selectDirectory();
+      await selectDirectory(handle);
+      clearError();
+      setError(null);
     } catch (error) {
       console.error('Failed to select directory:', error);
     }
+  };
+
+  const handleError = (errorMessage: string) => {
+    setError(errorMessage);
+  };
+
+  const handleClearDirectory = () => {
+    setError(null);
+    clearError();
   };
 
   if (!browserSupport.supported) {
@@ -28,23 +60,7 @@ export function HomePage() {
       <>
         <DocumentHead title="Home" />
         <div className="bg-white rounded-lg shadow-sm p-8">
-          <div className="text-center">
-            <div className="text-red-600 mb-4">
-              <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Browser Not Supported
-            </h1>
-            <p className="text-xl text-red-600 mb-4 max-w-2xl mx-auto">
-              {browserSupport.reason}
-            </p>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              CC Trace Viewer requires the File System Access API to read .claude-trace directories.
-              Please use Chrome, Edge, or another Chromium-based browser.
-            </p>
-          </div>
+          <BrowserUnsupportedMessage reason={browserSupport.reason} />
         </div>
       </>
     );
@@ -65,48 +81,32 @@ export function HomePage() {
 
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span className="text-red-800">{error}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-red-800">{error}</span>
+              </div>
+              <button
+                onClick={() => setError(null)}
+                className="text-red-600 hover:text-red-800 ml-4"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
           </div>
         )}
 
-        {!directoryHandle ? (
-          <div className="text-center">
-            <div className="mb-6">
-              <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z" />
-              </svg>
-              <p className="text-gray-600 mb-6">
-                Select your .claude-trace directory to begin analyzing your API traces
-              </p>
-            </div>
-            <button
-              onClick={handleSelectDirectory}
-              disabled={isLoading}
-              className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Loading...
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z" />
-                  </svg>
-                  Select .claude-trace Directory
-                </>
-              )}
-            </button>
-          </div>
+        {!isDirectorySelected ? (
+          <DirectoryPicker
+            onDirectorySelected={handleDirectorySelected}
+            onError={handleError}
+            isLoading={isDiscoveringSessions}
+            selectedDirectory={selectedDirectory}
+          />
         ) : (
           <div>
             <div className="flex items-center justify-between mb-6">
@@ -115,23 +115,50 @@ export function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
                 <span className="text-lg font-semibold text-gray-900">
-                  {directoryInfo?.name}
+                  {selectedDirectory}
                 </span>
                 <span className="ml-2 text-sm text-gray-500">
-                  ({directoryInfo?.jsonlFileCount} JSONL files)
+                  ({sessions.length} sessions found)
                 </span>
               </div>
-              <button
-                onClick={clearDirectory}
-                className="text-gray-500 hover:text-gray-700 text-sm"
-              >
-                Change Directory
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={refreshSessions}
+                  disabled={isDiscoveringSessions}
+                  className="text-gray-500 hover:text-gray-700 text-sm disabled:opacity-50"
+                >
+                  {isDiscoveringSessions ? 'Refreshing...' : 'Refresh'}
+                </button>
+                <span className="text-gray-300">|</span>
+                <button
+                  onClick={handleClearDirectory}
+                  className="text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  Change Directory
+                </button>
+              </div>
             </div>
 
-            {sessions.length === 0 ? (
+            {isDiscoveringSessions ? (
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Discovering Sessions...
+                </h2>
+                <div className="grid gap-4">
+                  <SessionCardSkeleton count={3} />
+                </div>
+              </div>
+            ) : sessions.length === 0 ? (
               <div className="text-center py-8">
+                <div className="text-gray-400 mb-4">
+                  <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
                 <p className="text-gray-600">No valid trace sessions found in the selected directory.</p>
+                <p className="text-sm text-gray-500 mt-2">
+                  Make sure the directory contains .jsonl files with Claude API traces.
+                </p>
               </div>
             ) : (
               <div>
@@ -140,98 +167,7 @@ export function HomePage() {
                 </h2>
                 <div className="grid gap-4">
                   {sessions.map((session) => (
-                    <div key={session.sessionId} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center mb-2">
-                            <h3 className="font-semibold text-gray-900 truncate">
-                              Session {session.sessionId.slice(0, 8)}...
-                            </h3>
-                            {session.metadata.hasErrors && (
-                              <span className="ml-2 px-2 py-1 text-xs bg-red-100 text-red-700 rounded-full">
-                                Has Errors
-                              </span>
-                            )}
-                          </div>
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                              <div>
-                                <div className="font-medium">Requests</div>
-                                <div>{session.metadata.requestCount}</div>
-                              </div>
-                              <div>
-                                <div className="font-medium">Total Tokens</div>
-                                <div className="font-semibold text-blue-600">
-                                  {traceParserService.formatTokenCount(session.metadata.totalTokens)}
-                                </div>
-                              </div>
-                              <div>
-                                <div className="font-medium">Duration</div>
-                                <div>{traceParserService.formatDuration(session.metadata.duration)}</div>
-                              </div>
-                              <div>
-                                <div className="font-medium">Models</div>
-                                <div>{Array.from(session.metadata.modelsUsed).join(', ')}</div>
-                              </div>
-                            </div>
-
-                            {/* Token Breakdown */}
-                            <div className="border-t border-gray-100 pt-3">
-                              <div className="text-xs text-gray-500 mb-2">Token Breakdown</div>
-                              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 text-xs">
-                                <div>
-                                  <div className="text-gray-500">Input</div>
-                                  <div className="font-medium">
-                                    {traceParserService.formatTokenCount(session.metadata.totalInputTokens)}
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="text-gray-500">Output</div>
-                                  <div className="font-medium">
-                                    {traceParserService.formatTokenCount(session.metadata.totalOutputTokens)}
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="text-gray-500">Cache Create</div>
-                                  <div className="font-medium text-orange-600">
-                                    {traceParserService.formatTokenCount(session.metadata.totalCacheCreationTokens)}
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="text-gray-500">Cache Read</div>
-                                  <div className="font-medium text-green-600">
-                                    {traceParserService.formatTokenCount(session.metadata.totalCacheReadTokens)}
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="text-gray-500">Cache 5m</div>
-                                  <div className="font-medium text-purple-600">
-                                    {traceParserService.formatTokenCount(session.metadata.totalCacheCreation5mTokens)}
-                                  </div>
-                                </div>
-                                <div>
-                                  <div className="text-gray-500">Cache 1h</div>
-                                  <div className="font-medium text-purple-600">
-                                    {traceParserService.formatTokenCount(session.metadata.totalCacheCreation1hTokens)}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <Link
-                            to={`/sessions/${session.sessionId}/requests`}
-                            className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
-                          >
-                            View
-                            <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
+                    <SessionCard key={session.sessionId} session={session} />
                   ))}
                 </div>
               </div>
