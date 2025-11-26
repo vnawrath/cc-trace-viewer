@@ -1,4 +1,4 @@
-import type { ClaudeTraceEntry, SessionData, SessionMetadata, TokenUsage } from '../types/trace';
+import type { ClaudeTraceEntry, SessionData, SessionMetadata, TokenUsage, TraceResponse, TraceRequest } from '../types/trace';
 
 export class TraceParserService {
   parseJsonLine(line: string): ClaudeTraceEntry | null {
@@ -129,6 +129,7 @@ export class TraceParserService {
         startTime: 0,
         endTime: 0,
         modelsUsed: new Set(),
+        toolsAvailable: new Set(),
         toolsUsed: new Set(),
         hasErrors: false
       };
@@ -146,15 +147,18 @@ export class TraceParserService {
     let totalCacheCreation5mTokens = 0;
     let totalCacheCreation1hTokens = 0;
     const modelsUsed = new Set<string>();
+    const toolsAvailable = new Set<string>();
     const toolsUsed = new Set<string>();
     let hasErrors = false;
 
     for (const entry of entries) {
       modelsUsed.add(entry.request.body.model);
 
-      if (entry.request.body.tools) {
-        entry.request.body.tools.forEach(tool => toolsUsed.add(tool.name));
-      }
+      const availableTools = this.extractToolsAvailableFromRequest(entry.request);
+      availableTools.forEach(tool => toolsAvailable.add(tool));
+
+      const usedTools = this.extractToolsUsedFromResponse(entry.response);
+      usedTools.forEach(tool => toolsUsed.add(tool));
 
       let usage: TokenUsage | Record<string, unknown> | null = null;
 
@@ -213,6 +217,7 @@ export class TraceParserService {
       startTime: firstEntry.request.timestamp,
       endTime: lastEntry.response.timestamp,
       modelsUsed,
+      toolsAvailable,
       toolsUsed,
       hasErrors
     };
@@ -245,6 +250,7 @@ export class TraceParserService {
       startTime: metadata.startTime * 1000,
       endTime: metadata.endTime * 1000,
       modelsUsed: Array.from(metadata.modelsUsed),
+      toolsAvailable: Array.from(metadata.toolsAvailable),
       toolsUsed: Array.from(metadata.toolsUsed),
       hasErrors: metadata.hasErrors
     };
@@ -379,6 +385,70 @@ export class TraceParserService {
     }
 
     return `${(tokens / 1000000).toFixed(1)}M`;
+  }
+
+  extractToolsUsedFromResponse(response: TraceResponse): string[] {
+    const toolsUsed = new Set<string>();
+
+    if (response.body?.content) {
+      for (const contentItem of response.body.content) {
+        if (contentItem.type === 'tool_use' && 'name' in contentItem && typeof contentItem.name === 'string') {
+          toolsUsed.add(contentItem.name);
+        }
+      }
+    } else if (response.body_raw) {
+      const reconstructed = this.reconstructResponseFromStream(response.body_raw);
+      if (reconstructed?.content && Array.isArray(reconstructed.content)) {
+        for (const contentItem of reconstructed.content) {
+          if (typeof contentItem === 'object' && contentItem &&
+              'type' in contentItem && contentItem.type === 'tool_use' &&
+              'name' in contentItem && typeof contentItem.name === 'string') {
+            toolsUsed.add(contentItem.name);
+          }
+        }
+      }
+
+      // Also parse SSE events directly to catch tool calls in streaming responses
+      const sseToolsUsed = this.extractToolsFromSSEStream(response.body_raw);
+      sseToolsUsed.forEach(tool => toolsUsed.add(tool));
+    }
+
+    return Array.from(toolsUsed);
+  }
+
+  extractToolsAvailableFromRequest(request: TraceRequest): string[] {
+    return request.body.tools?.map(tool => tool.name) || [];
+  }
+
+  extractToolsFromSSEStream(bodyRaw: string): string[] {
+    const toolsUsed = new Set<string>();
+    const lines = bodyRaw.split('\n');
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      if (trimmed.startsWith('data: ')) {
+        const data = trimmed.slice(6);
+
+        if (data === '[DONE]') {
+          break;
+        }
+
+        try {
+          const parsed = JSON.parse(data);
+
+          if (parsed.type === 'content_block_start' &&
+              parsed.content_block?.type === 'tool_use' &&
+              typeof parsed.content_block.name === 'string') {
+            toolsUsed.add(parsed.content_block.name);
+          }
+        } catch (error) {
+          // Ignore parsing errors for individual SSE events
+        }
+      }
+    }
+
+    return Array.from(toolsUsed);
   }
 }
 

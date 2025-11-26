@@ -77,6 +77,7 @@ export interface SessionData {
   startTime: number;
   endTime: number;
   modelsUsed: string[];
+  toolsAvailable: string[];
   toolsUsed: string[];
   hasErrors: boolean;
 }
@@ -111,6 +112,7 @@ export interface SessionMetadata {
   startTime: number;
   endTime: number;
   modelsUsed: Set<string>;
+  toolsAvailable: Set<string>;
   toolsUsed: Set<string>;
   hasErrors: boolean;
 }

@@ -142,7 +142,7 @@ Phase 7 provides a complete session management interface with lazy loading, allo
 
 ---
 
-### Phase 8: Request List Implementation ⏳
+### Phase 8: Request List Implementation ✅
 **Goal:** Parse and display individual requests within sessions with filtering and metrics.
 
 **Context & Files:**
@@ -151,27 +151,101 @@ Phase 7 provides a complete session management interface with lazy loading, allo
 - Need to parse JSONL entries and extract request metrics
 
 **Key Requirements:**
-- [ ] Parse individual JSONL entries to extract request data
-- [ ] Display requests with key metrics (tokens, duration, model, tools used)
-- [ ] Add filtering capabilities (by model, tool usage, date range)
-- [ ] Implement sorting (by timestamp, duration, token usage)
-- [ ] Show conversation flow reconstruction within sessions
-- [ ] Add request status indicators (success, error, streaming)
+- [x] Parse individual JSONL entries to extract request data
+- [x] Display requests with key metrics (tokens, duration, model, tools used)
+- [x] Add filtering capabilities (by model, tool usage, date range)
+- [x] Implement sorting (by timestamp, duration, token usage)
+- [x] Show conversation flow reconstruction within sessions
+- [x] Add request status indicators (success, error, streaming)
 
-**Files to Create/Modify:**
-- `/src/pages/RequestListPage.tsx` - Replace mock data with real parsed data
-- `/src/components/RequestCard.tsx` - Individual request preview components
-- `/src/components/SessionSummary.tsx` - Session-level metrics display
-- `/src/components/RequestFilters.tsx` - Filtering and sorting controls
-- `/src/services/requestAnalyzer.ts` - Request metrics calculation utilities
-- `/src/hooks/useRequestList.ts` - React hooks for request data management
+**Files Created/Modified:**
+- `/src/pages/RequestListPage.tsx` - Replaced mock data with real parsed data integration ✅
+- `/src/components/RequestCard.tsx` - Individual request preview components with dual view modes ✅
+- `/src/components/SessionSummary.tsx` - Session-level metrics display with comprehensive stats ✅
+- `/src/components/RequestFilters.tsx` - Filtering and sorting controls with advanced options ✅
+- `/src/services/requestAnalyzer.ts` - Request metrics calculation utilities with full analytics ✅
+- `/src/hooks/useRequestList.ts` - React hooks for request data management with caching ✅
 
 **Verification Steps:**
-- [ ] All requests within session display correctly
-- [ ] Request metrics calculate accurately (duration, token counts)
-- [ ] Filtering and sorting functions work properly
-- [ ] Navigation to individual request details functional
-- [ ] Session summary shows aggregated metrics correctly
+- [x] All requests within session display correctly
+- [x] Request metrics calculate accurately (duration, token counts)
+- [x] Filtering and sorting functions work properly
+- [x] Navigation to individual request details functional
+- [x] Session summary shows aggregated metrics correctly
+- [x] TypeScript compilation passes without errors
+- [x] Build process succeeds
+- [x] Both table and card view modes implemented
+- [x] Advanced filtering with token ranges and duration filters
+- [x] Comprehensive session overview with cache usage statistics
+
+**Implementation Notes:**
+- Created comprehensive RequestAnalyzerService for extracting and analyzing request metrics
+- Implemented dual view modes (table and card) for better user experience
+- Added advanced filtering capabilities including model, tool, status, and range filters
+- Built sophisticated sorting system supporting multiple fields and directions
+- Created SessionSummary component showing detailed session analytics including cache usage
+- RequestCard component supports both compact table rows and detailed card views
+- useRequestList hook provides complete state management with lazy loading and caching
+- Integrated seamlessly with existing session management system from Phase 7
+- Added comprehensive error handling and loading states throughout the interface
+- Supports all existing token types including cache creation and read tokens from Phase 6.1
+
+**Expected Impact:**
+Phase 8 completes the core functionality for viewing and analyzing individual requests within Claude API sessions. Users can now browse through their requests with rich filtering and sorting capabilities, view comprehensive metrics, and navigate to detailed request views. The implementation provides both overview and detailed views of API usage patterns.
+
+---
+
+### Phase 8.1: Tools Available vs Tools Used Distinction ✅
+**Goal:** Correct the understanding of tool usage to distinguish between "Tools Available" (sent with requests) and "Tools Used" (actually invoked by the agent).
+
+**Context & Problem:**
+- During Phase 8 testing, discovered that the current "Tools Used" understanding is incorrect
+- Each request includes all available tools in the request payload (`request.body.tools`)
+- These represent "Tools Available" to the agent, not tools actually used
+- Actual "Tools Used" can only be determined from the response content where tool calls are made
+- This affects filtering accuracy and usage analytics throughout the application
+
+**Key Requirements:**
+- [x] Update data models to distinguish between `toolsAvailable` and `toolsUsed`
+- [x] Parse response content to extract actual tool invocations from assistant messages
+- [x] Update RequestAnalyzerService to calculate tools actually used vs tools available
+- [x] Modify filtering logic to support both "tools available" and "tools used" filters
+- [x] Update SessionSummary to show accurate tool usage statistics
+- [x] Revise RequestCard and RequestFilters components to reflect correct tool usage
+- [x] Update session metadata calculation to track both available and used tools
+
+**Files Modified:**
+- `/src/types/trace.ts` - Added `toolsAvailable` field to interfaces and distinguished from `toolsUsed` ✅
+- `/src/services/requestAnalyzer.ts` - Added tool usage extraction from response content ✅
+- `/src/services/traceParser.ts` - Updated session metadata to track both tool types ✅
+- `/src/components/RequestFilters.tsx` - Added filter options for both tool availability and usage ✅
+- `/src/components/SessionSummary.tsx` - Updated tool statistics to show accurate usage ✅
+- `/src/components/RequestCard.tsx` - Display both available and used tools appropriately ✅
+- `/src/hooks/useRequestList.ts` - Updated filtering logic to handle both tool types ✅
+- `/src/pages/RequestListPage.tsx` - Updated to pass new props for tool filtering ✅
+- `/src/services/sessionManager.ts` - Fixed TypeScript interfaces for fallback metadata ✅
+
+**Verification Steps:**
+- [x] Session metadata correctly differentiates between tools available vs used
+- [x] Filtering by "tools used" only shows requests where tools were actually invoked
+- [x] Filtering by "tools available" shows requests where tools were offered to agent
+- [x] Session summary statistics reflect actual tool usage patterns
+- [x] Request cards display appropriate tool information based on context
+- [x] TypeScript compilation passes without errors
+- [x] Tool usage analytics provide meaningful insights into actual vs potential tool usage
+
+**Implementation Notes:**
+- Tool invocations appear in response content as tool_use blocks within assistant messages
+- Created `extractToolsUsedFromResponse()` and `extractToolsAvailableFromRequest()` utility functions
+- Updated both non-streaming and streaming response parsers to handle tool usage extraction
+- Enhanced SessionSummary to show both "Tools Available" (gray) and "Tools Actually Used" (amber) with clear visual distinction
+- RequestCard detailed view shows tools available vs used with highlighting for tools that were both available and used
+- RequestFilters now provides separate filtering options for "Tools Available" and "Tools Actually Used"
+- Enhanced request analytics to track both tool availability patterns and actual usage patterns
+- Added comprehensive TypeScript typing support for both tool types throughout the application
+
+**Expected Impact:**
+Phase 8.1 provides accurate tool usage analytics, enabling users to understand which tools are actually being leveraged by their Claude agents versus which tools are simply available. This distinction is crucial for optimizing tool configurations and understanding real automation patterns. Users can now filter and analyze their Claude API usage based on actual tool invocations rather than just tool availability.
 
 ---
 

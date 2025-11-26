@@ -142,6 +142,7 @@ export class SessionManagerService {
           startTime: Date.now(),
           endTime: Date.now(),
           modelsUsed: new Set(),
+          toolsAvailable: new Set(),
           toolsUsed: new Set(),
           hasErrors: false
         };
@@ -165,6 +166,7 @@ export class SessionManagerService {
         startTime: Date.now(),
         endTime: Date.now(),
         modelsUsed: new Set(),
+        toolsAvailable: new Set(),
         toolsUsed: new Set(),
         hasErrors: true
       };
