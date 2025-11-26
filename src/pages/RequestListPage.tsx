@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router';
+import { DocumentHead } from '../components/DocumentHead';
 
 interface MockRequest {
   id: string;
@@ -74,7 +75,9 @@ export function RequestListPage() {
   const sessionId = params.sessionId!;
 
   return (
-    <div className="space-y-6">
+    <>
+      <DocumentHead title={`Session ${sessionId} - Requests`} description={`View all requests for session ${sessionId}`} />
+      <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -149,5 +152,6 @@ export function RequestListPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

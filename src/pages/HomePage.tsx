@@ -1,8 +1,11 @@
 import { Link } from 'react-router';
+import { DocumentHead } from '../components/DocumentHead';
 
 export function HomePage() {
   return (
-    <div className="bg-white rounded-lg shadow-sm p-8">
+    <>
+      <DocumentHead title="Home" />
+      <div className="bg-white rounded-lg shadow-sm p-8">
       <div className="text-center">
         <h1 className="text-4xl font-bold text-gray-900 mb-4">
           Welcome to CC Trace Viewer
@@ -68,5 +71,6 @@ export function HomePage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

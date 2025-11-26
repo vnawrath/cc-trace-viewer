@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router';
+import { DocumentHead } from '../components/DocumentHead';
 
 interface MockRequestDetail {
   id: string;
@@ -77,7 +78,9 @@ export function RequestDetailPage() {
   const request = mockRequestDetail;
 
   return (
-    <div className="space-y-6">
+    <>
+      <DocumentHead title={`Request ${requestId} - Session ${sessionId}`} description={`Detailed view of request ${requestId} in session ${sessionId}`} />
+      <div className="space-y-6">
       {/* Header */}
       <div className="bg-white rounded-lg shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
@@ -188,5 +191,6 @@ export function RequestDetailPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
