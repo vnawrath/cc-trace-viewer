@@ -53,6 +53,48 @@ The CC Trace Viewer is a React-based web application for visualizing and analyzi
 
 ---
 
+### Phase 6.1: Streaming Response Token Extraction ✅
+**Goal:** Extract token usage from streaming responses stored in `body_raw` field to get complete token counts.
+
+**Context & Problem:**
+- Current token counting only works for non-streaming responses with `response.body.usage`
+- Streaming responses store raw SSE data in `response.body_raw` field
+- The majority of Claude API calls use streaming, so most token usage is currently missing
+- Need to parse SSE events and extract token usage from final message events
+
+**Key Requirements:**
+- [x] Analyze example `body_raw` content from existing `.claude-trace` files to understand SSE format
+- [x] Extract sample raw streaming responses for testing
+- [x] Enhance `reconstructResponseFromStream()` to extract token usage data
+- [x] Update token calculation logic to use reconstructed usage for streaming responses
+- [x] Ensure non-streaming responses continue to work as before
+- [x] Add debug logging to verify streaming token extraction works
+
+**Files Created/Modified:**
+- `/src/services/traceParser.ts` - Updated `calculateSessionMetadata()` to handle streaming responses ✅
+- `/src/services/traceParser.ts` - Enhanced `reconstructResponseFromStream()` to extract usage data ✅
+- Sample streaming response analysis completed ✅
+
+**Verification Steps:**
+- [x] Sample `body_raw` content analyzed and SSE format understood
+- [x] Token usage correctly extracted from streaming responses
+- [x] Session token totals include both streaming and non-streaming requests
+- [x] Debug logs show proper token extraction from both response types
+- [x] TypeScript compilation passes without errors
+
+**Implementation Notes:**
+- SSE format analysis revealed token usage data is available in `message_start` and `message_delta` events
+- Token usage structure in streaming responses matches existing `TokenUsage` interface
+- Enhanced `reconstructResponseFromStream()` to extract usage from `message_delta` event with final counts
+- Updated `calculateSessionMetadata()` to check both `response.body.usage` and reconstructed usage from streaming
+- Added debug logging to track token extraction success/failure for monitoring
+- All existing non-streaming responses continue to work unchanged
+
+**Expected Impact:**
+This dramatically increases the accuracy of token counts since streaming responses are the majority of Claude API calls.
+
+---
+
 ### Phase 7: Session Management & Navigation ⏳
 **Goal:** Implement session listing with lazy loading and navigation to session details.
 

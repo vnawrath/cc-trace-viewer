@@ -68,6 +68,10 @@ export interface SessionData {
   totalTokensUsed: number;
   totalInputTokens: number;
   totalOutputTokens: number;
+  totalCacheCreationTokens: number;
+  totalCacheReadTokens: number;
+  totalCacheCreation5mTokens: number;
+  totalCacheCreation1hTokens: number;
   totalRequests: number;
   duration: number;
   startTime: number;
@@ -99,6 +103,10 @@ export interface SessionMetadata {
   totalTokens: number;
   totalInputTokens: number;
   totalOutputTokens: number;
+  totalCacheCreationTokens: number;
+  totalCacheReadTokens: number;
+  totalCacheCreation5mTokens: number;
+  totalCacheCreation1hTokens: number;
   duration: number;
   startTime: number;
   endTime: number;

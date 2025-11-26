@@ -153,22 +153,69 @@ export function HomePage() {
                               </span>
                             )}
                           </div>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                            <div>
-                              <div className="font-medium">Requests</div>
-                              <div>{session.metadata.requestCount}</div>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
+                              <div>
+                                <div className="font-medium">Requests</div>
+                                <div>{session.metadata.requestCount}</div>
+                              </div>
+                              <div>
+                                <div className="font-medium">Total Tokens</div>
+                                <div className="font-semibold text-blue-600">
+                                  {traceParserService.formatTokenCount(session.metadata.totalTokens)}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="font-medium">Duration</div>
+                                <div>{traceParserService.formatDuration(session.metadata.duration)}</div>
+                              </div>
+                              <div>
+                                <div className="font-medium">Models</div>
+                                <div>{Array.from(session.metadata.modelsUsed).join(', ')}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="font-medium">Tokens</div>
-                              <div>{traceParserService.formatTokenCount(session.metadata.totalTokens)}</div>
-                            </div>
-                            <div>
-                              <div className="font-medium">Duration</div>
-                              <div>{traceParserService.formatDuration(session.metadata.duration)}</div>
-                            </div>
-                            <div>
-                              <div className="font-medium">Models</div>
-                              <div>{Array.from(session.metadata.modelsUsed).join(', ')}</div>
+
+                            {/* Token Breakdown */}
+                            <div className="border-t border-gray-100 pt-3">
+                              <div className="text-xs text-gray-500 mb-2">Token Breakdown</div>
+                              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 text-xs">
+                                <div>
+                                  <div className="text-gray-500">Input</div>
+                                  <div className="font-medium">
+                                    {traceParserService.formatTokenCount(session.metadata.totalInputTokens)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-500">Output</div>
+                                  <div className="font-medium">
+                                    {traceParserService.formatTokenCount(session.metadata.totalOutputTokens)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-500">Cache Create</div>
+                                  <div className="font-medium text-orange-600">
+                                    {traceParserService.formatTokenCount(session.metadata.totalCacheCreationTokens)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-500">Cache Read</div>
+                                  <div className="font-medium text-green-600">
+                                    {traceParserService.formatTokenCount(session.metadata.totalCacheReadTokens)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-500">Cache 5m</div>
+                                  <div className="font-medium text-purple-600">
+                                    {traceParserService.formatTokenCount(session.metadata.totalCacheCreation5mTokens)}
+                                  </div>
+                                </div>
+                                <div>
+                                  <div className="text-gray-500">Cache 1h</div>
+                                  <div className="font-medium text-purple-600">
+                                    {traceParserService.formatTokenCount(session.metadata.totalCacheCreation1hTokens)}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>

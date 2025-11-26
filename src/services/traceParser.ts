@@ -1,4 +1,4 @@
-import type { ClaudeTraceEntry, SessionData, SessionMetadata } from '../types/trace';
+import type { ClaudeTraceEntry, SessionData, SessionMetadata, TokenUsage } from '../types/trace';
 
 export class TraceParserService {
   parseJsonLine(line: string): ClaudeTraceEntry | null {
@@ -99,6 +99,10 @@ export class TraceParserService {
         totalTokens: 0,
         totalInputTokens: 0,
         totalOutputTokens: 0,
+        totalCacheCreationTokens: 0,
+        totalCacheReadTokens: 0,
+        totalCacheCreation5mTokens: 0,
+        totalCacheCreation1hTokens: 0,
         duration: 0,
         startTime: 0,
         endTime: 0,
@@ -115,6 +119,10 @@ export class TraceParserService {
     let totalTokens = 0;
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
+    let totalCacheCreationTokens = 0;
+    let totalCacheReadTokens = 0;
+    let totalCacheCreation5mTokens = 0;
+    let totalCacheCreation1hTokens = 0;
     const modelsUsed = new Set<string>();
     const toolsUsed = new Set<string>();
     let hasErrors = false;
@@ -126,11 +134,40 @@ export class TraceParserService {
         entry.request.body.tools.forEach(tool => toolsUsed.add(tool.name));
       }
 
+      let usage: TokenUsage | Record<string, unknown> | null = null;
+
       if (entry.response.body?.usage) {
-        const usage = entry.response.body.usage;
-        totalInputTokens += usage.input_tokens;
-        totalOutputTokens += usage.output_tokens;
-        totalTokens += usage.input_tokens + usage.output_tokens;
+        usage = entry.response.body.usage;
+      } else if (entry.response.body_raw) {
+        const reconstructed = this.reconstructResponseFromStream(entry.response.body_raw);
+        if (reconstructed?.usage) {
+          usage = reconstructed.usage as Record<string, unknown>;
+        }
+      }
+
+      if (usage) {
+        const inputTokens = typeof usage.input_tokens === 'number' ? usage.input_tokens : 0;
+        const outputTokens = typeof usage.output_tokens === 'number' ? usage.output_tokens : 0;
+        const cacheCreationTokens = typeof usage.cache_creation_input_tokens === 'number' ? usage.cache_creation_input_tokens : 0;
+        const cacheReadTokens = typeof usage.cache_read_input_tokens === 'number' ? usage.cache_read_input_tokens : 0;
+
+        totalInputTokens += inputTokens;
+        totalCacheCreationTokens += cacheCreationTokens;
+        totalCacheReadTokens += cacheReadTokens;
+        totalOutputTokens += outputTokens;
+
+        if (usage.cache_creation && typeof usage.cache_creation === 'object') {
+          const cacheCreation = usage.cache_creation as Record<string, unknown>;
+          const cache5m = typeof cacheCreation.ephemeral_5m_input_tokens === 'number' ? cacheCreation.ephemeral_5m_input_tokens : 0;
+          const cache1h = typeof cacheCreation.ephemeral_1h_input_tokens === 'number' ? cacheCreation.ephemeral_1h_input_tokens : 0;
+
+          totalCacheCreation5mTokens += cache5m;
+          totalCacheCreation1hTokens += cache1h;
+
+          totalTokens += inputTokens + outputTokens + cacheCreationTokens + cacheReadTokens + cache5m + cache1h;
+        } else {
+          totalTokens += inputTokens + outputTokens + cacheCreationTokens + cacheReadTokens;
+        }
       }
 
       if (entry.response.status_code >= 400) {
@@ -144,6 +181,10 @@ export class TraceParserService {
       totalTokens,
       totalInputTokens,
       totalOutputTokens,
+      totalCacheCreationTokens,
+      totalCacheReadTokens,
+      totalCacheCreation5mTokens,
+      totalCacheCreation1hTokens,
       duration: lastEntry.response.timestamp - firstEntry.request.timestamp,
       startTime: firstEntry.request.timestamp,
       endTime: lastEntry.response.timestamp,
@@ -170,6 +211,10 @@ export class TraceParserService {
       totalTokensUsed: metadata.totalTokens,
       totalInputTokens: metadata.totalInputTokens,
       totalOutputTokens: metadata.totalOutputTokens,
+      totalCacheCreationTokens: metadata.totalCacheCreationTokens,
+      totalCacheReadTokens: metadata.totalCacheReadTokens,
+      totalCacheCreation5mTokens: metadata.totalCacheCreation5mTokens,
+      totalCacheCreation1hTokens: metadata.totalCacheCreation1hTokens,
       totalRequests: metadata.requestCount,
       duration: metadata.duration,
       startTime: metadata.startTime,
@@ -231,24 +276,52 @@ export class TraceParserService {
 
     const contentPieces: string[] = [];
     let finalMessage: Record<string, unknown> | null = null;
+    let usage: Record<string, unknown> | null = null;
+    let messageStart: Record<string, unknown> | null = null;
 
     for (const event of events) {
-      if (event.type === 'content_block_delta' &&
+      if (event.type === 'message_start' &&
+          typeof event.message === 'object' &&
+          event.message) {
+        messageStart = event.message as Record<string, unknown>;
+      } else if (event.type === 'content_block_delta' &&
           typeof event.delta === 'object' &&
           event.delta &&
           'text' in event.delta &&
           typeof (event.delta as { text: unknown }).text === 'string') {
         contentPieces.push((event.delta as { text: string }).text);
+      } else if (event.type === 'message_delta' &&
+          typeof event.delta === 'object' &&
+          event.delta &&
+          'stop_reason' in event.delta) {
+        finalMessage = event.delta as Record<string, unknown>;
+        if (typeof event.usage === 'object' && event.usage) {
+          usage = event.usage as Record<string, unknown>;
+        }
       } else if (event.type === 'message_stop') {
-        finalMessage = event;
+        if (!finalMessage) {
+          finalMessage = {};
+        }
       }
     }
 
-    return {
+    const reconstructedMessage: Record<string, unknown> = {
       type: 'message',
       content: [{ type: 'text', text: contentPieces.join('') }],
       ...finalMessage
     };
+
+    if (messageStart) {
+      if (messageStart.model) reconstructedMessage.model = messageStart.model;
+      if (messageStart.id) reconstructedMessage.id = messageStart.id;
+      if (messageStart.role) reconstructedMessage.role = messageStart.role;
+    }
+
+    if (usage) {
+      reconstructedMessage.usage = usage;
+    }
+
+    return reconstructedMessage;
   }
 
   getRequestDuration(entry: ClaudeTraceEntry): number {
