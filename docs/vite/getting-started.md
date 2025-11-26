@@ -37,23 +37,23 @@ The supported template presets are:
 ## Scaffolding Your First Vite Project
 
 ```bash
-bash$ npm create vite@latest
+npm create vite@latest
 ```
 
 ```bash
-bash$ yarn create vite
+yarn create vite
 ```
 
 ```bash
-bash$ pnpm create vite
+pnpm create vite
 ```
 
 ```bash
-bash$ bun create vite
+bun create vite
 ```
 
 ```bash
-bash$ deno init --npm vite
+deno init --npm vite
 ```
 
 Then follow the prompts!
@@ -67,25 +67,25 @@ Using create vite with command line options
 You can also directly specify the project name and the template you want to use via additional command line options. For example, to scaffold a Vite + Vue project, run:
 
 ```bash
-bash# npm 7+, extra double-dash is needed:
+# npm 7+, extra double-dash is needed:
 
-$ npm create vite@latest my-vue-app -- --template vue
+npm create vite@latest my-vue-app -- --template vue
 ```
 
 ```bash
-bash$ yarn create vite my-vue-app --template vue
+yarn create vite my-vue-app --template vue
 ```
 
 ```bash
-bash$ pnpm create vite my-vue-app --template vue
+pnpm create vite my-vue-app --template vue
 ```
 
 ```bash
-bash$ bun create vite my-vue-app --template vue
+bun create vite my-vue-app --template vue
 ```
 
 ```bash
-bash$ deno init --npm vite my-vue-app --template vue
+deno init --npm vite my-vue-app --template vue
 ```
 
 See [create-vite](https://github.com/vitejs/vite/tree/main/packages/create-vite) for more details on each supported template: `vanilla`, `vanilla-ts`, `vue`, `vue-ts`, `react`, `react-ts`, `react-swc`, `react-swc-ts`, `preact`, `preact-ts`, `lit`, `lit-ts`, `svelte`, `svelte-ts`, `solid`, `solid-ts`, `qwik`, `qwik-ts`.
@@ -101,7 +101,7 @@ For a template at `https://github.com/user/project`, you can try it out online u
 You can also use a tool like [degit](https://github.com/Rich-Harris/degit) to scaffold your project with one of the templates. Assuming the project is on GitHub and uses `main` as the default branch, you can create a local copy using:
 
 ```bash
-bashnpx degit user/project#main my-project
+npx degit user/project#main my-project
 
 cd my-project
 
@@ -115,23 +115,23 @@ npm run dev
 In your project, you can install the `vite` CLI using:
 
 ```bash
-bash$ npm install -D vite
+npm install -D vite
 ```
 
 ```bash
-bash$ yarn add -D vite
+yarn add -D vite
 ```
 
 ```bash
-bash$ pnpm add -D vite
+pnpm add -D vite
 ```
 
 ```bash
-bash$ bun add -D vite
+bun add -D vite
 ```
 
 ```bash
-bash$ deno add -D npm:vite
+deno add -D npm:vite
 ```
 
 And create an `index.html` file like this:
@@ -144,23 +144,23 @@ html
 Then run the appropriate CLI command in your terminal:
 
 ```bash
-bash$ npx vite
+npx vite
 ```
 
 ```bash
-bash$ yarn vite
+yarn vite
 ```
 
 ```bash
-bash$ pnpm vite
+pnpm vite
 ```
 
 ```bash
-bash$ bunx vite
+bunx vite
 ```
 
 ```bash
-bash$ deno run -A npm:vite
+deno run -A npm:vite
 ```
 
 The `index.html` will be served on `http://localhost:5173`.
@@ -210,19 +210,19 @@ Learn more about the [Command Line Interface](https://vite.dev/guide/cli)
 If you can't wait for a new release to test the latest features, you can install a specific commit of Vite with [https://pkg.pr.new](https://pkg.pr.new/):
 
 ```bash
-bash$ npm install -D https://pkg.pr.new/vite@SHA
+npm install -D https://pkg.pr.new/vite@SHA
 ```
 
 ```bash
-bash$ yarn add -D https://pkg.pr.new/vite@SHA
+yarn add -D https://pkg.pr.new/vite@SHA
 ```
 
 ```bash
-bash$ pnpm add -D https://pkg.pr.new/vite@SHA
+pnpm add -D https://pkg.pr.new/vite@SHA
 ```
 
 ```bash
-bash$ bun add -D https://pkg.pr.new/vite@SHA
+bun add -D https://pkg.pr.new/vite@SHA
 ```
 
 Replace `SHA` with any of [Vite's commit SHAs](https://github.com/vitejs/vite/commits/main/). Note that only commits within the last month will work, as older commit releases are purged.
@@ -230,7 +230,7 @@ Replace `SHA` with any of [Vite's commit SHAs](https://github.com/vitejs/vite/co
 Alternatively, you can also clone the [vite repo](https://github.com/vitejs/vite) to your local machine and then build and link it yourself ([pnpm](https://pnpm.io/) is required):
 
 ```bash
-bashgit clone https://github.com/vitejs/vite.git
+git clone https://github.com/vitejs/vite.git
 
 cd vite
 
