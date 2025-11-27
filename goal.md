@@ -14,4 +14,5 @@ On the request detail, we should again move the request details to the side, and
 - the request and response headers can be ommited
 - raw request data and response data can be moved to separate tabs, same as the tool definitions
 
-Make sure to use the frontend-design skill when creating the new design.
+IMPORTANT: Make sure to use the frontend-design skill when creating the implementation plan, and include instructions to use the skill before starting each phase.
+Make sure to use Tailwind CSS for the styling exclusively, and follow Tailwind best practices for each styling you need.

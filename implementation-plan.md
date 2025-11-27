@@ -1,374 +1,347 @@
-# Frontend Redesign Implementation Plan
+# Implementation Plan: CC Trace Viewer Redesign
 
 ## Overview
 
-This plan redesigns the CC Trace Viewer frontend to be a professional, information-dense application for power users, following the core principle: **"Whitespace is the enemy"**.
+This plan transforms the CC Trace Viewer from a light-mode, card-based interface into a professional, information-dense, dark-mode terminal-style application for power users. The core design principle is **"Whitespace is the enemy"** - maximizing information density while maintaining clarity and usability.
 
-### Aesthetic Vision: "Data Command Center"
-- **Tone**: Industrial/utilitarian meets high-tech command center - think mission control for developers
-- **Differentiation**: Ultra-dense information display with surgical precision, like a Bloomberg terminal for API traces
-- **Key Elements**: Dark theme with electric accents, monospace typography dominance, grid-based layouts, subtle neon highlights
+**Design Direction**: "Terminal Modernism" - inspired by Bloomberg Terminal, advanced dev tools, and professional monitoring platforms.
 
-## Current Architecture Context
+### Key Design Decisions
 
-- **Tech Stack**: React + React Router + TypeScript + Tailwind CSS
-- **Key Files**:
-  - Routes: `src/routes.tsx`
-  - Pages: `src/pages/HomePage.tsx`, `src/pages/RequestListPage.tsx`, `src/pages/RequestDetailPage.tsx`
-  - Components: `src/components/SessionCard.tsx`, `src/components/RequestCard.tsx`, `src/components/RequestFilters.tsx`
-  - Layout: `src/layouts/AppLayout.tsx`
-  - Styling: `src/index.css` (Tailwind import)
+- **Color Scheme**: Slate dark (`#0f172a` base) with high-contrast amber/cyan accents
+- **Typography**: JetBrains Mono for data, Inter Tight for headers, Inter for body
+- **Layout**: Right sidebars for metadata, main content left-anchored
+- **Filters**: Compact inline toolbar with filter chips (not collapsible panels)
+- **Tables**: Ultra-dense rows, sharp borders, terminal-style aesthetics
+- **Tabs**: Horizontal tabs for secondary data views
 
-## Implementation Phases
+### Technical Stack
 
----
-
-## Phase 1: Sessions List Table & Dark Theme Foundation
-
-**Objective**: Transform the sessions listing page (HomePage) from cards to an ultra-dense table and implement the dark command center theme foundation.
-
-### Key Changes:
-- [ ] **Dark Theme System**: Create comprehensive dark theme CSS variables
-- [ ] **Sessions Table**: Convert SessionCard components to table rows
-- [ ] **Typography System**: Implement JetBrains Mono + Inter Display font stack
-- [ ] **Information Architecture**: Show only essential session metrics
-
-### Implementation Steps:
-
-#### 1.1 Dark Theme Foundation
-**Files**: `src/index.css`, `src/layouts/AppLayout.tsx`
-
-- [ ] Add CSS custom properties for dark theme colors:
-  - Primary background: `#0a0a0b` (deep charcoal)
-  - Secondary background: `#1a1a1b` (panels/cards)
-  - Accent: `#00d4ff` (electric blue)
-  - Warning: `#ffa726` (amber)
-  - Text: `#ffffff`, `#a1a1a6` (primary/secondary)
-- [ ] Import JetBrains Mono and Inter Display fonts
-- [ ] Update AppLayout background from `bg-gray-50` to dark theme
-- [ ] Create utility classes for consistent theming
-
-#### 1.2 Sessions Table Component
-**Files**: `src/components/SessionsTable.tsx` (new), `src/pages/HomePage.tsx`
-
-- [ ] Create new `SessionsTable` component to replace SessionCard grid
-- [ ] Table columns: Status, Session ID, Start Time, Requests, Total Tokens, Duration, Models
-- [ ] Ultra-dense styling with minimal padding and borders
-- [ ] Color-coded status indicators (green/red dots)
-- [ ] Monospace formatting for metrics and IDs
-- [ ] Sortable column headers with electric blue accents
-
-#### 1.3 Update HomePage
-**Files**: `src/pages/HomePage.tsx`
-
-- [ ] Replace SessionCard grid with SessionsTable
-- [ ] Update loading skeletons to match table layout
-- [ ] Apply dark theme styling to all UI elements
-- [ ] Maintain existing error handling and directory selection logic
-
-### Testing & Verification:
-- [ ] All sessions display correctly in table format
-- [ ] Dark theme applies consistently across all elements
-- [ ] Typography renders with correct font families
-- [ ] Table sorting functionality works
-- [ ] Loading states and error messages styled appropriately
-- [ ] Directory selection flow maintains functionality
-
-### Files Modified:
-- `src/index.css` - Dark theme variables and fonts
-- `src/layouts/AppLayout.tsx` - Dark background
-- `src/components/SessionsTable.tsx` - New component
-- `src/pages/HomePage.tsx` - Use new table component
+- **Framework**: React 19 with TypeScript
+- **Styling**: Tailwind CSS 4 (exclusively)
+- **Router**: React Router 7
+- **Current Structure**: src/pages/, src/components/, src/services/
 
 ---
 
-## Phase 2: Session Detail with Sidebar Layout
+## Phase 1: Dark Mode Foundation & Design System
 
-**Objective**: Redesign the session detail page (RequestListPage) with sidebar overview and main content as requests table, with hidden filters by default.
+**Goal**: Establish the dark mode color system, typography, and base component styles that will be used throughout the application.
 
-### Key Changes:
-- [ ] **Sidebar Layout**: Move session overview to collapsible left sidebar
-- [ ] **Requests Table**: Convert request cards/table to ultra-dense format
-- [ ] **Progressive Disclosure**: Hide RequestFilters by default, show on demand
-- [ ] **Sorting**: Default sort by timestamp, oldest first (reverse current order)
+### Context & Files
 
-### Implementation Steps:
+- **Main CSS**: `src/index.css` or Tailwind config
+- **Color References**:
+  - Base: `#0f172a` (slate-900)
+  - Surface: `#1e293b` (slate-800)
+  - Borders: `#334155` (slate-700)
+  - Text primary: `#f1f5f9` (slate-100)
+  - Text secondary: `#94a3b8` (slate-400)
+  - Accent amber: `#fbbf24` (amber-400)
+  - Accent cyan: `#22d3ee` (cyan-400)
+  - Error red: `#f87171` (red-400)
+  - Link blue: `#60a5fa` (blue-400)
 
-#### 2.1 Sidebar Layout System
-**Files**: `src/layouts/SessionDetailLayout.tsx` (new), `src/components/SessionSidebar.tsx` (new)
+### Implementation Steps
 
-- [ ] Create new `SessionDetailLayout` component with sidebar + main content
-- [ ] Implement collapsible sidebar (300px width, can collapse to 60px icons)
-- [ ] Create `SessionSidebar` component to replace SessionSummary
-- [ ] Industrial styling with electric blue accent borders
-- [ ] Responsive design (sidebar converts to overlay on mobile)
+- [ ] **IMPORTANT**: Use `/frontend-design` skill before starting implementation
+- [ ] Update root layout/body background to slate-900 (`#0f172a`)
+- [ ] Configure Tailwind theme with custom colors (if needed beyond default slate)
+- [ ] Add JetBrains Mono font (via CDN or local)
+- [ ] Add Inter Tight font (via CDN or local)
+- [ ] Create base typography classes:
+  - `.font-mono` for JetBrains Mono (IDs, timestamps, metrics)
+  - `.font-tight` for Inter Tight (headers)
+  - `.font-sans` for Inter (body text)
+- [ ] Update global styles:
+  - Remove rounded corners (sharp terminal aesthetic)
+  - Set default text colors (slate-100 primary, slate-400 secondary)
+  - Configure scrollbar styling for dark theme
+- [ ] Create reusable utility classes for:
+  - Status indicators (small colored squares)
+  - Terminal-style borders
+  - Compact spacing scales
 
-#### 2.2 Enhanced Requests Table
-**Files**: `src/components/RequestsTable.tsx` (new)
+### Testing & Verification
 
-- [ ] Create dedicated `RequestsTable` component (separate from RequestCard table view)
-- [ ] Ultra-dense columns: Status, Model, Duration, Tokens (In/Out), Timestamp, Tools, Actions
-- [ ] Color-coded status indicators and model badges
-- [ ] Monospace formatting for all metrics
-- [ ] Compact tool usage indicators
-- [ ] Electric blue accent on hover states
+- [ ] Application background is dark slate (`#0f172a`)
+- [ ] All text is readable with proper contrast ratios
+- [ ] Fonts load correctly (JetBrains Mono, Inter Tight, Inter)
+- [ ] No light-mode artifacts remain
+- [ ] Scrollbars match dark theme
+- [ ] Typography hierarchy is clear and distinct
 
-#### 2.3 Progressive Filter Disclosure
-**Files**: `src/components/CollapsibleFilters.tsx` (new)
-
-- [ ] Wrap RequestFilters in collapsible container
-- [ ] Default state: collapsed with just a "Filters & Sort" button
-- [ ] Expanded state: full RequestFilters with dark theme styling
-- [ ] Show filter count badge when active filters applied
-- [ ] Smooth expand/collapse animation
-
-#### 2.4 Update RequestListPage
-**Files**: `src/pages/RequestListPage.tsx`
-
-- [ ] Implement new sidebar layout structure
-- [ ] Replace existing layout with SessionDetailLayout
-- [ ] Default sort: timestamp ascending (oldest first)
-- [ ] Update loading and error states for new layout
-- [ ] Move view mode toggle to main content header
-
-### Testing & Verification:
-- [ ] Sidebar layout responsive and functional
-- [ ] Sidebar collapse/expand works smoothly
-- [ ] Session overview data displays correctly in sidebar
-- [ ] Requests table shows all data in dense format
-- [ ] Default sort shows oldest requests first
-- [ ] Filters hidden by default, expand on click
-- [ ] Filter count badge updates correctly
-- [ ] Mobile layout adapts properly
-
-### Files Modified:
-- `src/layouts/SessionDetailLayout.tsx` - New sidebar layout
-- `src/components/SessionSidebar.tsx` - Sidebar session overview
-- `src/components/RequestsTable.tsx` - Dense requests table
-- `src/components/CollapsibleFilters.tsx` - Collapsible filter panel
-- `src/pages/RequestListPage.tsx` - Use new layout and components
+**Files Modified**: `src/index.css`, `tailwind.config.js` (if exists), `index.html` (for font links)
 
 ---
 
-## Phase 3: Request Detail Dashboard Layout
+## Phase 2: HomePage - Session List Table Redesign
 
-**Objective**: Redesign the request detail page (RequestDetailPage) with asymmetric sidebar for metadata and main content for messages/response, with headers and raw data in separate tabs.
+**Goal**: Convert the session list from cards to a dense, terminal-style table showing session names and key metrics in compact rows.
 
-### Key Changes:
-- [ ] **Asymmetric Sidebar**: Request metadata and metrics in right sidebar
-- [ ] **Main Content**: Conversation messages and agent response prominently displayed
-- [ ] **Tabbed Interface**: Headers, raw request/response data in separate tabs
-- [ ] **Content Priority**: Focus on actual conversation, not technical details
+### Context & Files
 
-### Implementation Steps:
+- **Main Component**: `src/pages/HomePage.tsx` (lines 79-209)
+- **Session Card Component**: `src/components/SessionCard.tsx` (entire file)
+- **Data Structure**: `SessionSummary` type from `src/services/sessionManager.ts`
+  - Fields: sessionId, metadata (requestCount, totalTokens, duration, etc.)
+- **Current Implementation**: Grid of SessionCard components with badges and metrics
 
-#### 3.1 Request Detail Layout
-**Files**: `src/layouts/RequestDetailLayout.tsx` (new)
+### Implementation Steps
 
-- [ ] Asymmetric layout: 70% main content, 30% right sidebar
-- [ ] Sidebar: Fixed position with request metadata
-- [ ] Main content: Scrollable conversation area
-- [ ] Responsive: Sidebar becomes collapsible drawer on mobile
-- [ ] Industrial command center styling
+- [ ] **IMPORTANT**: Use `/frontend-design` skill before starting implementation
+- [ ] Create new SessionTable component or modify HomePage to render table
+- [ ] Table structure:
+  - Column headers: Status, Session ID, Requests, Tokens (Input/Output), Duration, Models, Tools, File
+  - Status: Small colored square (green=healthy, red=errors)
+  - Session ID: Monospace, truncated with hover tooltip
+  - Tokens: Show input/output in compact format (e.g., "12.5K / 3.2K")
+  - Duration: Formatted time in monospace
+  - Models: Compact badges (amber-100/amber-700)
+  - Tools: Show count with tooltip on hover
+- [ ] Ultra-compact row styling:
+  - `py-2` padding (not py-4 or py-6)
+  - Zebra striping: alternate slate-800/slate-900
+  - Hover state: amber left border indicator (`border-l-2 border-amber-400`)
+  - Sharp borders (no rounded corners)
+- [ ] Fixed header with backdrop blur
+- [ ] Each row is clickable link to session detail
+- [ ] Remove all card-based styling
+- [ ] Update loading skeleton to table format
+- [ ] Remove "How It Works" section or make it ultra-compact
 
-#### 3.2 Request Metadata Sidebar
-**Files**: `src/components/RequestSidebar.tsx` (new)
+### Testing & Verification
 
-- [ ] Compact request overview (status, duration, tokens, timestamp)
-- [ ] Model and API endpoint information
-- [ ] Performance metrics in monospace format
-- [ ] Tool usage summary with color-coded badges
-- [ ] Electric blue accent borders and highlights
+- [ ] Sessions display in dense table format
+- [ ] All metrics visible without horizontal scroll on desktop (1920px)
+- [ ] Status indicators are small colored squares
+- [ ] Hover states show amber left border
+- [ ] Zebra striping is subtle and clear
+- [ ] Click on any row navigates to session detail
+- [ ] Table header is fixed on scroll
+- [ ] Loading state shows table skeleton
+- [ ] Monospace fonts used for IDs, numbers, timestamps
+- [ ] No unnecessary whitespace between elements
 
-#### 3.3 Conversation Display
-**Files**: `src/components/ConversationView.tsx` (new)
-
-- [ ] Clean, focused message display (system, user, assistant)
-- [ ] Distinctive styling for each role type
-- [ ] Syntax highlighting for code blocks
-- [ ] Copy buttons for message content
-- [ ] Optimal reading typography (not monospace for content)
-
-#### 3.4 Tabbed Technical Details
-**Files**: `src/components/TechnicalTabs.tsx` (new)
-
-- [ ] Tab interface for: Headers, Raw Request, Raw Response, Tool Definitions
-- [ ] JSON syntax highlighting
-- [ ] Collapsible by default (focus on conversation)
-- [ ] Monospace formatting for all technical data
-- [ ] Copy functionality for each section
-
-#### 3.5 Update RequestDetailPage
-**Files**: `src/pages/RequestDetailPage.tsx`
-
-- [ ] Implement RequestDetailLayout structure
-- [ ] Move request metadata to sidebar
-- [ ] Main content shows conversation and tabs
-- [ ] Remove duplicate information from main content
-- [ ] Maintain all existing functionality
-
-### Testing & Verification:
-- [ ] Asymmetric layout displays correctly across screen sizes
-- [ ] Sidebar contains all essential request metadata
-- [ ] Conversation messages display clearly and are easily readable
-- [ ] Tab interface works smoothly with proper content
-- [ ] Copy functionality works on all relevant content
-- [ ] Mobile responsive layout functions properly
-- [ ] All existing request detail functionality preserved
-
-### Files Modified:
-- `src/layouts/RequestDetailLayout.tsx` - New asymmetric layout
-- `src/components/RequestSidebar.tsx` - Request metadata sidebar
-- `src/components/ConversationView.tsx` - Main conversation display
-- `src/components/TechnicalTabs.tsx` - Headers/raw data tabs
-- `src/pages/RequestDetailPage.tsx` - Use new layout structure
+**Files Modified**: `src/pages/HomePage.tsx`, `src/components/SessionCard.tsx` (may be deleted or repurposed)
 
 ---
 
-## Phase 4: Progressive Disclosure & Polish
+## Phase 3: RequestListPage - Layout Restructure with Sidebar & Inline Filters
 
-**Objective**: Add final layer of polish with animations, micro-interactions, and refinement of progressive disclosure patterns throughout the application.
+**Goal**: Restructure the request list page with a right sidebar for session overview, main table of requests, and compact inline filter toolbar. Sort requests oldest-first by default.
 
-### Key Changes:
-- [ ] **Animations**: Smooth transitions and micro-interactions
-- [ ] **Hover States**: Subtle but distinctive hover effects
-- [ ] **Loading States**: Custom loading animations matching theme
-- [ ] **Progressive Enhancement**: Additional collapsible elements and smart defaults
+### Context & Files
 
-### Implementation Steps:
+- **Main Component**: `src/pages/RequestListPage.tsx` (lines 145-275)
+- **Session Summary**: `src/components/SessionSummary.tsx` (lines 50-198)
+- **Request Filters**: `src/components/RequestFilters.tsx` (entire file)
+- **Request Card**: `src/components/RequestCard.tsx` (lines 149-214 for table view)
+- **Hook**: `src/hooks/useRequestList.ts`
+- **Data**: `filteredRequests` array of `RequestMetrics` type
 
-#### 4.1 Animation System
-**Files**: `src/index.css`
+### Implementation Steps
 
-- [ ] CSS animation utilities for consistent motion
-- [ ] Staggered reveal animations for table rows
-- [ ] Smooth expand/collapse transitions
-- [ ] Subtle hover state animations
-- [ ] Loading spinner matching electric blue theme
+- [ ] **IMPORTANT**: Use `/frontend-design` skill before starting implementation
+- [ ] Create two-column layout:
+  - Main content: `flex-1` (left side)
+  - Right sidebar: `w-80` (320px fixed width)
+- [ ] **Right Sidebar**:
+  - Move SessionSummary component here
+  - Make it sticky (`sticky top-0`)
+  - Compact styling with slate-800 background
+  - Reduce padding and spacing
+  - Keep all metrics but make them denser
+- [ ] **Main Content Area**:
+  - Remove view mode toggle (table only)
+  - Create compact inline filter toolbar (60px height):
+    - Dropdowns for: Model, Status, Type (streaming/non-streaming)
+    - Range inputs for: Duration, Tokens
+    - Tools checkboxes in dropdown menu
+    - Sort selector as dropdown
+  - Show active filters as dismissible chips below toolbar
+  - "Clear all filters" button when filters active
+- [ ] **Request Table**:
+  - Remove card view completely
+  - Use existing table structure from RequestCard component
+  - Columns: Status, Model, Duration, Tokens (In/Out/Total), Timestamp, Tools, Actions
+  - Ultra-compact rows: `py-2` padding
+  - Zebra striping: slate-800/slate-900
+  - Hover: amber left border
+  - Monospace for all numeric data
+  - Status as small colored square
+- [ ] **Default Sort**: Change to timestamp ascending (oldest first)
+- [ ] Update RequestFilters component:
+  - Convert from large panel to compact toolbar
+  - Dropdowns instead of expanded checkbox lists
+  - Keep functionality but reduce visual footprint
+  - Remove "Advanced Filters" toggle - show all in compact format
 
-#### 4.2 Enhanced Interactions
-**Files**: Various component files
+### Testing & Verification
 
-- [ ] Table row hover effects with electric blue accent
-- [ ] Button hover states with subtle glow
-- [ ] Smooth sidebar collapse/expand animations
-- [ ] Tab switching with slide transitions
-- [ ] Filter panel expand with staggered reveals
+- [ ] Page has clear two-column layout
+- [ ] Right sidebar is 320px wide and sticky
+- [ ] SessionSummary fits in sidebar with all metrics visible
+- [ ] Filter toolbar is ~60px tall and always visible
+- [ ] All filter controls accessible without scrolling filter bar
+- [ ] Active filters show as chips with X to dismiss
+- [ ] Requests display in table format only
+- [ ] Default sort is timestamp ascending (oldest on top)
+- [ ] Table is ultra-dense with minimal padding
+- [ ] Hover states work with amber left border
+- [ ] No horizontal scroll required on 1920px display
+- [ ] Clicking request row navigates to detail page
 
-#### 4.3 Smart Progressive Disclosure
-**Files**: Various component files
-
-- [ ] Auto-collapse sidebar on mobile navigation
-- [ ] Remember user preferences for panel states
-- [ ] Smart defaults based on data density
-- [ ] Contextual help tooltips
-- [ ] Keyboard shortcuts for power users
-
-#### 4.4 Performance & Accessibility
-**Files**: Various
-
-- [ ] Optimize table rendering for large datasets
-- [ ] Ensure proper ARIA labels for all interactive elements
-- [ ] Keyboard navigation for all functionality
-- [ ] High contrast mode compatibility
-- [ ] Screen reader friendly content structure
-
-### Testing & Verification:
-- [ ] All animations smooth and performant
-- [ ] Hover states provide clear visual feedback
-- [ ] Loading states appear consistently
-- [ ] Progressive disclosure enhances rather than hinders workflow
-- [ ] Performance remains optimal with large datasets
-- [ ] Accessibility compliance verified
-- [ ] Keyboard navigation fully functional
-
-### Files Modified:
-- `src/index.css` - Animation utilities and enhancements
-- Multiple component files - Enhanced interactions and polish
-- Various layout files - Progressive disclosure improvements
+**Files Modified**: `src/pages/RequestListPage.tsx`, `src/components/SessionSummary.tsx`, `src/components/RequestFilters.tsx`, `src/components/RequestCard.tsx`, possibly `src/hooks/useRequestList.ts`
 
 ---
 
-## Design System Specifications
+## Phase 4: RequestDetailPage - Sidebar Layout with Tabs
 
-### Color Palette
-```css
-:root {
-  /* Backgrounds */
-  --bg-primary: #0a0a0b;      /* Deep charcoal */
-  --bg-secondary: #1a1a1b;    /* Panel background */
-  --bg-tertiary: #2a2a2b;     /* Elevated surfaces */
+**Goal**: Restructure request detail page with right sidebar for metadata and horizontal tabs for secondary data (raw request/response, tools, headers).
 
-  /* Accents */
-  --accent-primary: #00d4ff;  /* Electric blue */
-  --accent-warning: #ffa726;  /* Amber */
-  --accent-success: #4caf50;  /* Green */
-  --accent-error: #f44336;    /* Red */
+### Context & Files
 
-  /* Text */
-  --text-primary: #ffffff;    /* Primary text */
-  --text-secondary: #a1a1a6;  /* Secondary text */
-  --text-muted: #6b6b70;      /* Muted text */
+- **Main Component**: `src/pages/RequestDetailPage.tsx` (lines 177-309)
+- **Sub-components**:
+  - `src/components/RequestMetrics.tsx`
+  - `src/components/ToolUsageDisplay.tsx`
+  - `src/components/CopyableText.tsx`
+- **Data**: `request` object of type `ClaudeTraceEntry` (from `src/types/trace.ts`)
+  - Fields: request (url, headers, body, timestamp), response (status_code, headers, body)
 
-  /* Borders */
-  --border-primary: #3a3a3b;  /* Primary borders */
-  --border-accent: #00d4ff;   /* Accent borders */
-}
-```
+### Implementation Steps
 
-### Typography Scale
-- **Headers**: Inter Display (600/700 weight)
-- **Data/Metrics**: JetBrains Mono (400/500 weight)
-- **Body Text**: Inter (400/500 weight)
-- **Code**: JetBrains Mono (400 weight)
+- [ ] **IMPORTANT**: Use `/frontend-design` skill before starting implementation
+- [ ] Create two-column layout:
+  - Main content: `flex-1` (left side, ~70%)
+  - Right sidebar: `w-96` (384px fixed width, ~30%)
+- [ ] **Right Sidebar (Sticky)**:
+  - Request Overview section:
+    - Method badge (POST)
+    - Status code badge with color
+    - Duration
+    - Timestamp (monospace)
+    - API endpoint URL
+  - Request Metrics (from RequestMetrics component)
+  - Compact layout with slate-800 background
+  - Sticky positioning
+- [ ] **Main Content Area**:
+  - Header: Page title and back button
+  - Conversation Messages section:
+    - System prompt (purple accent)
+    - User messages (blue accent)
+    - Assistant messages (green accent)
+    - Use CopyableText component
+    - Compact styling, minimal padding
+  - Assistant Response section:
+    - Reconstructed response
+    - Use CopyableText with JSON formatting
+- [ ] **Horizontal Tabs** (below main conversation area):
+  - Tab buttons: Raw Request, Raw Response, Request Headers, Response Headers, Tool Definitions
+  - Terminal-style tabs (sharp corners, amber active state)
+  - Tab content area shows selected data:
+    - Raw Request: Full request body JSON
+    - Raw Response: Full response body JSON
+    - Request Headers: Key-value list (currently in main view)
+    - Response Headers: Key-value list (currently in main view)
+    - Tool Definitions: ToolUsageDisplay component content
+  - Compact tab styling with slate-700 borders
+- [ ] Remove from main view:
+  - Request Headers section (move to tab)
+  - Response Headers section (move to tab)
+  - Raw Request Data section (move to tab)
+  - Current separate sections for tools (consolidate to tab)
+- [ ] Keep CopyableText functionality for all data sections
 
-### Spacing System
-- Ultra-dense tables: 8px/12px padding
-- Standard content: 16px/24px padding
-- Generous sections: 32px/48px padding
+### Testing & Verification
 
-### Component Standards
-- **Tables**: Minimal borders, hover states, sortable headers
-- **Sidebars**: 300px default width, collapsible to 60px
-- **Buttons**: Subtle hover glows, clear visual hierarchy
-- **Cards**: Elevated surfaces with subtle shadows
+- [ ] Page has clear two-column layout (70/30 split)
+- [ ] Right sidebar is 384px wide and sticky
+- [ ] All request metadata visible in sidebar without scroll
+- [ ] RequestMetrics displays compactly in sidebar
+- [ ] Main area shows conversation messages prominently
+- [ ] Conversation messages have clear role distinction (colors)
+- [ ] Horizontal tabs display below conversation
+- [ ] Clicking tab switches content area below
+- [ ] All tabs work: Raw Request, Raw Response, Headers (both), Tools
+- [ ] Headers no longer clutter main view
+- [ ] Active tab has amber accent styling
+- [ ] CopyableText works in all tab sections
+- [ ] No content is lost from original page
+- [ ] Layout doesn't break on smaller screens (minimum 1440px)
+
+**Files Modified**: `src/pages/RequestDetailPage.tsx`, possibly `src/components/RequestMetrics.tsx` for compact styling
+
+---
+
+## General Guidelines for All Phases
+
+### Before Starting Each Phase
+
+1. **ALWAYS** run `/frontend-design` skill with the specific phase context
+2. Review the design recommendations and ensure alignment
+3. Create any needed shared components first
+
+### Tailwind Best Practices
+
+- Use utility classes exclusively (no custom CSS unless absolutely necessary)
+- Leverage Tailwind's slate color palette (slate-900, slate-800, etc.)
+- Use spacing scale consistently (p-2, p-3, p-4 for padding; m-2, m-3, m-4 for margin)
+- Utilize responsive breakpoints: `md:`, `lg:`, `xl:`
+- Use `font-mono` for monospace, `font-tight` for condensed headers
+- Apply `hover:` states for interactivity
+- Use `sticky` for fixed sidebars and headers
+- Leverage `border-l-2` for left border indicators
+- Apply `backdrop-blur-sm` for layered elements
+
+### Testing Checklist for All Phases
+
+- [ ] Dark mode colors applied correctly
+- [ ] Typography (JetBrains Mono, Inter Tight, Inter) renders properly
+- [ ] No light-mode styling remains
+- [ ] Information density is high (minimal padding/margins)
+- [ ] Sharp corners (no unnecessary border-radius)
+- [ ] Hover states work with amber/cyan accents
+- [ ] Monospace fonts used for IDs, timestamps, metrics
+- [ ] No horizontal scroll on 1920px display
+- [ ] All functionality from original component preserved
+- [ ] Loading states maintain dark theme
+- [ ] Error states match terminal aesthetic
+- [ ] Accessibility: proper contrast ratios, keyboard navigation
+
+---
 
 ## Success Criteria
 
-### Phase 1 Success
-- [ ] Dark theme consistently applied across entire application
-- [ ] Sessions display in ultra-dense table format showing essential metrics only
-- [ ] Typography system implemented with distinctive font choices
-- [ ] Loading states and error handling work correctly with new theme
+The redesign is complete when:
 
-### Phase 2 Success
-- [ ] Session overview moved to collapsible sidebar layout
-- [ ] Requests display in dense table format with all key metrics
-- [ ] Filters hidden by default, expandable on demand
-- [ ] Default sort shows oldest requests first
-- [ ] Mobile responsive design functions properly
+1. ✅ Entire application uses dark slate theme consistently
+2. ✅ All pages are information-dense with minimal whitespace
+3. ✅ Typography uses JetBrains Mono, Inter Tight, Inter appropriately
+4. ✅ HomePage shows sessions in compact table format
+5. ✅ RequestListPage has right sidebar and inline filters
+6. ✅ RequestDetailPage has right sidebar and horizontal tabs
+7. ✅ All interactions use terminal-style aesthetics (sharp borders, amber/cyan accents)
+8. ✅ No generic "AI slop" styling remains
+9. ✅ Application feels purpose-built for professional trace analysis
+10. ✅ All existing functionality is preserved
 
-### Phase 3 Success
-- [ ] Request metadata moved to asymmetric right sidebar
-- [ ] Main content focuses on conversation messages and agent response
-- [ ] Technical details (headers, raw data) organized in tabs
-- [ ] Layout optimized for reading conversation content
+---
 
-### Phase 4 Success
-- [ ] Smooth animations enhance user experience without hindering performance
-- [ ] Progressive disclosure patterns improve information discovery
-- [ ] All interactions provide clear visual feedback
-- [ ] Application maintains excellent performance with large datasets
-- [ ] Full keyboard navigation and accessibility compliance
+## Phase Dependencies
 
-## Frontend-Design Skill Application
+- **Phase 1** must be completed first (foundation for all other phases)
+- **Phases 2, 3, 4** can be done in order or the order can be adjusted based on priority
+- Each phase is independently testable and deliverable
 
-Each phase will leverage the frontend-design skill to ensure:
+---
 
-1. **Distinctive Aesthetic**: Avoiding generic AI aesthetics through bold design choices
-2. **Typography Excellence**: Using JetBrains Mono and Inter Display for character
-3. **Spatial Innovation**: Asymmetric layouts, strategic density, grid-breaking elements
-4. **Motion Design**: Purposeful animations that enhance the command center experience
-5. **Professional Polish**: Every detail refined for power user workflows
+## Estimated Effort per Phase
 
-The final result will be a truly distinctive, professionally-crafted interface that serves as an efficient command center for API trace analysis.
+- **Phase 1**: 1-2 hours (setup and configuration)
+- **Phase 2**: 2-3 hours (table conversion and styling)
+- **Phase 3**: 3-4 hours (complex layout restructure with sidebar and filters)
+- **Phase 4**: 2-3 hours (sidebar and tabs implementation)
+
+**Total Estimated Time**: 8-12 hours
