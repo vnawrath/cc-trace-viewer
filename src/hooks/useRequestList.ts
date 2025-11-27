@@ -51,10 +51,10 @@ export function useRequestList(sessionId: string): UseRequestListReturn {
   // Directory context for restoration state
   const { restorationAttempted, isDirectorySelected } = useDirectory();
 
-  // Filter and sort state
+  // Filter and sort state (default: timestamp ascending for oldest-first)
   const [filters, setFilters] = useState<Partial<RequestFilters>>({});
   const [sortField, setSortField] = useState<SortField>('timestamp');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
 
   // Analyze requests when session data loads
   const requests = useMemo(() => {

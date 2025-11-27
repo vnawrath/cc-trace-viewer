@@ -16,9 +16,10 @@ interface SessionSummaryProps {
     streamingCount: number;
     streamingRate: number;
   };
+  variant?: 'full' | 'sidebar';
 }
 
-export function SessionSummary({ sessionId, metadata, aggregateMetrics }: SessionSummaryProps) {
+export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant = 'full' }: SessionSummaryProps) {
   const formatDuration = (ms: number) => {
     if (ms < 1000) return `${ms}ms`;
     if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
@@ -47,6 +48,186 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics }: Sessio
     return 'text-red-600 bg-red-100';
   };
 
+  // Sidebar variant (compact, sticky, dark theme)
+  if (variant === 'sidebar') {
+    return (
+      <div className="sticky top-4 space-y-3">
+        {/* Session Info Card */}
+        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide">Session</h3>
+            <Link
+              to="/"
+              className="text-xs text-cyan-400 hover:text-cyan-300 font-medium"
+            >
+              ← Back
+            </Link>
+          </div>
+          <div className="mb-3">
+            <div className="text-[10px] text-gray-500 mb-1">Session ID</div>
+            <div className="font-mono text-xs text-gray-300 break-all">{sessionId}</div>
+          </div>
+          <div className="mb-3">
+            <div className="text-[10px] text-gray-500 mb-1">User</div>
+            <div className="font-mono text-xs text-gray-300">{metadata.userId}</div>
+          </div>
+          <div>
+            <div className="text-[10px] text-gray-500 mb-1">Time Range</div>
+            <div className="text-[11px] text-gray-400 font-mono">
+              {formatDateTime(metadata.startTime)}
+            </div>
+            <div className="text-[11px] text-gray-400 font-mono">
+              {formatDateTime(metadata.endTime)}
+            </div>
+          </div>
+        </div>
+
+        {/* Key Metrics Card */}
+        <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 space-y-3">
+          <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Metrics</h3>
+
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-gray-500">Requests</span>
+            <span className="font-mono text-sm font-semibold text-cyan-400">{metadata.totalRequests}</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-gray-500">Total Tokens</span>
+            <span className="font-mono text-sm font-semibold text-cyan-400">{formatTokens(metadata.totalTokensUsed)}</span>
+          </div>
+
+          <div className="pl-3 space-y-2 border-l-2 border-gray-800">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-gray-600">Input</span>
+              <span className="font-mono text-xs text-gray-400">{formatTokens(metadata.totalInputTokens)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-gray-600">Output</span>
+              <span className="font-mono text-xs text-gray-400">{formatTokens(metadata.totalOutputTokens)}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+            <span className="text-[11px] text-gray-500">Duration</span>
+            <span className="font-mono text-sm font-semibold text-cyan-400">{formatDuration(metadata.duration)}</span>
+          </div>
+
+          {aggregateMetrics && (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">Avg Duration</span>
+                <span className="font-mono text-xs text-gray-400">{formatDuration(aggregateMetrics.avgDuration)}</span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">Errors</span>
+                <span className={`font-mono text-sm font-semibold ${aggregateMetrics.errorCount > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  {aggregateMetrics.errorCount}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">Error Rate</span>
+                <span className={`font-mono text-xs ${aggregateMetrics.errorRate > 0 ? 'text-red-400' : 'text-green-400'}`}>
+                  {formatPercentage(aggregateMetrics.errorRate)}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">Streaming</span>
+                <span className="font-mono text-xs text-gray-400">{formatPercentage(aggregateMetrics.streamingRate)}</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Cache Usage (if applicable) */}
+        {(metadata.totalCacheCreationTokens > 0 || metadata.totalCacheReadTokens > 0) && (
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 space-y-2">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Cache Usage</h3>
+
+            {metadata.totalCacheCreationTokens > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">Created</span>
+                <span className="font-mono text-xs text-blue-400">{formatTokens(metadata.totalCacheCreationTokens)}</span>
+              </div>
+            )}
+
+            {metadata.totalCacheReadTokens > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">Read</span>
+                <span className="font-mono text-xs text-green-400">{formatTokens(metadata.totalCacheReadTokens)}</span>
+              </div>
+            )}
+
+            {metadata.totalCacheCreation5mTokens > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">5m Cache</span>
+                <span className="font-mono text-xs text-purple-400">{formatTokens(metadata.totalCacheCreation5mTokens)}</span>
+              </div>
+            )}
+
+            {metadata.totalCacheCreation1hTokens > 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-gray-500">1h Cache</span>
+                <span className="font-mono text-xs text-indigo-400">{formatTokens(metadata.totalCacheCreation1hTokens)}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Models Used */}
+        {metadata.modelsUsed.length > 0 && (
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Models</h3>
+            <div className="space-y-1.5">
+              {metadata.modelsUsed.map(model => (
+                <div key={model} className="text-xs text-purple-400 font-mono">
+                  {model.replace('claude-3-5-', '').replace('claude-3-', '').replace('-20241022', '').replace('-20240229', '').replace('-20240307', '')}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tools */}
+        {(metadata.toolsAvailable.length > 0 || metadata.toolsUsed.length > 0) && (
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 space-y-3">
+            {metadata.toolsAvailable.length > 0 && (
+              <div>
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Tools Available</h3>
+                <div className="space-y-1">
+                  {metadata.toolsAvailable.map(tool => (
+                    <div
+                      key={tool}
+                      className={`text-[11px] font-mono ${metadata.toolsUsed.includes(tool) ? 'text-amber-400 font-medium' : 'text-gray-500'}`}
+                    >
+                      {tool}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {metadata.toolsUsed.length > 0 && metadata.toolsUsed.length !== metadata.toolsAvailable.length && (
+              <div className="pt-3 border-t border-gray-800">
+                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Actually Used</h3>
+                <div className="space-y-1">
+                  {metadata.toolsUsed.map(tool => (
+                    <div key={tool} className="text-[11px] text-amber-400 font-mono font-medium">
+                      {tool}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Full variant (original layout)
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
       <div className="flex items-center justify-between mb-6">

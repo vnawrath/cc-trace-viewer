@@ -45,18 +45,18 @@ export function RequestFilters({
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
       return (
-        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
         </svg>
       );
     }
 
     return sortDirection === 'asc' ? (
-      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3 h-3 text-cyan-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
       </svg>
     ) : (
-      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="w-3 h-3 text-cyan-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
       </svg>
     );
@@ -72,25 +72,25 @@ export function RequestFilters({
   });
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+    <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-4">
-          <h3 className="text-lg font-medium text-gray-900">Filters & Sorting</h3>
-          <div className="text-sm text-gray-500">
-            Showing {filteredCount} of {totalCount} requests
+          <h3 className="text-sm font-semibold text-gray-200">Filters & Sorting</h3>
+          <div className="text-xs text-gray-500 font-mono">
+            {filteredCount} / {totalCount}
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowAdvanced(!showAdvanced)}
-            className="text-sm text-blue-600 hover:text-blue-900 font-medium"
+            className="text-xs text-cyan-400 hover:text-cyan-300 font-medium"
           >
-            {showAdvanced ? 'Hide Advanced' : 'Advanced Filters'}
+            {showAdvanced ? 'Hide Advanced' : 'Advanced'}
           </button>
           {hasActiveFilters && (
             <button
               onClick={onClearFilters}
-              className="text-sm text-red-600 hover:text-red-900 font-medium"
+              className="text-xs text-red-400 hover:text-red-300 font-medium"
             >
               Clear All
             </button>
@@ -100,23 +100,23 @@ export function RequestFilters({
 
       {/* Sort Controls */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">Sort by:</label>
+        <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Sort by:</label>
         <div className="flex flex-wrap gap-2">
           {[
             { field: 'timestamp' as SortField, label: 'Time' },
             { field: 'duration' as SortField, label: 'Duration' },
-            { field: 'totalTokens' as SortField, label: 'Total Tokens' },
-            { field: 'inputTokens' as SortField, label: 'Input Tokens' },
-            { field: 'outputTokens' as SortField, label: 'Output Tokens' },
+            { field: 'totalTokens' as SortField, label: 'Tokens' },
+            { field: 'inputTokens' as SortField, label: 'Input' },
+            { field: 'outputTokens' as SortField, label: 'Output' },
             { field: 'model' as SortField, label: 'Model' }
           ].map(({ field, label }) => (
             <button
               key={field}
               onClick={() => handleSortClick(field)}
-              className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              className={`inline-flex items-center gap-2 px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                 sortField === field
-                  ? 'text-blue-700 bg-blue-100 hover:bg-blue-200'
-                  : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
+                  ? 'text-cyan-950 bg-cyan-400 hover:bg-cyan-300'
+                  : 'text-gray-400 bg-gray-800 hover:bg-gray-700 border border-gray-700'
               }`}
             >
               {label}
@@ -129,8 +129,8 @@ export function RequestFilters({
       {/* Basic Filters */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Models</label>
-          <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Models</label>
+          <div className="space-y-1.5">
             {availableModels.map(model => (
               <label key={model} className="flex items-center">
                 <input
@@ -144,9 +144,9 @@ export function RequestFilters({
                       updateFilters({ models: models.filter(m => m !== model) });
                     }
                   }}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
                 />
-                <span className="ml-2 text-sm text-gray-700">
+                <span className="ml-2 text-xs text-gray-300">
                   {model.replace('claude-3-5-', '').replace('claude-3-', '').replace('-20241022', '').replace('-20240229', '').replace('-20240307', '')}
                 </span>
               </label>
@@ -155,17 +155,17 @@ export function RequestFilters({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-          <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Status</label>
+          <div className="space-y-1.5">
             <label className="flex items-center">
               <input
                 type="radio"
                 name="errorFilter"
                 checked={filters.hasErrors === null || filters.hasErrors === undefined}
                 onChange={() => updateFilters({ hasErrors: null })}
-                className="text-blue-600 focus:ring-blue-500"
+                className="border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
               />
-              <span className="ml-2 text-sm text-gray-700">All</span>
+              <span className="ml-2 text-xs text-gray-300">All</span>
             </label>
             <label className="flex items-center">
               <input
@@ -173,9 +173,9 @@ export function RequestFilters({
                 name="errorFilter"
                 checked={filters.hasErrors === false}
                 onChange={() => updateFilters({ hasErrors: false })}
-                className="text-blue-600 focus:ring-blue-500"
+                className="border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
               />
-              <span className="ml-2 text-sm text-gray-700">Success only</span>
+              <span className="ml-2 text-xs text-gray-300">Success only</span>
             </label>
             <label className="flex items-center">
               <input
@@ -183,25 +183,25 @@ export function RequestFilters({
                 name="errorFilter"
                 checked={filters.hasErrors === true}
                 onChange={() => updateFilters({ hasErrors: true })}
-                className="text-blue-600 focus:ring-blue-500"
+                className="border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
               />
-              <span className="ml-2 text-sm text-gray-700">Errors only</span>
+              <span className="ml-2 text-xs text-gray-300">Errors only</span>
             </label>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Request Type</label>
-          <div className="space-y-2">
+          <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Request Type</label>
+          <div className="space-y-1.5">
             <label className="flex items-center">
               <input
                 type="radio"
                 name="streamingFilter"
                 checked={filters.isStreaming === null || filters.isStreaming === undefined}
                 onChange={() => updateFilters({ isStreaming: null })}
-                className="text-blue-600 focus:ring-blue-500"
+                className="border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
               />
-              <span className="ml-2 text-sm text-gray-700">All</span>
+              <span className="ml-2 text-xs text-gray-300">All</span>
             </label>
             <label className="flex items-center">
               <input
@@ -209,9 +209,9 @@ export function RequestFilters({
                 name="streamingFilter"
                 checked={filters.isStreaming === true}
                 onChange={() => updateFilters({ isStreaming: true })}
-                className="text-blue-600 focus:ring-blue-500"
+                className="border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
               />
-              <span className="ml-2 text-sm text-gray-700">Streaming only</span>
+              <span className="ml-2 text-xs text-gray-300">Streaming only</span>
             </label>
             <label className="flex items-center">
               <input
@@ -219,9 +219,9 @@ export function RequestFilters({
                 name="streamingFilter"
                 checked={filters.isStreaming === false}
                 onChange={() => updateFilters({ isStreaming: false })}
-                className="text-blue-600 focus:ring-blue-500"
+                className="border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
               />
-              <span className="ml-2 text-sm text-gray-700">Non-streaming only</span>
+              <span className="ml-2 text-xs text-gray-300">Non-streaming only</span>
             </label>
           </div>
         </div>
@@ -230,7 +230,7 @@ export function RequestFilters({
       {/* Tools Filters */}
       {availableToolsAvailable.length > 0 && (
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tools Available (offered to agent)</label>
+          <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Tools Available</label>
           <div className="flex flex-wrap gap-2">
             {availableToolsAvailable.map(tool => (
               <label key={tool} className="flex items-center">
@@ -245,9 +245,9 @@ export function RequestFilters({
                       updateFilters({ toolsAvailable: tools.filter(t => t !== tool) });
                     }
                   }}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
                 />
-                <span className="ml-2 text-sm text-gray-700 px-2 py-1 bg-gray-100 text-gray-600 rounded-md">
+                <span className="ml-2 text-xs text-gray-500 px-2 py-0.5 bg-gray-800 border border-gray-700 rounded font-mono">
                   {tool}
                 </span>
               </label>
@@ -258,7 +258,7 @@ export function RequestFilters({
 
       {availableToolsUsed.length > 0 && (
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Tools Actually Used (invoked by agent)</label>
+          <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Tools Actually Used</label>
           <div className="flex flex-wrap gap-2">
             {availableToolsUsed.map(tool => (
               <label key={tool} className="flex items-center">
@@ -273,9 +273,9 @@ export function RequestFilters({
                       updateFilters({ toolsUsed: tools.filter(t => t !== tool) });
                     }
                   }}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-gray-600 bg-gray-800 text-cyan-500 focus:ring-cyan-500 focus:ring-offset-gray-900"
                 />
-                <span className="ml-2 text-sm text-gray-700 px-2 py-1 bg-amber-100 text-amber-700 rounded-md">
+                <span className="ml-2 text-xs text-amber-400 px-2 py-0.5 bg-amber-950/30 border border-amber-700/50 rounded font-mono">
                   {tool}
                 </span>
               </label>
@@ -286,45 +286,45 @@ export function RequestFilters({
 
       {/* Advanced Filters */}
       {showAdvanced && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-800">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Duration Range (ms)</label>
+            <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Duration Range (ms)</label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
                 placeholder="Min"
                 value={filters.minDuration || ''}
                 onChange={(e) => updateFilters({ minDuration: e.target.value ? parseInt(e.target.value) : null })}
-                className="w-24 rounded-md border-gray-300 text-sm"
+                className="w-24 rounded border-gray-700 bg-gray-800 text-gray-300 text-xs placeholder-gray-600 focus:border-cyan-500 focus:ring-cyan-500"
               />
-              <span className="text-gray-500">to</span>
+              <span className="text-gray-500 text-xs">to</span>
               <input
                 type="number"
                 placeholder="Max"
                 value={filters.maxDuration || ''}
                 onChange={(e) => updateFilters({ maxDuration: e.target.value ? parseInt(e.target.value) : null })}
-                className="w-24 rounded-md border-gray-300 text-sm"
+                className="w-24 rounded border-gray-700 bg-gray-800 text-gray-300 text-xs placeholder-gray-600 focus:border-cyan-500 focus:ring-cyan-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Token Range</label>
+            <label className="block text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Token Range</label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
                 placeholder="Min"
                 value={filters.minTokens || ''}
                 onChange={(e) => updateFilters({ minTokens: e.target.value ? parseInt(e.target.value) : null })}
-                className="w-24 rounded-md border-gray-300 text-sm"
+                className="w-24 rounded border-gray-700 bg-gray-800 text-gray-300 text-xs placeholder-gray-600 focus:border-cyan-500 focus:ring-cyan-500"
               />
-              <span className="text-gray-500">to</span>
+              <span className="text-gray-500 text-xs">to</span>
               <input
                 type="number"
                 placeholder="Max"
                 value={filters.maxTokens || ''}
                 onChange={(e) => updateFilters({ maxTokens: e.target.value ? parseInt(e.target.value) : null })}
-                className="w-24 rounded-md border-gray-300 text-sm"
+                className="w-24 rounded border-gray-700 bg-gray-800 text-gray-300 text-xs placeholder-gray-600 focus:border-cyan-500 focus:ring-cyan-500"
               />
             </div>
           </div>

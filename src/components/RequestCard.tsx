@@ -146,68 +146,76 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
     );
   }
 
-  // Compact table row view
+  // Compact table row view (~36px height, dark theme)
   return (
-    <tr className="hover:bg-gray-50">
-      <td className="px-6 py-4 whitespace-nowrap">
-        <div className="flex items-center gap-2">
-          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(request.status)}`}>
-            {request.status}
-          </span>
-          {request.hasError && (
-            <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+    <tr className="hover:bg-gray-800/50 transition-colors group" title={request.stopReason ? `Stop reason: ${request.stopReason}` : undefined}>
+      {/* Status Icon */}
+      <td className="px-3 py-2 whitespace-nowrap">
+        <div className="flex items-center gap-1.5">
+          {request.hasError ? (
+            <svg className="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          ) : (
+            <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           )}
           {request.isStreaming && (
-            <svg className="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            <svg className="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           )}
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap">
-        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getModelColor(request.model)}`}>
+
+      {/* Timestamp */}
+      <td className="px-3 py-2 whitespace-nowrap text-[11px] text-gray-400 font-mono">
+        {new Date(request.timestamp).toLocaleTimeString()}
+      </td>
+
+      {/* Model */}
+      <td className="px-3 py-2 whitespace-nowrap">
+        <span className="text-[11px] text-purple-400 font-mono">
           {request.model.replace('claude-3-5-', '').replace('claude-3-', '').replace('-20241022', '').replace('-20240229', '').replace('-20240307', '')}
         </span>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+
+      {/* Duration */}
+      <td className="px-3 py-2 whitespace-nowrap text-[11px] text-cyan-400 font-mono">
         {formatDuration(request.duration)}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+
+      {/* Tokens */}
+      <td className="px-3 py-2 whitespace-nowrap">
         <div className="flex flex-col">
-          <span className="font-medium">{formatTokens(request.totalTokens)}</span>
-          <span className="text-xs text-gray-500">{formatTokens(request.inputTokens)} / {formatTokens(request.outputTokens)}</span>
+          <span className="text-[11px] font-mono font-medium text-cyan-400">{formatTokens(request.totalTokens)}</span>
+          <span className="text-[10px] text-gray-500 font-mono">{formatTokens(request.inputTokens)} / {formatTokens(request.outputTokens)}</span>
         </div>
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">
-        {new Date(request.timestamp).toLocaleString()}
-      </td>
-      <td className="px-6 py-4 whitespace-nowrap">
+
+      {/* Tools */}
+      <td className="px-3 py-2 whitespace-nowrap">
         {request.toolsUsed.length > 0 ? (
-          <div className="flex flex-wrap gap-1">
-            {request.toolsUsed.slice(0, 2).map(tool => (
-              <span
-                key={tool}
-                className="inline-flex px-1 py-0.5 text-xs font-medium rounded text-amber-700 bg-amber-100"
-              >
-                {tool}
-              </span>
-            ))}
-            {request.toolsUsed.length > 2 && (
-              <span className="text-xs text-gray-500">+{request.toolsUsed.length - 2}</span>
-            )}
+          <div className="flex items-center gap-1" title={request.toolsUsed.join(', ')}>
+            <svg className="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <span className="text-[11px] text-amber-400 font-mono">{request.toolsUsed.length}</span>
           </div>
         ) : (
-          <span className="text-xs text-gray-400">None</span>
+          <span className="text-[10px] text-gray-600">—</span>
         )}
       </td>
-      <td className="px-6 py-4 whitespace-nowrap text-sm">
+
+      {/* Actions */}
+      <td className="px-3 py-2 whitespace-nowrap text-right">
         <Link
           to={`/sessions/${sessionId}/requests/${request.id}`}
-          className="text-blue-600 hover:text-blue-900 font-medium"
+          className="text-[11px] text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
         >
-          View Details
+          View →
         </Link>
       </td>
     </tr>

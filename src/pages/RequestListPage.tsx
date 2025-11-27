@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router';
 import { DocumentHead } from '../components/DocumentHead';
 import { SessionSummary } from '../components/SessionSummary';
@@ -10,7 +10,7 @@ import { useDirectory } from '../contexts/DirectoryContext';
 export function RequestListPage() {
   const params = useParams();
   const sessionId = params.sessionId!;
-  const [viewMode, setViewMode] = useState<'table' | 'cards'>('table');
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const { isDirectorySelected, isRestoring } = useDirectory();
 
   const {
@@ -29,6 +29,29 @@ export function RequestListPage() {
     setSort,
     clearFilters
   } = useRequestList(sessionId);
+
+  // Keyboard shortcut for filter toggle (Ctrl/Cmd+F)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        setFiltersVisible(prev => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Count active filters
+  const activeFilterCount = Object.values(filters).filter(value => {
+    if (Array.isArray(value)) return value.length > 0;
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'object' && 'start' in value) {
+      return value.start !== null || value.end !== null;
+    }
+    return true;
+  }).length;
 
   // Show restoration or no directory message
   if (isRestoring) {
@@ -145,130 +168,139 @@ export function RequestListPage() {
   return (
     <>
       <DocumentHead title={`Session ${sessionId} - Requests`} description={`View all requests for session ${sessionId}`} />
-      <div className="space-y-6">
-        {/* Session Summary */}
-        <SessionSummary
-          sessionId={sessionId}
-          metadata={sessionData}
-          aggregateMetrics={aggregateMetrics}
-        />
 
-        {/* Filters */}
-        <RequestFilters
-          availableModels={availableModels}
-          availableToolsAvailable={availableToolsAvailable}
-          availableToolsUsed={availableToolsUsed}
-          filters={filters}
-          sortField={sortField}
-          sortDirection={sortDirection}
-          onFiltersChange={setFilters}
-          onSortChange={setSort}
-          onClearFilters={clearFilters}
-          totalCount={sessionData.requests.length}
-          filteredCount={filteredRequests.length}
-        />
+      {/* Flexbox layout: main content + right sidebar */}
+      <div className="flex gap-6">
+        {/* Main Content Area */}
+        <div className="flex-1 min-w-0 space-y-4">
+          {/* Collapsible Filter Panel */}
+          <div className="relative">
+            <button
+              onClick={() => setFiltersVisible(!filtersVisible)}
+              className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-900 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors group"
+            >
+              <div className="flex items-center gap-3">
+                <svg className="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                </svg>
+                <span className="text-sm font-medium text-gray-200">
+                  Filters {activeFilterCount > 0 && <span className="ml-2 px-2 py-0.5 bg-cyan-500 text-gray-950 rounded-full text-xs font-mono">{activeFilterCount}</span>}
+                </span>
+                <span className="text-xs text-gray-500 font-mono">
+                  {navigator.platform.includes('Mac') ? 'Cmd' : 'Ctrl'}+F
+                </span>
+              </div>
+              <svg
+                className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${filtersVisible ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
 
-        {/* View Mode Toggle & Request List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900">Requests</h2>
-              <p className="text-gray-600 text-sm mt-1">
-                Showing {filteredRequests.length} of {sessionData.requests.length} requests
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setViewMode('table')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'table'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                Table View
-              </button>
-              <button
-                onClick={() => setViewMode('cards')}
-                className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  viewMode === 'cards'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                Card View
-              </button>
+            {/* Slide-down filter panel */}
+            <div
+              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                filtersVisible ? 'max-h-[800px] opacity-100 mt-2' : 'max-h-0 opacity-0'
+              }`}
+            >
+              <RequestFilters
+                availableModels={availableModels}
+                availableToolsAvailable={availableToolsAvailable}
+                availableToolsUsed={availableToolsUsed}
+                filters={filters}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onFiltersChange={setFilters}
+                onSortChange={setSort}
+                onClearFilters={clearFilters}
+                totalCount={sessionData.requests.length}
+                filteredCount={filteredRequests.length}
+              />
             </div>
           </div>
 
-          {filteredRequests.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                </svg>
+          {/* Dense Request Table */}
+          <div className="bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+              <div>
+                <h2 className="text-sm font-semibold text-gray-200">Request List</h2>
+                <p className="text-xs text-gray-500 mt-0.5 font-mono">
+                  {filteredRequests.length} / {sessionData.requests.length} requests
+                </p>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No requests match your filters</h3>
-              <p className="text-gray-600 mb-4">Try adjusting your filters to see more results.</p>
-              <button
-                onClick={clearFilters}
-                className="text-blue-600 hover:text-blue-900 font-medium"
-              >
-                Clear all filters
-              </button>
             </div>
-          ) : viewMode === 'cards' ? (
-            <div className="p-6 space-y-4">
-              {filteredRequests.map((request) => (
-                <RequestCard
-                  key={request.id}
-                  request={request}
-                  sessionId={sessionId}
-                  showDetailedView={true}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Model
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Duration
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tokens
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Timestamp
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Tools
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredRequests.map((request) => (
-                    <RequestCard
-                      key={request.id}
-                      request={request}
-                      sessionId={sessionId}
-                      showDetailedView={false}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+
+            {filteredRequests.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="text-gray-600 mb-4">
+                  <svg className="w-10 h-10 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-medium text-gray-300 mb-2">No matching requests</h3>
+                <p className="text-sm text-gray-500 mb-4">Adjust filters to see results</p>
+                <button
+                  onClick={clearFilters}
+                  className="text-cyan-400 hover:text-cyan-300 font-medium text-sm"
+                >
+                  Clear filters
+                </button>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead className="bg-gray-950 sticky top-0 z-10">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        Timestamp
+                      </th>
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        Model
+                      </th>
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        Duration
+                      </th>
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        Tokens
+                      </th>
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        Tools
+                      </th>
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {filteredRequests.map((request) => (
+                      <RequestCard
+                        key={request.id}
+                        request={request}
+                        sessionId={sessionId}
+                        showDetailedView={false}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Sidebar */}
+        <div className="w-[300px] flex-shrink-0">
+          <SessionSummary
+            sessionId={sessionId}
+            metadata={sessionData}
+            aggregateMetrics={aggregateMetrics}
+            variant="sidebar"
+          />
         </div>
       </div>
     </>
