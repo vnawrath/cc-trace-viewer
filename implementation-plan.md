@@ -94,18 +94,18 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - No "How It Works" section at bottom (info density priority)
 
 ### Tasks
-- [ ] Use `/frontend-design` skill for table design
-- [ ] Update `src/pages/HomePage.tsx` to replace card grid with `<table>` element
-- [ ] Create table header with sortable columns (click to sort)
-- [ ] Convert `SessionCard` component to `SessionRow` table row component
-- [ ] Add hover states with elevated shadow and full session ID tooltip
-- [ ] Implement column sorting (local state in HomePage)
-- [ ] Add status indicator as small colored dot (green=healthy, red=errors)
-- [ ] Format numeric data with monospace font
-- [ ] Add sticky table header (sticky top-0)
-- [ ] Show models as compact comma-separated text (not badges)
-- [ ] Show tool count with title attribute for hover details
-- [ ] Remove "How It Works" section
+- [x] Use `/frontend-design` skill for table design
+- [x] Update `src/pages/HomePage.tsx` to replace card grid with `<table>` element
+- [x] Create table header with sortable columns (click to sort)
+- [x] Convert `SessionCard` component to `SessionRow` table row component
+- [x] Add hover states with elevated shadow and full session ID tooltip
+- [x] Implement column sorting (local state in SessionTable component)
+- [x] Add status indicator as small colored dot (green=healthy, red=errors)
+- [x] Format numeric data with monospace font
+- [x] Add sticky table header (sticky top-0)
+- [x] Show models as compact comma-separated text (not badges)
+- [x] Show tool count with title attribute for hover details
+- [x] Remove "How It Works" section
 
 ### Verification
 - [ ] Table displays all sessions with maximum 10+ visible rows on 1080p screen
@@ -117,7 +117,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - [ ] Responsive on smaller screens (horizontal scroll if needed)
 - [ ] Performance is good with 50+ sessions
 
-**Files**: `src/pages/HomePage.tsx`, `src/components/SessionCard.tsx` (rename to SessionRow.tsx)
+**Files**: `src/pages/HomePage.tsx`, `src/components/SessionTable.tsx` (new component)
 
 **Related API**:
 - `useSessionData()` hook from `src/hooks/useSessionData.ts`
