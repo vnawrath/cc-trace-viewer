@@ -1,4 +1,11 @@
-import type { ClaudeTraceEntry, SessionData, SessionMetadata, TokenUsage, TraceResponse, TraceRequest } from '../types/trace';
+import type {
+  ClaudeTraceEntry,
+  SessionData,
+  SessionMetadata,
+  TokenUsage,
+  TraceResponse,
+  TraceRequest,
+} from "../types/trace";
 
 export class TraceParserService {
   parseJsonLine(line: string): ClaudeTraceEntry | null {
@@ -9,39 +16,66 @@ export class TraceParserService {
       }
 
       // Skip lines that don't look like JSON (should start with '{' and end with '}')
-      if (!trimmed.startsWith('{') || !trimmed.endsWith('}')) {
-        console.warn('Skipping non-JSON line:', trimmed.substring(0, 100) + (trimmed.length > 100 ? '...' : ''));
+      if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
+        console.warn(
+          "Skipping non-JSON line:",
+          trimmed.substring(0, 100) + (trimmed.length > 100 ? "..." : "")
+        );
         return null;
       }
 
-      // Check if the line is too long (potential truncation issue)
-      if (trimmed.length > 1000000) { // 1MB limit
-        console.warn('Skipping extremely long JSON line (potential truncation):', trimmed.length, 'characters');
-        return null;
+      // Warn about very large lines but still attempt to parse them
+      // Large lines are common in trace files with big responses or tool outputs
+      if (trimmed.length > 1000000) {
+        const sizeMB = (trimmed.length / 1024 / 1024).toFixed(2);
+        console.info(
+          `Parsing large JSON line: ${sizeMB}MB (${trimmed.length.toLocaleString()} characters)`
+        );
       }
 
+      // Parse with explicit error handling for large JSON
       const parsed = JSON.parse(trimmed) as ClaudeTraceEntry;
 
       if (!this.isValidTraceEntry(parsed)) {
-        console.warn('Invalid trace entry structure:', typeof parsed, Object.keys(parsed || {}));
+        console.warn(
+          "Invalid trace entry structure:",
+          typeof parsed,
+          Object.keys(parsed || {})
+        );
         return null;
       }
 
       return parsed;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       const previewLength = 200;
-      const linePreview = line.length > previewLength
-        ? line.substring(0, previewLength) + '...'
-        : line;
+      const linePreview =
+        line.length > previewLength
+          ? line.substring(0, previewLength) + "..."
+          : line;
 
-      console.warn(`Failed to parse JSON line (${errorMessage}):`, linePreview);
+      // Check if it's an out-of-memory error
+      if (errorMessage.includes("memory") || errorMessage.includes("heap")) {
+        console.error(
+          `Out of memory parsing JSON line (${(
+            line.length /
+            1024 /
+            1024
+          ).toFixed(2)}MB). This line is too large for the browser to handle.`
+        );
+      } else {
+        console.warn(
+          `Failed to parse JSON line (${errorMessage}):`,
+          linePreview
+        );
+      }
       return null;
     }
   }
 
   private isValidTraceEntry(entry: unknown): entry is ClaudeTraceEntry {
-    if (!entry || typeof entry !== 'object') {
+    if (!entry || typeof entry !== "object") {
       return false;
     }
 
@@ -49,35 +83,56 @@ export class TraceParserService {
 
     return Boolean(
       obj.request &&
-      typeof obj.request === 'object' &&
-      obj.response &&
-      typeof obj.response === 'object' &&
-      typeof obj.logged_at === 'string' &&
-      typeof (obj.request as Record<string, unknown>).timestamp === 'number' &&
-      typeof (obj.response as Record<string, unknown>).timestamp === 'number'
+        typeof obj.request === "object" &&
+        obj.response &&
+        typeof obj.response === "object" &&
+        typeof obj.logged_at === "string" &&
+        typeof (obj.request as Record<string, unknown>).timestamp ===
+          "number" &&
+        typeof (obj.response as Record<string, unknown>).timestamp === "number"
     );
   }
 
   parseJsonlContent(content: string): ClaudeTraceEntry[] {
-    const lines = content.split('\n');
+    const lines = content.split("\n");
     const entries: ClaudeTraceEntry[] = [];
     let lineNumber = 0;
+    const totalLines = lines.length;
+    const logInterval = Math.max(1, Math.floor(totalLines / 10)); // Log every 10%
+
+    console.log(
+      `Parsing ${totalLines.toLocaleString()} lines from JSONL content...`
+    );
 
     for (const line of lines) {
       lineNumber++;
+
+      // Progress logging for large files
+      if (totalLines > 100 && lineNumber % logInterval === 0) {
+        const progress = Math.round((lineNumber / totalLines) * 100);
+        console.log(
+          `Parsing progress: ${progress}% (${lineNumber.toLocaleString()}/${totalLines.toLocaleString()} lines, ${
+            entries.length
+          } valid entries)`
+        );
+      }
+
       const entry = this.parseJsonLine(line);
       if (entry) {
         entries.push(entry);
       }
     }
 
+    console.log(`Parsing complete: ${entries.length} valid entries found`);
     return entries;
   }
 
-  async parseJsonlStream(stream: ReadableStream<string>): Promise<ClaudeTraceEntry[]> {
+  async parseJsonlStream(
+    stream: ReadableStream<string>
+  ): Promise<ClaudeTraceEntry[]> {
     const reader = stream.getReader();
     const entries: ClaudeTraceEntry[] = [];
-    let buffer = '';
+    let buffer = "";
 
     try {
       while (true) {
@@ -86,10 +141,10 @@ export class TraceParserService {
         if (done) break;
 
         buffer += value;
-        const lines = buffer.split('\n');
+        const lines = buffer.split("\n");
 
         // Keep the last potentially incomplete line in buffer
-        buffer = lines.pop() || '';
+        buffer = lines.pop() || "";
 
         for (const line of lines) {
           const entry = this.parseJsonLine(line);
@@ -116,7 +171,7 @@ export class TraceParserService {
   calculateSessionMetadata(entries: ClaudeTraceEntry[]): SessionMetadata {
     if (entries.length === 0) {
       return {
-        userId: '',
+        userId: "",
         requestCount: 0,
         totalTokens: 0,
         totalInputTokens: 0,
@@ -131,11 +186,13 @@ export class TraceParserService {
         modelsUsed: new Set(),
         toolsAvailable: new Set(),
         toolsUsed: new Set(),
-        hasErrors: false
+        hasErrors: false,
       };
     }
 
-    const sortedEntries = [...entries].sort((a, b) => a.request.timestamp - b.request.timestamp);
+    const sortedEntries = [...entries].sort(
+      (a, b) => a.request.timestamp - b.request.timestamp
+    );
     const firstEntry = sortedEntries[0];
     const lastEntry = sortedEntries[sortedEntries.length - 1];
 
@@ -154,45 +211,70 @@ export class TraceParserService {
     for (const entry of entries) {
       modelsUsed.add(entry.request.body.model);
 
-      const availableTools = this.extractToolsAvailableFromRequest(entry.request);
-      availableTools.forEach(tool => toolsAvailable.add(tool));
+      const availableTools = this.extractToolsAvailableFromRequest(
+        entry.request
+      );
+      availableTools.forEach((tool) => toolsAvailable.add(tool));
 
       const usedTools = this.extractToolsUsedFromResponse(entry.response);
-      usedTools.forEach(tool => toolsUsed.add(tool));
+      usedTools.forEach((tool) => toolsUsed.add(tool));
 
       let usage: TokenUsage | Record<string, unknown> | null = null;
 
       if (entry.response.body?.usage) {
         usage = entry.response.body.usage;
       } else if (entry.response.body_raw) {
-        const reconstructed = this.reconstructResponseFromStream(entry.response.body_raw);
+        const reconstructed = this.reconstructResponseFromStream(
+          entry.response.body_raw
+        );
         if (reconstructed?.usage) {
           usage = reconstructed.usage as Record<string, unknown>;
         }
       }
 
       if (usage) {
-        const inputTokens = typeof usage.input_tokens === 'number' ? usage.input_tokens : 0;
-        const outputTokens = typeof usage.output_tokens === 'number' ? usage.output_tokens : 0;
-        const cacheCreationTokens = typeof usage.cache_creation_input_tokens === 'number' ? usage.cache_creation_input_tokens : 0;
-        const cacheReadTokens = typeof usage.cache_read_input_tokens === 'number' ? usage.cache_read_input_tokens : 0;
+        const inputTokens =
+          typeof usage.input_tokens === "number" ? usage.input_tokens : 0;
+        const outputTokens =
+          typeof usage.output_tokens === "number" ? usage.output_tokens : 0;
+        const cacheCreationTokens =
+          typeof usage.cache_creation_input_tokens === "number"
+            ? usage.cache_creation_input_tokens
+            : 0;
+        const cacheReadTokens =
+          typeof usage.cache_read_input_tokens === "number"
+            ? usage.cache_read_input_tokens
+            : 0;
 
         totalInputTokens += inputTokens;
         totalCacheCreationTokens += cacheCreationTokens;
         totalCacheReadTokens += cacheReadTokens;
         totalOutputTokens += outputTokens;
 
-        if (usage.cache_creation && typeof usage.cache_creation === 'object') {
+        if (usage.cache_creation && typeof usage.cache_creation === "object") {
           const cacheCreation = usage.cache_creation as Record<string, unknown>;
-          const cache5m = typeof cacheCreation.ephemeral_5m_input_tokens === 'number' ? cacheCreation.ephemeral_5m_input_tokens : 0;
-          const cache1h = typeof cacheCreation.ephemeral_1h_input_tokens === 'number' ? cacheCreation.ephemeral_1h_input_tokens : 0;
+          const cache5m =
+            typeof cacheCreation.ephemeral_5m_input_tokens === "number"
+              ? cacheCreation.ephemeral_5m_input_tokens
+              : 0;
+          const cache1h =
+            typeof cacheCreation.ephemeral_1h_input_tokens === "number"
+              ? cacheCreation.ephemeral_1h_input_tokens
+              : 0;
 
           totalCacheCreation5mTokens += cache5m;
           totalCacheCreation1hTokens += cache1h;
 
-          totalTokens += inputTokens + outputTokens + cacheCreationTokens + cacheReadTokens + cache5m + cache1h;
+          totalTokens +=
+            inputTokens +
+            outputTokens +
+            cacheCreationTokens +
+            cacheReadTokens +
+            cache5m +
+            cache1h;
         } else {
-          totalTokens += inputTokens + outputTokens + cacheCreationTokens + cacheReadTokens;
+          totalTokens +=
+            inputTokens + outputTokens + cacheCreationTokens + cacheReadTokens;
         }
       }
 
@@ -212,14 +294,15 @@ export class TraceParserService {
       totalCacheCreation5mTokens,
       totalCacheCreation1hTokens,
       // Convert duration from seconds to milliseconds for consistent formatting
-      duration: (lastEntry.response.timestamp - firstEntry.request.timestamp) * 1000,
+      duration:
+        (lastEntry.response.timestamp - firstEntry.request.timestamp) * 1000,
       // Keep timestamps in seconds for metadata (will be converted when creating SessionData)
       startTime: firstEntry.request.timestamp,
       endTime: lastEntry.response.timestamp,
       modelsUsed,
       toolsAvailable,
       toolsUsed,
-      hasErrors
+      hasErrors,
     };
   }
 
@@ -228,7 +311,10 @@ export class TraceParserService {
     return sessionMatch ? sessionMatch[1] : null;
   }
 
-  createSessionData(entries: ClaudeTraceEntry[], filename: string): SessionData {
+  createSessionData(
+    entries: ClaudeTraceEntry[],
+    filename: string
+  ): SessionData {
     const metadata = this.calculateSessionMetadata(entries);
     const sessionId = this.extractSessionId(metadata.userId) || filename;
 
@@ -252,31 +338,37 @@ export class TraceParserService {
       modelsUsed: Array.from(metadata.modelsUsed),
       toolsAvailable: Array.from(metadata.toolsAvailable),
       toolsUsed: Array.from(metadata.toolsUsed),
-      hasErrors: metadata.hasErrors
+      hasErrors: metadata.hasErrors,
     };
   }
 
-  async parseSessionFile(content: string, filename: string): Promise<SessionData> {
+  async parseSessionFile(
+    content: string,
+    filename: string
+  ): Promise<SessionData> {
     const entries = this.parseJsonlContent(content);
     return this.createSessionData(entries, filename);
   }
 
-  async parseSessionStream(stream: ReadableStream<string>, filename: string): Promise<SessionData> {
+  async parseSessionStream(
+    stream: ReadableStream<string>,
+    filename: string
+  ): Promise<SessionData> {
     const entries = await this.parseJsonlStream(stream);
     return this.createSessionData(entries, filename);
   }
 
   parseStreamingResponse(bodyRaw: string): Array<Record<string, unknown>> {
     const events: Array<Record<string, unknown>> = [];
-    const lines = bodyRaw.split('\n');
+    const lines = bodyRaw.split("\n");
 
     for (const line of lines) {
       const trimmed = line.trim();
 
-      if (trimmed.startsWith('data: ')) {
+      if (trimmed.startsWith("data: ")) {
         const data = trimmed.slice(6);
 
-        if (data === '[DONE]') {
+        if (data === "[DONE]") {
           break;
         }
 
@@ -284,7 +376,7 @@ export class TraceParserService {
           const parsed = JSON.parse(data);
           events.push(parsed);
         } catch (error) {
-          console.warn('Failed to parse SSE data:', data, error);
+          console.warn("Failed to parse SSE data:", data, error);
         }
       }
     }
@@ -292,7 +384,9 @@ export class TraceParserService {
     return events;
   }
 
-  reconstructResponseFromStream(bodyRaw: string): Record<string, unknown> | null {
+  reconstructResponseFromStream(
+    bodyRaw: string
+  ): Record<string, unknown> | null {
     const events = this.parseStreamingResponse(bodyRaw);
 
     if (events.length === 0) {
@@ -301,7 +395,7 @@ export class TraceParserService {
 
     const lastEvent = events[events.length - 1];
 
-    if (lastEvent && lastEvent.type === 'message') {
+    if (lastEvent && lastEvent.type === "message") {
       return lastEvent;
     }
 
@@ -311,25 +405,31 @@ export class TraceParserService {
     let messageStart: Record<string, unknown> | null = null;
 
     for (const event of events) {
-      if (event.type === 'message_start' &&
-          typeof event.message === 'object' &&
-          event.message) {
+      if (
+        event.type === "message_start" &&
+        typeof event.message === "object" &&
+        event.message
+      ) {
         messageStart = event.message as Record<string, unknown>;
-      } else if (event.type === 'content_block_delta' &&
-          typeof event.delta === 'object' &&
-          event.delta &&
-          'text' in event.delta &&
-          typeof (event.delta as { text: unknown }).text === 'string') {
+      } else if (
+        event.type === "content_block_delta" &&
+        typeof event.delta === "object" &&
+        event.delta &&
+        "text" in event.delta &&
+        typeof (event.delta as { text: unknown }).text === "string"
+      ) {
         contentPieces.push((event.delta as { text: string }).text);
-      } else if (event.type === 'message_delta' &&
-          typeof event.delta === 'object' &&
-          event.delta &&
-          'stop_reason' in event.delta) {
+      } else if (
+        event.type === "message_delta" &&
+        typeof event.delta === "object" &&
+        event.delta &&
+        "stop_reason" in event.delta
+      ) {
         finalMessage = event.delta as Record<string, unknown>;
-        if (typeof event.usage === 'object' && event.usage) {
+        if (typeof event.usage === "object" && event.usage) {
           usage = event.usage as Record<string, unknown>;
         }
-      } else if (event.type === 'message_stop') {
+      } else if (event.type === "message_stop") {
         if (!finalMessage) {
           finalMessage = {};
         }
@@ -337,9 +437,9 @@ export class TraceParserService {
     }
 
     const reconstructedMessage: Record<string, unknown> = {
-      type: 'message',
-      content: [{ type: 'text', text: contentPieces.join('') }],
-      ...finalMessage
+      type: "message",
+      content: [{ type: "text", text: contentPieces.join("") }],
+      ...finalMessage,
     };
 
     if (messageStart) {
@@ -392,17 +492,28 @@ export class TraceParserService {
 
     if (response.body?.content) {
       for (const contentItem of response.body.content) {
-        if (contentItem.type === 'tool_use' && 'name' in contentItem && typeof contentItem.name === 'string') {
+        if (
+          contentItem.type === "tool_use" &&
+          "name" in contentItem &&
+          typeof contentItem.name === "string"
+        ) {
           toolsUsed.add(contentItem.name);
         }
       }
     } else if (response.body_raw) {
-      const reconstructed = this.reconstructResponseFromStream(response.body_raw);
+      const reconstructed = this.reconstructResponseFromStream(
+        response.body_raw
+      );
       if (reconstructed?.content && Array.isArray(reconstructed.content)) {
         for (const contentItem of reconstructed.content) {
-          if (typeof contentItem === 'object' && contentItem &&
-              'type' in contentItem && contentItem.type === 'tool_use' &&
-              'name' in contentItem && typeof contentItem.name === 'string') {
+          if (
+            typeof contentItem === "object" &&
+            contentItem &&
+            "type" in contentItem &&
+            contentItem.type === "tool_use" &&
+            "name" in contentItem &&
+            typeof contentItem.name === "string"
+          ) {
             toolsUsed.add(contentItem.name);
           }
         }
@@ -410,39 +521,42 @@ export class TraceParserService {
 
       // Also parse SSE events directly to catch tool calls in streaming responses
       const sseToolsUsed = this.extractToolsFromSSEStream(response.body_raw);
-      sseToolsUsed.forEach(tool => toolsUsed.add(tool));
+      sseToolsUsed.forEach((tool) => toolsUsed.add(tool));
     }
 
     return Array.from(toolsUsed);
   }
 
   extractToolsAvailableFromRequest(request: TraceRequest): string[] {
-    return request.body.tools?.map(tool => tool.name) || [];
+    return request.body.tools?.map((tool) => tool.name) || [];
   }
 
   extractToolsFromSSEStream(bodyRaw: string): string[] {
     const toolsUsed = new Set<string>();
-    const lines = bodyRaw.split('\n');
+    const lines = bodyRaw.split("\n");
 
     for (const line of lines) {
       const trimmed = line.trim();
 
-      if (trimmed.startsWith('data: ')) {
+      if (trimmed.startsWith("data: ")) {
         const data = trimmed.slice(6);
 
-        if (data === '[DONE]') {
+        if (data === "[DONE]") {
           break;
         }
 
         try {
           const parsed = JSON.parse(data);
 
-          if (parsed.type === 'content_block_start' &&
-              parsed.content_block?.type === 'tool_use' &&
-              typeof parsed.content_block.name === 'string') {
+          if (
+            parsed.type === "content_block_start" &&
+            parsed.content_block?.type === "tool_use" &&
+            typeof parsed.content_block.name === "string"
+          ) {
             toolsUsed.add(parsed.content_block.name);
           }
         } catch (error) {
+          console.warn("Failed to parse SSE data:", data, error);
           // Ignore parsing errors for individual SSE events
         }
       }
