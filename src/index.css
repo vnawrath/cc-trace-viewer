@@ -1,1 +1,365 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  /* ============================================
+     TYPOGRAPHY SYSTEM
+     ============================================ */
+
+  /* Primary font for headers and UI labels */
+  --font-sans: "DM Sans", system-ui, -apple-system, sans-serif;
+
+  /* Monospace font for data, metrics, and code */
+  --font-mono: "IBM Plex Mono", "Menlo", "Monaco", "Courier New", monospace;
+
+  /* ============================================
+     COLOR PALETTE - TERMINAL DARK AESTHETIC
+     ============================================ */
+
+  /* Base slate backgrounds - deep, professional blacks */
+  --color-base-950: #0a0e14;
+  --color-base-925: #0f1419;
+  --color-base-900: #14181f;
+  --color-base-850: #1a1f27;
+  --color-base-800: #1f2530;
+  --color-base-750: #252b38;
+  --color-base-700: #2d3442;
+  --color-base-600: #3d4557;
+  --color-base-500: #4d5669;
+
+  /* Surface colors for cards and elevated elements */
+  --color-surface-dark: #14181f;
+  --color-surface-medium: #1a1f27;
+  --color-surface-light: #1f2530;
+  --color-surface-elevated: #252b38;
+
+  /* Border colors - subtle, low-contrast */
+  --color-border-subtle: #2d3442;
+  --color-border-default: #3d4557;
+  --color-border-strong: #4d5669;
+
+  /* Text colors - optimized for dark backgrounds */
+  --color-text-primary: #e6edf3;
+  --color-text-secondary: #adbac7;
+  --color-text-tertiary: #768390;
+  --color-text-muted: #545d68;
+
+  /* ============================================
+     SYNTAX HIGHLIGHTING & STATUS COLORS
+     ============================================ */
+
+  /* Success/Positive - Terminal green */
+  --color-success-50: #e6f9f0;
+  --color-success-100: #b3ead6;
+  --color-success-200: #80dcbc;
+  --color-success-300: #4dcda2;
+  --color-success-400: #26c281;
+  --color-success-500: #1db574;
+  --color-success-600: #17a066;
+  --color-success-700: #128b58;
+  --color-success-800: #0d6641;
+  --color-success-900: #084129;
+
+  /* Error/Negative - Terminal red */
+  --color-error-50: #fef2f2;
+  --color-error-100: #fee2e2;
+  --color-error-200: #fecaca;
+  --color-error-300: #fca5a5;
+  --color-error-400: #f87171;
+  --color-error-500: #ef4444;
+  --color-error-600: #dc2626;
+  --color-error-700: #b91c1c;
+  --color-error-800: #991b1b;
+  --color-error-900: #7f1d1d;
+
+  /* Data/Info - Cyan blue */
+  --color-data-50: #ecfeff;
+  --color-data-100: #cffafe;
+  --color-data-200: #a5f3fc;
+  --color-data-300: #67e8f9;
+  --color-data-400: #22d3ee;
+  --color-data-500: #06b6d4;
+  --color-data-600: #0891b2;
+  --color-data-700: #0e7490;
+  --color-data-800: #155e75;
+  --color-data-900: #164e63;
+
+  /* Warning - Amber */
+  --color-warning-50: #fffbeb;
+  --color-warning-100: #fef3c7;
+  --color-warning-200: #fde68a;
+  --color-warning-300: #fcd34d;
+  --color-warning-400: #fbbf24;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-700: #b45309;
+  --color-warning-800: #92400e;
+  --color-warning-900: #78350f;
+
+  /* Highlight/Accent - Purple */
+  --color-accent-50: #faf5ff;
+  --color-accent-100: #f3e8ff;
+  --color-accent-200: #e9d5ff;
+  --color-accent-300: #d8b4fe;
+  --color-accent-400: #c084fc;
+  --color-accent-500: #a855f7;
+  --color-accent-600: #9333ea;
+  --color-accent-700: #7e22ce;
+  --color-accent-800: #6b21a8;
+  --color-accent-900: #581c87;
+
+  /* ============================================
+     COMPACT SPACING SCALE
+     Information-dense layouts
+     ============================================ */
+
+  --spacing-0: 0;
+  --spacing-px: 1px;
+  --spacing-0\.5: 0.125rem;   /* 2px */
+  --spacing-1: 0.25rem;        /* 4px */
+  --spacing-1\.5: 0.375rem;    /* 6px */
+  --spacing-2: 0.5rem;         /* 8px */
+  --spacing-2\.5: 0.625rem;    /* 10px */
+  --spacing-3: 0.75rem;        /* 12px */
+  --spacing-3\.5: 0.875rem;    /* 14px */
+  --spacing-4: 1rem;           /* 16px */
+  --spacing-5: 1.25rem;        /* 20px */
+  --spacing-6: 1.5rem;         /* 24px */
+  --spacing-8: 2rem;           /* 32px */
+  --spacing-10: 2.5rem;        /* 40px */
+  --spacing-12: 3rem;          /* 48px */
+  --spacing-16: 4rem;          /* 64px */
+  --spacing-20: 5rem;          /* 80px */
+  --spacing-24: 6rem;          /* 96px */
+
+  /* ============================================
+     ANIMATION SYSTEM
+     Smooth, professional transitions
+     ============================================ */
+
+  /* Timing functions */
+  --ease-in-out-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
+
+  /* Durations */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+
+  /* Keyframe animations */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-down {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slide-in-left {
+    from {
+      opacity: 0;
+      transform: translateX(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes terminal-blink {
+    0%, 50% {
+      opacity: 1;
+    }
+    51%, 100% {
+      opacity: 0;
+    }
+  }
+
+  /* Animation utilities */
+  --animate-fade-in: fade-in 0.3s ease-in-out;
+  --animate-slide-in-up: slide-in-up 0.3s var(--ease-in-out-smooth);
+  --animate-slide-in-down: slide-in-down 0.3s var(--ease-in-out-smooth);
+  --animate-slide-in-left: slide-in-left 0.3s var(--ease-in-out-smooth);
+  --animate-scale-in: scale-in 0.2s var(--ease-out-back);
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+  --animate-terminal-blink: terminal-blink 1s step-end infinite;
+
+  /* ============================================
+     SHADOW SYSTEM
+     Subtle elevation for dark theme
+     ============================================ */
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.4);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+
+  /* Glow effects for interactive elements */
+  --shadow-glow-success: 0 0 20px rgba(29, 181, 116, 0.3);
+  --shadow-glow-error: 0 0 20px rgba(239, 68, 68, 0.3);
+  --shadow-glow-data: 0 0 20px rgba(6, 182, 212, 0.3);
+  --shadow-glow-accent: 0 0 20px rgba(168, 85, 247, 0.3);
+}
+
+/* ============================================
+   GLOBAL BASE STYLES
+   ============================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--color-base-950);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-base-900);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-base-700);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-base-600);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-base-700) var(--color-base-900);
+}
+
+/* Selection styling */
+::selection {
+  background-color: var(--color-accent-600);
+  color: var(--color-text-primary);
+}
+
+::-moz-selection {
+  background-color: var(--color-accent-600);
+  color: var(--color-text-primary);
+}
+
+/* Focus visible for accessibility */
+:focus-visible {
+  outline: 2px solid var(--color-accent-500);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Monospace data formatting */
+.font-data {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* Terminal-style text glow */
+.text-glow-success {
+  text-shadow: 0 0 8px rgba(29, 181, 116, 0.5);
+}
+
+.text-glow-error {
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.5);
+}
+
+.text-glow-data {
+  text-shadow: 0 0 8px rgba(6, 182, 212, 0.5);
+}
+
+/* Glass morphism for elevated surfaces */
+.glass-surface {
+  background: rgba(20, 24, 31, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(61, 69, 87, 0.3);
+}
+
+/* Subtle grain texture overlay */
+.grain-texture::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: overlay;
+}

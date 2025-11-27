@@ -5,7 +5,7 @@ interface SkeletonProps {
 function Skeleton({ className = '' }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-gray-200 rounded ${className}`}
+      className={`animate-pulse bg-[var(--color-base-800)] rounded ${className}`}
       aria-hidden="true"
     />
   );
@@ -14,38 +14,38 @@ function Skeleton({ className = '' }: SkeletonProps) {
 export function TableSkeleton() {
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-        <table className="min-w-full divide-y divide-gray-300">
-          <thead className="bg-gray-50">
+      <div className="overflow-hidden border border-[var(--color-border-subtle)] rounded-lg">
+        <table className="min-w-full divide-y divide-[var(--color-border-subtle)]">
+          <thead className="bg-[var(--color-base-900)]">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <Skeleton className="h-4 w-20" />
+              <th className="px-4 py-2 text-left text-xs font-medium">
+                <Skeleton className="h-3 w-20" />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <Skeleton className="h-4 w-16" />
+              <th className="px-4 py-2 text-left text-xs font-medium">
+                <Skeleton className="h-3 w-16" />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <Skeleton className="h-4 w-24" />
+              <th className="px-4 py-2 text-left text-xs font-medium">
+                <Skeleton className="h-3 w-24" />
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <Skeleton className="h-4 w-20" />
+              <th className="px-4 py-2 text-left text-xs font-medium">
+                <Skeleton className="h-3 w-20" />
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody className="bg-[var(--color-base-950)] divide-y divide-[var(--color-border-subtle)]">
             {[...Array(5)].map((_, i) => (
               <tr key={i}>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Skeleton className="h-4 w-32" />
+                <td className="px-4 py-2.5 whitespace-nowrap">
+                  <Skeleton className="h-3 w-32" />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Skeleton className="h-4 w-16" />
+                <td className="px-4 py-2.5 whitespace-nowrap">
+                  <Skeleton className="h-3 w-16" />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Skeleton className="h-4 w-40" />
+                <td className="px-4 py-2.5 whitespace-nowrap">
+                  <Skeleton className="h-3 w-40" />
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <Skeleton className="h-4 w-20" />
+                <td className="px-4 py-2.5 whitespace-nowrap">
+                  <Skeleton className="h-3 w-20" />
                 </td>
               </tr>
             ))}
@@ -58,14 +58,14 @@ export function TableSkeleton() {
 
 export function CardSkeleton() {
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <div className="space-y-4">
-        <Skeleton className="h-6 w-3/4" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-2/3" />
+    <div className="bg-[var(--color-base-900)] border border-[var(--color-border-subtle)] rounded-lg p-4">
+      <div className="space-y-3">
+        <Skeleton className="h-5 w-3/4" />
+        <Skeleton className="h-3 w-full" />
+        <Skeleton className="h-3 w-2/3" />
         <div className="space-y-2">
-          <Skeleton className="h-4 w-1/2" />
-          <Skeleton className="h-4 w-1/3" />
+          <Skeleton className="h-3 w-1/2" />
+          <Skeleton className="h-3 w-1/3" />
         </div>
       </div>
     </div>
@@ -74,28 +74,28 @@ export function CardSkeleton() {
 
 export function DetailSkeleton() {
   return (
-    <div className="space-y-6">
-      <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
-        <div className="px-6 py-4">
-          <Skeleton className="h-6 w-48" />
+    <div className="space-y-4">
+      <div className="bg-[var(--color-base-900)] border border-[var(--color-border-subtle)] rounded-lg divide-y divide-[var(--color-border-subtle)]">
+        <div className="px-4 py-3">
+          <Skeleton className="h-5 w-48" />
         </div>
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-4 py-3 space-y-3">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="flex justify-between">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-48" />
+              <Skeleton className="h-3 w-32" />
+              <Skeleton className="h-3 w-48" />
             </div>
           ))}
         </div>
       </div>
-      <div className="bg-white shadow rounded-lg divide-y divide-gray-200">
-        <div className="px-6 py-4">
-          <Skeleton className="h-6 w-32" />
+      <div className="bg-[var(--color-base-900)] border border-[var(--color-border-subtle)] rounded-lg divide-y divide-[var(--color-border-subtle)]">
+        <div className="px-4 py-3">
+          <Skeleton className="h-5 w-32" />
         </div>
-        <div className="px-6 py-4">
+        <div className="px-4 py-3">
           <div className="space-y-2">
             {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-4 w-full" />
+              <Skeleton key={i} className="h-3 w-full" />
             ))}
           </div>
         </div>

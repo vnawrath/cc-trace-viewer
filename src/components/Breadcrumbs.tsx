@@ -49,13 +49,13 @@ export function Breadcrumbs() {
   }
 
   return (
-    <nav className="flex mb-6" aria-label="Breadcrumb">
-      <ol className="inline-flex items-center space-x-1 md:space-x-3">
+    <nav className="flex mb-3" aria-label="Breadcrumb">
+      <ol className="inline-flex items-center gap-1">
         {breadcrumbs.map((breadcrumb, index) => (
           <li key={index} className="inline-flex items-center">
             {index > 0 && (
               <svg
-                className="w-3 h-3 text-gray-400 mx-1"
+                className="w-2.5 h-2.5 text-[var(--color-text-muted)] mx-1"
                 aria-hidden="true"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -73,11 +73,11 @@ export function Breadcrumbs() {
             {breadcrumb.href ? (
               <Link
                 to={breadcrumb.href}
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs font-medium text-[var(--color-text-tertiary)] hover:text-[var(--color-data-400)] transition-colors duration-200"
               >
                 {index === 0 && (
                   <svg
-                    className="w-3 h-3 mr-2.5"
+                    className="w-2.5 h-2.5 mr-1.5"
                     aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="currentColor"
@@ -89,7 +89,7 @@ export function Breadcrumbs() {
                 {breadcrumb.label}
               </Link>
             ) : (
-              <span className="text-sm font-medium text-gray-500">
+              <span className="text-xs font-medium text-[var(--color-text-secondary)] font-mono">
                 {breadcrumb.label}
               </span>
             )}

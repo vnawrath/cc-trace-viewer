@@ -8,14 +8,14 @@ export function Navigation() {
   };
 
   const linkClass = (path: string) =>
-    `px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+    `px-2 py-1 rounded text-xs font-medium transition-all duration-200 ${
       isActive(path)
-        ? 'bg-blue-100 text-blue-700 shadow-sm'
-        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100 active:bg-gray-200'
+        ? 'bg-[var(--color-accent-600)] text-[var(--color-text-primary)] shadow-[var(--shadow-glow-accent)]'
+        : 'text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-surface-medium)]'
     }`;
 
   return (
-    <nav className="flex space-x-4">
+    <nav className="flex gap-2">
       <Link to="/" className={linkClass('/')}>
         Home
       </Link>

@@ -26,42 +26,42 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-gray-50 px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8">
+        <div className="min-h-screen bg-[var(--color-base-950)] px-4 py-16 sm:px-6 sm:py-24 md:grid md:place-items-center lg:px-8">
           <div className="mx-auto max-w-max">
-            <main className="sm:flex">
-              <p className="text-4xl font-bold tracking-tight text-red-600 sm:text-5xl">
+            <main className="sm:flex items-center gap-6">
+              <p className="text-6xl font-bold font-mono text-[var(--color-error-500)] sm:text-7xl">
                 Error
               </p>
-              <div className="sm:ml-6">
-                <div className="sm:border-l sm:border-gray-200 sm:pl-6">
-                  <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">
+              <div>
+                <div className="sm:border-l sm:border-[var(--color-border-subtle)] sm:pl-6">
+                  <h1 className="text-3xl font-bold tracking-tight text-[var(--color-text-primary)] sm:text-4xl">
                     Something went wrong
                   </h1>
-                  <p className="mt-1 text-base text-gray-500">
+                  <p className="mt-2 text-sm text-[var(--color-text-tertiary)]">
                     An unexpected error occurred while loading this page.
                   </p>
                 </div>
-                <div className="mt-10 flex space-x-3 sm:border-l sm:border-transparent sm:pl-6">
+                <div className="mt-8 flex gap-3 sm:border-l sm:border-transparent sm:pl-6">
                   <button
                     onClick={() => window.location.reload()}
-                    className="inline-flex items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="inline-flex items-center rounded px-4 py-2 text-sm font-medium text-[var(--color-text-primary)] bg-[var(--color-accent-600)] hover:bg-[var(--color-accent-700)] transition-colors duration-200"
                   >
                     Reload page
                   </button>
                   <button
                     onClick={() => (window.location.href = '/')}
-                    className="inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    className="inline-flex items-center rounded px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] border border-[var(--color-border-default)] hover:bg-[var(--color-surface-medium)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
                   >
                     Go home
                   </button>
                 </div>
                 {this.state.error && (
                   <div className="mt-6 sm:border-l sm:border-transparent sm:pl-6">
-                    <details className="text-sm text-gray-600">
-                      <summary className="cursor-pointer font-medium">
+                    <details className="text-sm text-[var(--color-text-secondary)]">
+                      <summary className="cursor-pointer font-medium hover:text-[var(--color-text-primary)]">
                         Error details
                       </summary>
-                      <pre className="mt-2 whitespace-pre-wrap bg-gray-100 p-2 rounded text-xs">
+                      <pre className="mt-2 whitespace-pre-wrap bg-[var(--color-base-900)] border border-[var(--color-border-subtle)] p-3 rounded text-xs font-mono text-[var(--color-error-400)]">
                         {this.state.error.message}
                         {this.state.error.stack}
                       </pre>

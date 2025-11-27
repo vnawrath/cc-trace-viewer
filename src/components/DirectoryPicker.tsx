@@ -16,10 +16,8 @@ export function DirectoryPicker({
   isLoading = false,
   selectedDirectory,
   isRestoring = false,
-  onRestoreDirectory
 }: DirectoryPickerProps) {
   const [isSelecting, setIsSelecting] = useState(false);
-  const [hasSavedDirectory, setHasSavedDirectory] = useState(false);
 
   const handleSelectDirectory = useCallback(async () => {
     setIsSelecting(true);
@@ -42,19 +40,6 @@ export function DirectoryPicker({
       setIsSelecting(false);
     }
   }, [onDirectorySelected, onError]);
-
-  const handleRestoreDirectory = useCallback(async () => {
-    if (!onRestoreDirectory) return;
-    
-    setIsSelecting(true);
-    try {
-      await onRestoreDirectory();
-    } catch (error) {
-      onError((error as Error).message);
-    } finally {
-      setIsSelecting(false);
-    }
-  }, [onRestoreDirectory, onError]);
 
   const isDisabled = isLoading || isSelecting || isRestoring;
 
