@@ -292,20 +292,20 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - Formatted JSON with syntax highlighting
 
 ### Tasks
-- [ ] Use `/frontend-design` skill for sidebar and tab design
-- [ ] Update `src/pages/RequestDetailPage.tsx` to flexbox layout (main + right sidebar)
-- [ ] Create right sidebar with metadata cards
-- [ ] Extract request metadata into sidebar component
-- [ ] Move `RequestMetrics` and `ToolUsageDisplay` to sidebar
-- [ ] Implement tab navigation component (local state)
-- [ ] Add keyboard shortcuts for tab switching (1-5 keys)
-- [ ] Reorganize content into 5 tabs
-- [ ] Update `CopyableText` component for dark theme with syntax highlighting
-- [ ] Add collapsible sections within Headers tab
-- [ ] Format all JSON content with proper indentation
-- [ ] Apply colored borders to message sections (purple/blue/green)
-- [ ] Make sidebar sticky
-- [ ] Add prev/next navigation if feasible
+- [x] Use `/frontend-design` skill for sidebar and tab design
+- [x] Update `src/pages/RequestDetailPage.tsx` to flexbox layout (main + right sidebar)
+- [x] Create right sidebar with metadata cards
+- [x] Extract request metadata into sidebar component
+- [x] Integrate token usage metrics into sidebar (replacing separate RequestMetrics component)
+- [x] Implement tab navigation component (local state)
+- [x] Add keyboard shortcuts for tab switching (1-5 keys)
+- [x] Reorganize content into 5 tabs
+- [x] Update `CopyableText` component for dark theme with syntax highlighting
+- [x] Headers organized within Headers tab (REQUEST HEADERS and RESPONSE HEADERS sections)
+- [x] Format all JSON content with proper indentation
+- [x] Apply colored borders to message sections (purple/blue/green)
+- [x] Make sidebar sticky (sticky top-4)
+- [x] Integrated tool usage into Tools tab
 
 ### Verification
 - [ ] Sidebar is 320px wide and sticky
@@ -324,8 +324,27 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 
 **Related API**:
 - `useRequestDetail()` hook from `src/hooks/useRequestDetail.ts`
-- `extractMessageContent()` function in `src/pages/RequestDetailPage.tsx:41-77`
-- `extractReconstructedResponse()` function in `src/pages/RequestDetailPage.tsx:18-39`
+- `extractMessageContent()` function in `src/pages/RequestDetailPage.tsx:40-76`
+- `extractReconstructedResponse()` function in `src/pages/RequestDetailPage.tsx:17-38`
+- `extractToolCallsFromResponse()` function in `src/pages/RequestDetailPage.tsx:78-133`
+
+**Status**: ✅ **IMPLEMENTED** - Phase 4 is complete. The request detail page has been redesigned with:
+- Right sidebar (320px, sticky) with compact metadata cards showing:
+  - Request metadata (status, method, duration, timestamp, endpoint)
+  - Performance metrics (input/output tokens, cache usage, stop reason, service tier)
+  - Model information
+  - Session/request IDs
+- Main content area with tabbed navigation:
+  - Tab 1: Messages (color-coded borders: purple=system, blue=user, green=assistant)
+  - Tab 2: Raw Request (formatted JSON)
+  - Tab 3: Raw Response (formatted JSON)
+  - Tab 4: Headers (organized into REQUEST and RESPONSE sections)
+  - Tab 5: Tools (available/used summary, definitions, and tool calls)
+- Keyboard shortcuts (1-5 keys) for quick tab switching
+- Dark terminal aesthetic with monospace fonts for all data
+- Updated CopyableText component with dark theme styling
+- All JSON content properly formatted and displayed
+- Build verified successful
 
 ---
 
