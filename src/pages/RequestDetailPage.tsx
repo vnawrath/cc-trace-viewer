@@ -4,6 +4,7 @@ import { CopyableText } from '../components/CopyableText';
 import { RequestMetrics } from '../components/RequestMetrics';
 import { ToolUsageDisplay } from '../components/ToolUsageDisplay';
 import { useRequestDetail } from '../hooks/useRequestDetail';
+import { useDirectory } from '../contexts/DirectoryContext';
 import { traceParserService } from '../services/traceParser';
 import type { TraceResponse } from '../types/trace';
 
@@ -80,6 +81,51 @@ export function RequestDetailPage() {
   const sessionId = params.sessionId!;
   const requestId = params.requestId!;
   const { request, loading, error } = useRequestDetail(sessionId, requestId);
+  const { isDirectorySelected, isRestoring } = useDirectory();
+
+  // Show restoration message
+  if (isRestoring) {
+    return (
+      <>
+        <DocumentHead title={`Request ${requestId} - Session ${sessionId}`} description={`Detailed view of request ${requestId} in session ${sessionId}`} />
+        <div className="flex items-center justify-center min-h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Restoring directory...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // Show no directory message
+  if (!isDirectorySelected) {
+    return (
+      <>
+        <DocumentHead title={`Request ${requestId} - Session ${sessionId}`} description={`Detailed view of request ${requestId} in session ${sessionId}`} />
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="text-center">
+            <div className="p-3 bg-orange-100 text-orange-600 rounded-full inline-block mb-4">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">No Directory Selected</h2>
+            <p className="text-gray-600 mb-4">Please select a .claude-trace directory to view request details.</p>
+            <Link
+              to="/"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <svg className="mr-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              Go to Home Page
+            </Link>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   if (loading) {
     return (

@@ -6,15 +6,20 @@ interface DirectoryPickerProps {
   onError: (error: string) => void;
   isLoading?: boolean;
   selectedDirectory?: string | null;
+  isRestoring?: boolean;
+  onRestoreDirectory?: () => Promise<boolean>;
 }
 
 export function DirectoryPicker({
   onDirectorySelected,
   onError,
   isLoading = false,
-  selectedDirectory
+  selectedDirectory,
+  isRestoring = false,
+  onRestoreDirectory
 }: DirectoryPickerProps) {
   const [isSelecting, setIsSelecting] = useState(false);
+  const [hasSavedDirectory, setHasSavedDirectory] = useState(false);
 
   const handleSelectDirectory = useCallback(async () => {
     setIsSelecting(true);
@@ -38,7 +43,20 @@ export function DirectoryPicker({
     }
   }, [onDirectorySelected, onError]);
 
-  const isDisabled = isLoading || isSelecting;
+  const handleRestoreDirectory = useCallback(async () => {
+    if (!onRestoreDirectory) return;
+    
+    setIsSelecting(true);
+    try {
+      await onRestoreDirectory();
+    } catch (error) {
+      onError((error as Error).message);
+    } finally {
+      setIsSelecting(false);
+    }
+  }, [onRestoreDirectory, onError]);
+
+  const isDisabled = isLoading || isSelecting || isRestoring;
 
   return (
     <div className="space-y-4">
@@ -50,6 +68,25 @@ export function DirectoryPicker({
           Choose a .claude-trace directory containing your Claude API logs to analyze your usage patterns and request history.
         </p>
       </div>
+
+      {isRestoring && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto">
+          <div className="flex items-center space-x-3">
+            <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-blue-900">
+                Restoring previous directory...
+              </p>
+              <p className="text-xs text-blue-700">
+                Loading your saved .claude-trace directory
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col items-center space-y-4">
         {selectedDirectory && (
@@ -83,7 +120,15 @@ export function DirectoryPicker({
             transition-all duration-200
           `}
         >
-          {isSelecting ? (
+          {isRestoring ? (
+            <>
+              <svg className="animate-spin -ml-1 mr-3 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Restoring...
+            </>
+          ) : isSelecting ? (
             <>
               <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { sessionManagerService } from '../services/sessionManager';
 import type { ClaudeTraceEntry } from '../types/trace';
+import { useDirectory } from '../contexts/DirectoryContext';
 
 export interface UseRequestDetailReturn {
   request: ClaudeTraceEntry | null;
@@ -13,6 +14,9 @@ export function useRequestDetail(sessionId: string, requestId: string): UseReque
   const [request, setRequest] = useState<ClaudeTraceEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Directory context for restoration state
+  const { restorationAttempted, isDirectorySelected } = useDirectory();
 
   const loadRequestData = async () => {
     try {
@@ -42,9 +46,12 @@ export function useRequestDetail(sessionId: string, requestId: string): UseReque
     }
   };
 
+  // Wait for directory restoration before loading data
   useEffect(() => {
-    loadRequestData();
-  }, [sessionId, requestId]);
+    if (restorationAttempted && isDirectorySelected) {
+      loadRequestData();
+    }
+  }, [sessionId, requestId, restorationAttempted, isDirectorySelected]);
 
   const refreshData = async () => {
     sessionManagerService.clearCache();

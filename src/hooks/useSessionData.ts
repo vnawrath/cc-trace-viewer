@@ -2,13 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import type { SessionData } from '../types/trace';
 import type { SessionSummary } from '../services/sessionManager';
 import { sessionManagerService } from '../services/sessionManager';
-import { fileSystemService } from '../services/fileSystem';
+import { useDirectory } from '../contexts/DirectoryContext';
 
 export interface UseSessionDataReturn {
-  // Directory state
-  selectedDirectory: string | null;
-  isDirectorySelected: boolean;
-
   // Session discovery
   sessions: SessionSummary[];
   isDiscoveringSessions: boolean;
@@ -20,16 +16,14 @@ export interface UseSessionDataReturn {
   sessionLoadError: string | null;
 
   // Actions
-  selectDirectory: (handle: FileSystemDirectoryHandle) => Promise<void>;
   refreshSessions: () => Promise<void>;
   loadSession: (sessionId: string) => Promise<SessionData>;
   clearError: () => void;
 }
 
 export function useSessionData(): UseSessionDataReturn {
-  // Directory state
-  const [selectedDirectory, setSelectedDirectory] = useState<string | null>(null);
-  const [directoryHandle, setDirectoryHandle] = useState<FileSystemDirectoryHandle | null>(null);
+  // Get directory state from context
+  const { directoryHandle, isDirectorySelected } = useDirectory();
 
   // Session discovery state
   const [sessions, setSessions] = useState<SessionSummary[]>([]);
@@ -41,39 +35,10 @@ export function useSessionData(): UseSessionDataReturn {
   const [isLoadingSession, setIsLoadingSession] = useState(false);
   const [sessionLoadError, setSessionLoadError] = useState<string | null>(null);
 
-  // Select directory and discover sessions
-  const selectDirectory = useCallback(async (handle: FileSystemDirectoryHandle) => {
-    try {
-      // Update directory state
-      setDirectoryHandle(handle);
-      setSelectedDirectory(handle.name);
-
-      // Clear previous state
-      setSessions([]);
-      setLoadedSession(null);
-      setDiscoveryError(null);
-      setSessionLoadError(null);
-
-      // Update services
-      fileSystemService.setCurrentDirectory(handle);
-      sessionManagerService.setCurrentDirectory(handle);
-
-      // Start discovering sessions
-      setIsDiscoveringSessions(true);
-      const discoveredSessions = await sessionManagerService.discoverSessions();
-      setSessions(discoveredSessions);
-    } catch (error) {
-      setDiscoveryError((error as Error).message);
-      setSessions([]);
-    } finally {
-      setIsDiscoveringSessions(false);
-    }
-  }, []);
-
-  // Refresh session list
-  const refreshSessions = useCallback(async () => {
+  // Discover sessions when directory changes
+  const discoverSessions = useCallback(async () => {
     if (!directoryHandle) {
-      setDiscoveryError('No directory selected');
+      setSessions([]);
       return;
     }
 
@@ -85,10 +50,25 @@ export function useSessionData(): UseSessionDataReturn {
       setSessions(discoveredSessions);
     } catch (error) {
       setDiscoveryError((error as Error).message);
+      setSessions([]);
     } finally {
       setIsDiscoveringSessions(false);
     }
   }, [directoryHandle]);
+
+  // Discover sessions when directory is selected or changes
+  useEffect(() => {
+    if (isDirectorySelected) {
+      discoverSessions();
+    } else {
+      setSessions([]);
+    }
+  }, [isDirectorySelected, discoverSessions]);
+
+  // Refresh session list
+  const refreshSessions = useCallback(async () => {
+    await discoverSessions();
+  }, [discoverSessions]);
 
   // Load individual session data
   const loadSession = useCallback(async (sessionId: string): Promise<SessionData> => {
@@ -114,23 +94,7 @@ export function useSessionData(): UseSessionDataReturn {
     setSessionLoadError(null);
   }, []);
 
-  // Initialize from current directory if available
-  useEffect(() => {
-    const currentDirectory = sessionManagerService.getCurrentDirectory();
-    if (currentDirectory) {
-      setDirectoryHandle(currentDirectory);
-      setSelectedDirectory(currentDirectory.name);
-
-      // Auto-discover sessions if we have a directory
-      refreshSessions();
-    }
-  }, [refreshSessions]);
-
   return {
-    // Directory state
-    selectedDirectory,
-    isDirectorySelected: Boolean(directoryHandle),
-
     // Session discovery
     sessions,
     isDiscoveringSessions,
@@ -142,10 +106,9 @@ export function useSessionData(): UseSessionDataReturn {
     sessionLoadError,
 
     // Actions
-    selectDirectory,
     refreshSessions,
     loadSession,
-    clearError
+    clearError,
   };
 }
 

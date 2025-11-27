@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fileSystemService } from '../services/fileSystem';
+import { useDirectory } from '../contexts/DirectoryContext';
 import type { SessionData, ParsedSession } from '../types/trace';
 import { traceParserService } from '../services/traceParser';
 
 interface UseFileSystemState {
-  directoryHandle: FileSystemDirectoryHandle | null;
   directoryInfo: {
     name: string;
     jsonlFileCount: number;
@@ -21,19 +21,20 @@ interface UseFileSystemState {
 
 interface UseFileSystemActions {
   selectDirectory: () => Promise<void>;
-  clearDirectory: () => void;
   refreshSessions: () => Promise<void>;
   loadSessionData: (sessionId: string) => Promise<SessionData | null>;
 }
 
 export function useFileSystem(): UseFileSystemState & UseFileSystemActions {
+  // Get directory from context
+  const { directoryHandle, selectDirectory: selectDir } = useDirectory();
+
   const [state, setState] = useState<UseFileSystemState>({
-    directoryHandle: null,
     directoryInfo: null,
     sessions: [],
     isLoading: false,
     error: null,
-    browserSupport: { supported: true }
+    browserSupport: { supported: true },
   });
 
   const checkBrowserSupport = useCallback(async () => {
@@ -94,9 +95,11 @@ export function useFileSystem(): UseFileSystemState & UseFileSystemActions {
         return;
       }
 
+      // Use context to set the directory
+      await selectDir(handle);
+
       setState(prev => ({
         ...prev,
-        directoryHandle: handle,
         directoryInfo: info,
         isLoading: false
       }));
@@ -109,27 +112,18 @@ export function useFileSystem(): UseFileSystemState & UseFileSystemActions {
         error: (error as Error).message
       }));
     }
-  }, [discoverSessions]);
+  }, [discoverSessions, selectDir]);
 
-  const clearDirectory = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      directoryHandle: null,
-      directoryInfo: null,
-      sessions: [],
-      error: null
-    }));
-  }, []);
 
   const refreshSessions = useCallback(async () => {
-    if (!state.directoryHandle) {
+    if (!directoryHandle) {
       return;
     }
 
     setState(prev => ({ ...prev, isLoading: true, error: null }));
 
     try {
-      await discoverSessions(state.directoryHandle);
+      await discoverSessions(directoryHandle);
     } catch (error) {
       setState(prev => ({
         ...prev,
@@ -138,10 +132,10 @@ export function useFileSystem(): UseFileSystemState & UseFileSystemActions {
     } finally {
       setState(prev => ({ ...prev, isLoading: false }));
     }
-  }, [state.directoryHandle, discoverSessions]);
+  }, [directoryHandle, discoverSessions]);
 
   const loadSessionData = useCallback(async (sessionId: string): Promise<SessionData | null> => {
-    if (!state.directoryHandle) {
+    if (!directoryHandle) {
       throw new Error('No directory selected');
     }
 
@@ -151,7 +145,7 @@ export function useFileSystem(): UseFileSystemState & UseFileSystemActions {
     }
 
     try {
-      const jsonlFiles = await fileSystemService.findJsonlFiles(state.directoryHandle);
+      const jsonlFiles = await fileSystemService.findJsonlFiles(directoryHandle);
       const fileHandle = jsonlFiles.find(f => f.name === session.filePath);
 
       if (!fileHandle) {
@@ -163,30 +157,17 @@ export function useFileSystem(): UseFileSystemState & UseFileSystemActions {
     } catch (error) {
       throw new Error(`Failed to load session data: ${(error as Error).message}`);
     }
-  }, [state.directoryHandle, state.sessions]);
+  }, [directoryHandle, state.sessions]);
+
 
   useEffect(() => {
     checkBrowserSupport();
   }, [checkBrowserSupport]);
 
-  useEffect(() => {
-    const current = fileSystemService.getCurrentDirectory();
-    if (current && !state.directoryHandle) {
-      setState(prev => ({ ...prev, directoryHandle: current }));
-      fileSystemService.getDirectoryInfo(current).then(info => {
-        setState(prev => ({ ...prev, directoryInfo: info }));
-        if (info.isClaudeTraceDirectory) {
-          discoverSessions(current);
-        }
-      });
-    }
-  }, [state.directoryHandle, discoverSessions]);
-
   return {
     ...state,
     selectDirectory,
-    clearDirectory,
     refreshSessions,
-    loadSessionData
+    loadSessionData,
   };
 }

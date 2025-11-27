@@ -3,19 +3,27 @@ import { DocumentHead } from '../components/DocumentHead';
 import { DirectoryPicker, BrowserUnsupportedMessage } from '../components/DirectoryPicker';
 import { SessionCard, SessionCardSkeleton } from '../components/SessionCard';
 import { useSessionData } from '../hooks/useSessionData';
+import { useDirectory } from '../contexts/DirectoryContext';
 import { fileSystemService } from '../services/fileSystem';
 
 export function HomePage() {
   const {
-    selectedDirectory,
-    isDirectorySelected,
     sessions,
     isDiscoveringSessions,
     discoveryError,
-    selectDirectory,
     refreshSessions,
-    clearError
+    clearError,
   } = useSessionData();
+
+  const {
+    directoryName,
+    isDirectorySelected,
+    isRestoring,
+    selectDirectory: selectDir,
+    clearDirectory,
+    restoreSavedDirectory,
+    error: directoryError
+  } = useDirectory();
 
   const [browserSupport, setBrowserSupport] = useState<{
     supported: boolean;
@@ -33,12 +41,13 @@ export function HomePage() {
   }, []);
 
   useEffect(() => {
-    setError(discoveryError);
-  }, [discoveryError]);
+    // Combine errors from both discovery and directory
+    setError(discoveryError || directoryError);
+  }, [discoveryError, directoryError]);
 
   const handleDirectorySelected = async (handle: FileSystemDirectoryHandle) => {
     try {
-      await selectDirectory(handle);
+      await selectDir(handle);
       clearError();
       setError(null);
     } catch (error) {
@@ -50,9 +59,10 @@ export function HomePage() {
     setError(errorMessage);
   };
 
-  const handleClearDirectory = () => {
+  const handleClearDirectory = async () => {
     setError(null);
     clearError();
+    await clearDirectory();
   };
 
   if (!browserSupport.supported) {
@@ -105,7 +115,9 @@ export function HomePage() {
             onDirectorySelected={handleDirectorySelected}
             onError={handleError}
             isLoading={isDiscoveringSessions}
-            selectedDirectory={selectedDirectory}
+            selectedDirectory={directoryName}
+            isRestoring={isRestoring}
+            onRestoreDirectory={restoreSavedDirectory}
           />
         ) : (
           <div>
@@ -115,7 +127,7 @@ export function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-5l-2-2H5a2 2 0 00-2 2z" />
                 </svg>
                 <span className="text-lg font-semibold text-gray-900">
-                  {selectedDirectory}
+                  {directoryName}
                 </span>
                 <span className="ml-2 text-sm text-gray-500">
                   ({sessions.length} sessions found)

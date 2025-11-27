@@ -101,9 +101,16 @@ export class SessionManagerService {
       throw new Error('No directory selected');
     }
 
-    const summary = this.sessionSummaryCache.get(sessionId);
+    // Check if session is in cache, if not, discover sessions first
+    let summary = this.sessionSummaryCache.get(sessionId);
     if (!summary) {
-      throw new Error(`Session ${sessionId} not found`);
+      // Session not in cache, discover all sessions
+      await this.discoverSessions();
+      // Try again after discovery
+      summary = this.sessionSummaryCache.get(sessionId);
+      if (!summary) {
+        throw new Error(`Session ${sessionId} not found`);
+      }
     }
 
     const jsonlFiles = await fileSystemService.findJsonlFiles(this.currentDirectory);

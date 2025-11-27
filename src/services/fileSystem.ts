@@ -1,4 +1,3 @@
-
 export class FileSystemService {
   private directoryHandle: FileSystemDirectoryHandle | null = null;
 
@@ -20,6 +19,46 @@ export class FileSystemService {
         throw new Error('Directory selection was cancelled');
       }
       throw new Error(`Failed to select directory: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Check permission status for a directory handle
+   */
+  async checkPermission(handle: FileSystemDirectoryHandle): Promise<PermissionState> {
+    try {
+      const permission = await handle.queryPermission({ mode: 'read' });
+      return permission;
+    } catch (error) {
+      // If queryPermission fails, the handle might be stale
+      return 'prompt';
+    }
+  }
+
+  /**
+   * Request permission for a directory handle
+   * This may show a permission prompt to the user
+   */
+  async requestPermission(handle: FileSystemDirectoryHandle): Promise<PermissionState> {
+    try {
+      const permission = await handle.requestPermission({ mode: 'read' });
+      return permission;
+    } catch (error) {
+      throw new Error(`Failed to request permission: ${(error as Error).message}`);
+    }
+  }
+
+  /**
+   * Verify that a handle is still valid by attempting to access it
+   */
+  async verifyHandleValid(handle: FileSystemDirectoryHandle): Promise<boolean> {
+    try {
+      // Try to iterate the directory (without consuming the iterator)
+      const iterator = handle.entries();
+      await iterator.next();
+      return true;
+    } catch (error) {
+      return false;
     }
   }
 
@@ -141,5 +180,11 @@ declare global {
 
   interface FileSystemDirectoryHandle {
     entries(): AsyncIterableIterator<[string, FileSystemHandle]>;
+    queryPermission(descriptor?: FileSystemHandlePermissionDescriptor): Promise<PermissionState>;
+    requestPermission(descriptor?: FileSystemHandlePermissionDescriptor): Promise<PermissionState>;
+  }
+
+  interface FileSystemHandlePermissionDescriptor {
+    mode?: 'read' | 'readwrite';
   }
 }

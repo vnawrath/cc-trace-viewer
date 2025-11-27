@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { sessionManagerService } from '../services/sessionManager';
 import { requestAnalyzerService, type RequestMetrics, type RequestFilters, type SortField, type SortDirection } from '../services/requestAnalyzer';
 import type { SessionData } from '../types/trace';
+import { useDirectory } from '../contexts/DirectoryContext';
 
 export interface UseRequestListReturn {
   // Data state
@@ -46,6 +47,9 @@ export function useRequestList(sessionId: string): UseRequestListReturn {
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Directory context for restoration state
+  const { restorationAttempted, isDirectorySelected } = useDirectory();
 
   // Filter and sort state
   const [filters, setFilters] = useState<Partial<RequestFilters>>({});
@@ -100,10 +104,12 @@ export function useRequestList(sessionId: string): UseRequestListReturn {
     }
   };
 
-  // Initial load
+  // Initial load - wait for directory restoration before loading data
   useEffect(() => {
-    loadSessionData();
-  }, [sessionId]);
+    if (restorationAttempted && isDirectorySelected) {
+      loadSessionData();
+    }
+  }, [sessionId, restorationAttempted, isDirectorySelected]);
 
   const setSort = (field: SortField, direction: SortDirection) => {
     setSortField(field);
