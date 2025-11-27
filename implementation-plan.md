@@ -5,6 +5,7 @@
 This plan redesigns the CC Trace Viewer as a professional, information-dense debugging tool with a **Data Terminal Aesthetic**. The design draws inspiration from IDE/terminal interfaces with maximum data density, dark mode throughout, and progressive disclosure patterns.
 
 ### Design Principles
+
 - **Whitespace is the enemy**: Maximize visible information per screen
 - **Dark mode first**: Slate-based color scheme (gray-950/900/800 backgrounds)
 - **Professional/utilitarian**: Terminal-inspired with monospace fonts for data
@@ -13,6 +14,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - **Tailwind CSS v4 exclusive**: Use @theme directive for custom colors, fonts, and animations
 
 ### Key Design Decisions
+
 - Right sidebar for metadata (keeps main content left-aligned)
 - Very compact tables with minimal padding and small monospace fonts
 - Oldest requests first (ascending timestamp sort)
@@ -26,11 +28,13 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 **Goal**: Establish the dark theme foundation, typography system, and core color palette using Tailwind CSS v4's @theme directive.
 
 ### Context & Files
+
 - **Global CSS**: `src/index.css` - Define @theme configuration
 - **Layout**: `src/layouts/AppLayout.tsx` - Apply dark background
 - **Components affected**: All components will inherit the new theme
 
 ### Tasks
+
 - [x] Use `/frontend-design` skill to design the dark theme color palette
 - [x] Configure @theme directive in `src/index.css` with:
   - Custom color palette (slate-based with syntax colors: green for success, red for errors, cyan for data, amber for warnings, purple for highlights)
@@ -48,6 +52,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - [x] Test build to ensure no TypeScript or build errors
 
 ### Verification
+
 - [x] All pages have dark backgrounds with no white flashes
 - [x] Typography is legible with proper contrast ratios (WCAG AA)
 - [x] Navigation is compact and doesn't waste vertical space
@@ -58,6 +63,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 **Files**: `src/index.css`, `src/layouts/AppLayout.tsx`, `src/components/Header.tsx`, `src/components/Navigation.tsx`, `src/components/Breadcrumbs.tsx`, `src/pages/NotFoundPage.tsx`, `src/components/LoadingSkeleton.tsx`, `src/components/ErrorBoundary.tsx`
 
 **Status**: ✅ **COMPLETED** - Phase 1 is complete. The dark terminal aesthetic foundation has been established with:
+
 - Comprehensive Tailwind CSS v4 @theme configuration with terminal-inspired colors
 - IBM Plex Mono for data/code, DM Sans for UI text
 - Compact spacing scale and smooth animation keyframes
@@ -73,17 +79,20 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 **Goal**: Convert the card-based session list into a dense, sortable table showing maximum information density.
 
 ### Context & Files
+
 - **Page**: `src/pages/HomePage.tsx:79-209` - Main session list UI
 - **Component**: `src/components/SessionCard.tsx` - Convert to table row
 - **Hook**: `src/hooks/useSessionData.ts` - Add sorting logic
 - **Types**: `src/types/trace.ts:95-117` - SessionMetadata structure
 
 ### Current Implementation
+
 - Grid of cards with large spacing
 - Each card shows: session ID, status icon, start time, request count, tokens, duration, token breakdown, model badges, tool badges
 - Cards are clickable links to session detail
 
 ### New Design
+
 - Dense HTML table with sortable columns
 - Columns: Status (dot), Session ID (truncated), Start Time, Requests, Total Tokens (with input/output as subtext), Duration, Models (comma-separated), Tools Used (count with hover), Errors (count)
 - Row height: ~32px with small text (text-xs/text-sm)
@@ -94,6 +103,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - No "How It Works" section at bottom (info density priority)
 
 ### Tasks
+
 - [x] Use `/frontend-design` skill for table design
 - [x] Update `src/pages/HomePage.tsx` to replace card grid with `<table>` element
 - [x] Create table header with sortable columns (click to sort)
@@ -108,6 +118,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - [x] Remove "How It Works" section
 
 ### Verification
+
 - [ ] Table displays all sessions with maximum 10+ visible rows on 1080p screen
 - [ ] All columns are sortable (click header to toggle asc/desc)
 - [ ] Hover row shows elevated state and tooltip
@@ -120,6 +131,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 **Files**: `src/pages/HomePage.tsx`, `src/components/SessionTable.tsx` (new component)
 
 **Related API**:
+
 - `useSessionData()` hook from `src/hooks/useSessionData.ts`
 - `SessionSummary` type from `src/services/sessionManager.ts`
 
@@ -130,6 +142,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 **Goal**: Redesign the session detail page with a right sidebar for overview and main content area for dense request table.
 
 ### Context & Files
+
 - **Page**: `src/pages/RequestListPage.tsx:145-275` - Session detail with request list
 - **Component**: `src/components/SessionSummary.tsx` - Convert to compact sidebar
 - **Component**: `src/components/RequestFilters.tsx` - Make collapsible
@@ -138,6 +151,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - **Types**: `src/types/trace.ts` - Request data structures
 
 ### Current Implementation
+
 - Full-width `SessionSummary` component at top (large, spread out)
 - `RequestFilters` component always visible
 - Request table with card view toggle
@@ -147,6 +161,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 ### New Design
 
 #### Right Sidebar (300px fixed width)
+
 - Compact session overview with key metrics stacked vertically
 - Small metric cards (bg-gray-900 with border)
 - Metrics: Request count, Total tokens, Duration, Error count, Start/End time
@@ -156,6 +171,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - Sticky position (scrolls with page)
 
 #### Main Content Area
+
 - Collapsed filter panel (toggle button at top)
 - Dense request table (replaces card view - remove toggle)
 - Table row height: ~36px
@@ -166,12 +182,14 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - Hover row shows additional details (cache usage, stop reason)
 
 #### Filter Panel (collapsed by default)
+
 - Slide down from top when toggled
 - Compact form layout (all in one row if space allows)
 - Keyboard shortcut: `Ctrl+F` or `Cmd+F` to toggle
 - Show active filter count in toggle button
 
 ### Tasks
+
 - [x] Use `/frontend-design` skill for sidebar and table design
 - [x] Update `src/pages/RequestListPage.tsx` to use flexbox layout (main area + right sidebar)
 - [x] Convert `SessionSummary` to compact sidebar variant (new prop: `variant="sidebar"`)
@@ -188,6 +206,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - [x] Show tools as icon with count tooltip
 
 ### Verification
+
 - [ ] Sidebar is 300px wide and sticky
 - [ ] Main content area uses remaining width
 - [ ] Filters are collapsed by default
@@ -203,10 +222,12 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 **Files**: `src/pages/RequestListPage.tsx`, `src/components/SessionSummary.tsx`, `src/components/RequestFilters.tsx`, `src/components/RequestCard.tsx`, `src/hooks/useRequestList.ts`
 
 **Related API**:
+
 - `useRequestList()` hook from `src/hooks/useRequestList.ts`
 - `RequestMetrics` type from `src/services/requestAnalyzer.ts`
 
 **Status**: ✅ **IMPLEMENTED** - Phase 3 is complete. The session detail page has been redesigned with:
+
 - Right sidebar (300px, sticky) with compact session overview showing all key metrics
 - Collapsible filter panel (collapsed by default) with Ctrl/Cmd+F keyboard shortcut
 - Dense request table (~36px row height) with dark terminal aesthetic
@@ -226,12 +247,14 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 **Goal**: Redesign request detail page with right sidebar for metadata and tabbed main content for messages, raw data, and headers.
 
 ### Context & Files
+
 - **Page**: `src/pages/RequestDetailPage.tsx:177-310` - Request detail view
 - **Components**: `src/components/RequestMetrics.tsx`, `src/components/ToolUsageDisplay.tsx`, `src/components/CopyableText.tsx`
 - **Hook**: `src/hooks/useRequestDetail.ts`
 - **Types**: `src/types/trace.ts:1-61` - ClaudeTraceEntry, TraceRequest, TraceResponse
 
 ### Current Implementation
+
 - Vertical stack of sections: header, metrics, request headers, conversation, response, tools, raw data, response headers
 - Each section is full-width card (bg-white)
 - Headers and raw data always visible (takes up space)
@@ -240,6 +263,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 ### New Design
 
 #### Right Sidebar (320px fixed width)
+
 - Request metadata card
   - Status code with color badge
   - HTTP method
@@ -259,11 +283,13 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
   - Previous/Next request buttons (if possible)
 
 #### Main Content Area (Tabbed)
+
 - Tab navigation at top: **Messages** (default) | **Raw Request** | **Raw Response** | **Headers** | **Tools**
 - Minimal tab design with active indicator
 - Keyboard shortcuts: `1-5` to switch tabs
 
 ##### Tab 1: Messages (default)
+
 - System prompt (if present) - purple-bordered section
 - User messages - blue-bordered sections
 - Assistant response content - green-bordered sections
@@ -272,26 +298,31 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - Monospace font for code/JSON content
 
 ##### Tab 2: Raw Request
+
 - Full request body as formatted JSON
 - Syntax-highlighted
 - Copyable
 
 ##### Tab 3: Raw Response
+
 - Full response body as formatted JSON
 - Syntax-highlighted
 - Copyable
 
 ##### Tab 4: Headers
+
 - Request headers (collapsed by default)
 - Response headers (collapsed by default)
 - Key-value table format
 
 ##### Tab 5: Tools
+
 - Tool definitions (if available)
 - Tool use calls with parameters
 - Formatted JSON with syntax highlighting
 
 ### Tasks
+
 - [x] Use `/frontend-design` skill for sidebar and tab design
 - [x] Update `src/pages/RequestDetailPage.tsx` to flexbox layout (main + right sidebar)
 - [x] Create right sidebar with metadata cards
@@ -308,6 +339,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - [x] Integrated tool usage into Tools tab
 
 ### Verification
+
 - [ ] Sidebar is 320px wide and sticky
 - [ ] Main content uses remaining width
 - [ ] Default tab is Messages
@@ -323,12 +355,14 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 **Files**: `src/pages/RequestDetailPage.tsx`, `src/components/RequestMetrics.tsx`, `src/components/ToolUsageDisplay.tsx`, `src/components/CopyableText.tsx`
 
 **Related API**:
+
 - `useRequestDetail()` hook from `src/hooks/useRequestDetail.ts`
 - `extractMessageContent()` function in `src/pages/RequestDetailPage.tsx:40-76`
 - `extractReconstructedResponse()` function in `src/pages/RequestDetailPage.tsx:17-38`
 - `extractToolCallsFromResponse()` function in `src/pages/RequestDetailPage.tsx:78-133`
 
 **Status**: ✅ **IMPLEMENTED** - Phase 4 is complete. The request detail page has been redesigned with:
+
 - Right sidebar (320px, sticky) with compact metadata cards showing:
   - Request metadata (status, method, duration, timestamp, endpoint)
   - Performance metrics (input/output tokens, cache usage, stop reason, service tier)
@@ -348,55 +382,70 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 
 ---
 
-## Phase 5: Polish & Performance Optimization
+## Phase 5: Design Consistency Review
 
-**Goal**: Add final polish touches, micro-interactions, keyboard shortcuts, and optimize performance for large datasets.
+**Goal**: Review all pages implemented in previous phases to ensure they share a consistent design language and work together as a cohesive whole.
 
 ### Context & Files
-- All pages and components from previous phases
-- Focus on animations, loading states, error states, and performance
+
+- All pages and components from Phase 1-4
+- Focus on visual consistency, design coherence, and unified aesthetic
 
 ### Tasks
-- [ ] Use `/frontend-design` skill for micro-interactions
-- [ ] Add loading skeletons for all data loading states (dark theme appropriate)
-- [ ] Optimize table rendering performance with virtualization if needed
-- [ ] Add smooth transitions for tab switching (animate-* utilities)
-- [ ] Add hover animations on table rows (scale, shadow, glow effects)
-- [ ] Implement keyboard navigation for tables (arrow keys, Enter to open)
-- [ ] Add keyboard shortcuts documentation (help modal with `?` key)
-- [ ] Optimize font loading (font-display: swap)
-- [ ] Add subtle background patterns or grain texture (optional, if enhances aesthetic)
-- [ ] Add error boundary styling for dark theme
-- [ ] Optimize `LoadingSkeleton` component for dark backgrounds
-- [ ] Add subtle gradient accents or glows on interactive elements
-- [ ] Test with large datasets (100+ sessions, 500+ requests)
-- [ ] Add scroll position restoration when navigating back
-- [ ] Ensure all hover states have appropriate transitions
-- [ ] Add focus indicators for accessibility (keyboard navigation)
+
+- [ ] Use `/frontend-design` skill for design consistency review
+- [ ] Review HomePage (Session List Table)
+  - [ ] Verify table styling matches terminal aesthetic
+  - [ ] Check color consistency (status dots, hover states)
+  - [ ] Ensure typography matches global design (monospace for data, DM Sans for labels)
+  - [ ] Verify spacing and padding consistency
+- [ ] Review RequestListPage (Session Detail)
+  - [ ] Verify sidebar styling matches overall design
+  - [ ] Check table consistency with HomePage table
+  - [ ] Ensure filter panel styling is cohesive with rest of UI
+  - [ ] Verify hover states and transitions match other tables
+- [ ] Review RequestDetailPage (Request Detail)
+  - [ ] Verify sidebar styling matches RequestListPage sidebar
+  - [ ] Check tab styling is consistent and professional
+  - [ ] Ensure message cards have consistent styling (borders, padding, colors)
+  - [ ] Verify code blocks and JSON formatting are uniform
+- [ ] Cross-page Consistency
+  - [ ] Ensure all cards/panels use consistent backgrounds (gray-900/gray-800)
+  - [ ] Verify borders use consistent colors and widths
+  - [ ] Check that all tables have the same row heights and styling
+  - [ ] Ensure status indicators (dots, icons) are consistent across all pages
+  - [ ] Verify hover states behave the same way everywhere
+  - [ ] Check that spacing between sections is uniform
+  - [ ] Ensure all interactive elements share the same visual language
+- [ ] Typography Audit
+  - [ ] Verify monospace fonts are used consistently for all data
+  - [ ] Check that DM Sans is used consistently for all UI text
+  - [ ] Ensure font sizes are consistent across similar elements
+  - [ ] Verify text colors have sufficient contrast and are used consistently
 
 ### Verification
-- [ ] All loading states show dark-themed skeletons
-- [ ] Tables scroll smoothly with 500+ rows
-- [ ] Tab transitions are smooth (no flashing)
-- [ ] Hover states feel responsive (under 200ms)
-- [ ] Keyboard shortcuts work across all pages
-- [ ] Help modal (?) shows all keyboard shortcuts
-- [ ] Fonts load without FOUT (Flash of Unstyled Text)
-- [ ] Error states match dark theme aesthetic
-- [ ] Focus indicators are visible and styled
-- [ ] Scroll position is preserved on back navigation
-- [ ] No performance issues with large datasets
-- [ ] All interactions feel polished and intentional
 
-**Files**: All components, `src/components/LoadingSkeleton.tsx`, `src/components/ErrorBoundary.tsx`, `src/index.css`
+- [ ] All pages feel like they belong to the same application
+- [ ] Navigation between pages feels seamless (no jarring visual changes)
+- [ ] Color palette is used consistently across all pages
+- [ ] Typography system is applied uniformly
+- [ ] All tables have consistent styling and behavior
+- [ ] Sidebars look similar and share the same design patterns
+- [ ] Cards and panels have uniform styling
+- [ ] Interactive elements (buttons, links) behave consistently
+- [ ] Hover states and transitions are uniform across the app
+- [ ] The dark terminal aesthetic is maintained throughout
 
-**Related API**: Browser Performance APIs, keyboard event handlers
+**Files**: `src/pages/HomePage.tsx`, `src/pages/RequestListPage.tsx`, `src/pages/RequestDetailPage.tsx`, `src/components/SessionTable.tsx`, `src/components/SessionSummary.tsx`, `src/components/RequestCard.tsx`, `src/components/CopyableText.tsx`
+
+**Related**: All components and styling from Phases 1-4
 
 ---
 
 ## Implementation Notes
 
 ### Tailwind CSS v4 Usage
+
 - All color customization via `@theme` directive in `src/index.css`
 - Use arbitrary values for precise spacing: `w-[320px]`, `h-[36px]`, `gap-[0.5rem]`
 - Custom animations via `@keyframes` in `@theme` block
@@ -405,6 +454,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - Syntax highlighting colors: green-400, red-400, cyan-400, amber-400, purple-400
 
 ### Performance Considerations
+
 - Use React.memo() for table row components
 - Consider virtual scrolling for 500+ row tables (react-virtual or similar)
 - Lazy load tab content (don't render hidden tabs)
@@ -412,6 +462,7 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - Use CSS contain property for isolated rendering
 
 ### Accessibility
+
 - Maintain WCAG AA contrast ratios (4.5:1 for text)
 - All interactive elements keyboard accessible
 - Focus indicators visible on all focusable elements
@@ -420,7 +471,9 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 - Screen reader announcements for dynamic content
 
 ### Testing Strategy
+
 Each phase should be tested with:
+
 1. Small dataset (5 sessions, 10 requests)
 2. Medium dataset (50 sessions, 100 requests)
 3. Large dataset (100+ sessions, 500+ requests)
@@ -433,6 +486,7 @@ Each phase should be tested with:
 ## Success Criteria
 
 The redesign is complete when:
+
 - ✓ All pages use dark theme exclusively
 - ✓ Session list shows 10+ sessions in compact table
 - ✓ Session detail shows 15+ requests in main table view
