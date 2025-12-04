@@ -116,3 +116,20 @@ export interface SessionMetadata {
   toolsUsed: Set<string>;
   hasErrors: boolean;
 }
+
+export interface ConversationGroup {
+  id: string; // Hash of normalized first message
+  requests: ClaudeTraceEntry[];
+  firstUserMessage: string;
+  longestRequestIndex: number;
+  models: Set<string>;
+  totalMessages: number;
+}
+
+export interface ConversationMetadata {
+  conversationCount: number;
+  longestConversation: {
+    firstUserMessage: string;
+    messageCount: number;
+  } | null;
+}

@@ -5,6 +5,8 @@ import type {
   TokenUsage,
   TraceResponse,
   TraceRequest,
+  ConversationGroup,
+  ConversationMetadata,
 } from "../types/trace";
 
 export class TraceParserService {
@@ -563,6 +565,160 @@ export class TraceParserService {
     }
 
     return Array.from(toolsUsed);
+  }
+
+  /**
+   * Normalize message content for conversation grouping
+   * Removes dynamic content like timestamps, file references, and system reminders
+   */
+  normalizeMessageForGrouping(content: string | Array<{type: string; [key: string]: unknown}>): string {
+    let textContent = "";
+
+    // Extract text from content blocks if it's an array
+    if (Array.isArray(content)) {
+      const textBlocks = content
+        .filter(block => block.type === "text" && "text" in block)
+        .map(block => block.text as string);
+      textContent = textBlocks.join(" ");
+    } else {
+      textContent = content;
+    }
+
+    // Normalize dynamic content
+    let normalized = textContent;
+
+    // Replace timestamps: Generated YYYY-MM-DD HH:MM:SS → Generated [TIMESTAMP]
+    normalized = normalized.replace(/Generated \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/g, "Generated [TIMESTAMP]");
+
+    // Replace file references: The user opened the file X → The user opened file in IDE
+    normalized = normalized.replace(/The user opened the file [^\s]+ in the IDE\./g, "The user opened file in IDE.");
+
+    // Remove system reminders entirely
+    normalized = normalized.replace(/<system-reminder>.*?<\/system-reminder>/gs, "[SYSTEM-REMINDER]");
+
+    return normalized;
+  }
+
+  /**
+   * Generate a hash from a string for conversation grouping
+   */
+  hashConversation(firstMessage: string, system: string | undefined, model: string): string {
+    const conversationKey = JSON.stringify({
+      firstMessage,
+      system,
+      model,
+    });
+
+    // Simple hash function
+    let hash = 0;
+    for (let i = 0; i < conversationKey.length; i++) {
+      const char = conversationKey.charCodeAt(i);
+      hash = (hash << 5) - hash + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+
+    return Math.abs(hash).toString();
+  }
+
+  /**
+   * Detect and group conversations within a set of trace entries
+   * Returns an array of conversation groups, each representing a unique conversation thread
+   */
+  detectConversations(entries: ClaudeTraceEntry[]): ConversationGroup[] {
+    if (entries.length === 0) {
+      return [];
+    }
+
+    // Map to store conversations by their hash
+    const conversationMap = new Map<string, ConversationGroup>();
+
+    for (const entry of entries) {
+      const messages = entry.request.body.messages;
+
+      // Skip entries with no messages
+      if (!messages || messages.length === 0) {
+        continue;
+      }
+
+      // Find the first user message
+      const firstUserMessage = messages.find(msg => msg.role === "user");
+
+      if (!firstUserMessage) {
+        continue;
+      }
+
+      // Normalize the first user message for grouping
+      const normalizedMessage = this.normalizeMessageForGrouping(firstUserMessage.content);
+
+      // Extract system prompt (join all text blocks if array)
+      let systemPrompt: string | undefined = undefined;
+      if (entry.request.body.system) {
+        systemPrompt = entry.request.body.system
+          .map(block => block.text)
+          .join(" ");
+      }
+
+      // Generate hash for this conversation
+      const conversationId = this.hashConversation(
+        normalizedMessage,
+        systemPrompt,
+        entry.request.body.model
+      );
+
+      // Add to or update conversation group
+      if (!conversationMap.has(conversationId)) {
+        conversationMap.set(conversationId, {
+          id: conversationId,
+          requests: [],
+          firstUserMessage: normalizedMessage,
+          longestRequestIndex: 0,
+          models: new Set(),
+          totalMessages: 0,
+        });
+      }
+
+      const conversation = conversationMap.get(conversationId)!;
+      conversation.requests.push(entry);
+      conversation.models.add(entry.request.body.model);
+
+      // Track the longest request (most messages)
+      const messageCount = messages.length;
+      if (messageCount > conversation.totalMessages) {
+        conversation.totalMessages = messageCount;
+        conversation.longestRequestIndex = conversation.requests.length - 1;
+      }
+    }
+
+    return Array.from(conversationMap.values());
+  }
+
+  /**
+   * Extract conversation metadata from conversation groups
+   * Returns metadata including count and preview of longest conversation
+   */
+  extractConversationMetadata(conversations: ConversationGroup[]): ConversationMetadata {
+    if (conversations.length === 0) {
+      return {
+        conversationCount: 0,
+        longestConversation: null,
+      };
+    }
+
+    // Find the longest conversation overall
+    let longestConversation = conversations[0];
+    for (const conversation of conversations) {
+      if (conversation.totalMessages > longestConversation.totalMessages) {
+        longestConversation = conversation;
+      }
+    }
+
+    return {
+      conversationCount: conversations.length,
+      longestConversation: {
+        firstUserMessage: longestConversation.firstUserMessage.substring(0, 200),
+        messageCount: longestConversation.totalMessages,
+      },
+    };
   }
 }
 
