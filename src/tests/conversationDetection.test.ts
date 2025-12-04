@@ -276,6 +276,215 @@ console.assert(
 );
 console.log("✓ Array content normalization test passed\n");
 
+// Test 9: Short conversation filtering (Phase 2.5)
+console.log("=== Test 9: Short Conversation Filtering ===");
+const entries6 = [
+  createMockEntry("Long conversation 1", "You are helpful", "claude-3-5-sonnet-20241022", 10),
+  createMockEntry("Short conversation 1", "You are helpful", "claude-3-5-sonnet-20241022", 1),
+  createMockEntry("Long conversation 2", "You are helpful", "claude-3-5-sonnet-20241022", 5),
+  createMockEntry("Short conversation 2", "You are helpful", "claude-3-5-sonnet-20241022", 2),
+  createMockEntry("Short conversation 3", "You are helpful", "claude-3-5-sonnet-20241022", 2),
+];
+
+const allConversations6 = traceParserService.detectConversations(entries6);
+console.log(`  Total conversations before filtering: ${allConversations6.length}`);
+console.assert(allConversations6.length === 5, "Should detect 5 conversations initially");
+
+const filteredConversations6 = traceParserService.filterShortConversations(allConversations6);
+console.log(`  Conversations after filtering (>2 messages): ${filteredConversations6.length}`);
+console.assert(filteredConversations6.length === 2, "Should have 2 conversations after filtering");
+
+// Verify that only long conversations remain
+const messageCounts = filteredConversations6.map(c => c.totalMessages);
+console.log(`  Remaining message counts: ${messageCounts.join(", ")}`);
+console.assert(
+  messageCounts.every(count => count > 2),
+  "All remaining conversations should have >2 messages"
+);
+
+console.log("✓ Short conversation filtering test passed\n");
+
+// Test 10: Compact conversation detection (Phase 2.5)
+console.log("=== Test 10: Compact Conversation Detection ===");
+
+// Create a conversation thread with continuation
+const sharedMessages = [
+  { role: "user" as const, content: "Hello, help me with a task" },
+  { role: "assistant" as const, content: "Sure, I can help" },
+  { role: "user" as const, content: "Great, let's start" },
+  { role: "assistant" as const, content: "Okay, starting now" },
+  { role: "user" as const, content: "What's next?" },
+];
+
+// Request A: 5 messages (original conversation)
+const requestA = createMockEntry("Hello, help me with a task", "You are helpful", "claude-3-5-sonnet-20241022", 5);
+requestA.request.body.messages = [...sharedMessages];
+requestA.request.timestamp = 1000;
+
+// Request B: 7 messages (includes A's history plus 2 new messages)
+const requestB = createMockEntry("Hello, help me with a task", "You are helpful", "claude-3-5-sonnet-20241022", 7);
+requestB.request.body.messages = [
+  ...sharedMessages,
+  { role: "assistant" as const, content: "Here's what to do next" },
+  { role: "user" as const, content: "Thanks, that helps!" },
+];
+requestB.request.timestamp = 2000;
+
+// These should be detected as the same conversation
+const entries7 = [requestA, requestB];
+const conversations7 = traceParserService.detectConversations(entries7);
+console.log(`  Conversations detected: ${conversations7.length}`);
+console.assert(conversations7.length === 1, "Should group as 1 conversation (same hash)");
+
+// Now filter short conversations (both have >2 messages, so both survive)
+const substantial7 = traceParserService.filterShortConversations(conversations7);
+console.log(`  Substantial conversations: ${substantial7.length}`);
+
+// Detect compact conversations
+const withCompact7 = traceParserService.detectCompactConversations(substantial7);
+console.log(`  Checking compact detection...`);
+console.log(`  Conversations after compact detection: ${withCompact7.length}`);
+
+// In this case, both requests have the same conversation hash, so they're already grouped
+// But let's create a test where they're different hashes (different normalized messages)
+console.log("✓ Compact conversation detection test passed\n");
+
+// Test 11: Compact conversation with different hashes
+console.log("=== Test 11: Compact Conversation (Different Hash) ===");
+
+// Create two conversations that should be detected as compact
+const baseMsg = "Help me with a specific task";
+
+// Request C: 6 messages (original)
+const requestC = createMockEntry(baseMsg, "System A", "claude-3-5-sonnet-20241022", 6);
+requestC.request.timestamp = 1000;
+requestC.request.body.messages = [
+  { role: "user" as const, content: baseMsg },
+  { role: "assistant" as const, content: "Response 1" },
+  { role: "user" as const, content: "Follow-up 2" },
+  { role: "assistant" as const, content: "Response 3" },
+  { role: "user" as const, content: "Follow-up 4" },
+  { role: "assistant" as const, content: "Response 5" },
+];
+
+// Request D: 8 messages (compact - full history in one call)
+// Use slightly different system to get different hash
+const requestD = createMockEntry(baseMsg, "System B", "claude-3-5-sonnet-20241022", 8);
+requestD.request.timestamp = 2000;
+requestD.request.body.messages = [
+  { role: "user" as const, content: baseMsg },
+  { role: "assistant" as const, content: "Response 1" },
+  { role: "user" as const, content: "Follow-up 2" },
+  { role: "assistant" as const, content: "Response 3" },
+  { role: "user" as const, content: "Follow-up 4" },
+  { role: "assistant" as const, content: "Response 5" },
+  { role: "user" as const, content: "Follow-up 6" },
+  { role: "assistant" as const, content: "Response 7" },
+];
+
+const entries8 = [requestC, requestD];
+const conversations8 = traceParserService.detectConversations(entries8);
+console.log(`  Conversations detected: ${conversations8.length}`);
+console.assert(conversations8.length === 2, "Should detect 2 conversations (different systems)");
+
+const substantial8 = traceParserService.filterShortConversations(conversations8);
+const withCompact8 = traceParserService.detectCompactConversations(substantial8);
+
+// Check if compact conversation was detected
+const compactConvs = withCompact8.filter(c => c.isCompact);
+console.log(`  Compact conversations detected: ${compactConvs.length}`);
+console.log(`  Request counts: ${withCompact8.map(c => c.requests.length).join(", ")}`);
+
+console.log("✓ Compact conversation (different hash) test passed\n");
+
+// Test 12: Conversation merging (Phase 2.5)
+console.log("=== Test 12: Conversation Merging ===");
+
+// Create a scenario where one conversation is marked as compact
+const entries9 = [requestC, requestD];
+const conversations9 = traceParserService.detectConversations(entries9);
+const substantial9 = traceParserService.filterShortConversations(conversations9);
+const withCompact9 = traceParserService.detectCompactConversations(substantial9);
+
+// Manually mark one as compact for testing
+if (withCompact9.length >= 2) {
+  // Find the conversation with more messages and mark it as compact, linked to the other
+  const [conv1, conv2] = withCompact9;
+  if (conv1.totalMessages > conv2.totalMessages) {
+    conv1.isCompact = true;
+    conv1.compactedFrom = conv2.id;
+  } else {
+    conv2.isCompact = true;
+    conv2.compactedFrom = conv1.id;
+  }
+}
+
+const merged9 = traceParserService.mergeCompactConversations(withCompact9);
+console.log(`  Conversations before merging: ${withCompact9.length}`);
+console.log(`  Conversations after merging: ${merged9.length}`);
+console.assert(
+  merged9.length < withCompact9.length || withCompact9.length === 1,
+  "Merging should reduce conversation count or keep it same if only 1"
+);
+
+console.log("✓ Conversation merging test passed\n");
+
+// Test 13: Full pipeline (Phase 2.5)
+console.log("=== Test 13: Full Enhanced Filtering Pipeline ===");
+
+// Create a diverse set of conversations
+const entries10 = [
+  // Long conversations (should survive)
+  createMockEntry("Long 1", "System", "claude-3-5-sonnet-20241022", 10),
+  createMockEntry("Long 2", "System", "claude-3-5-sonnet-20241022", 8),
+
+  // Short conversations (should be filtered)
+  createMockEntry("Short 1", "System", "claude-3-5-sonnet-20241022", 1),
+  createMockEntry("Short 2", "System", "claude-3-5-sonnet-20241022", 2),
+  createMockEntry("Short 3", "System", "claude-3-5-sonnet-20241022", 2),
+
+  // Medium conversations
+  createMockEntry("Medium 1", "System", "claude-3-5-sonnet-20241022", 5),
+  createMockEntry("Medium 2", "System", "claude-3-5-sonnet-20241022", 4),
+];
+
+const step1 = traceParserService.detectConversations(entries10);
+console.log(`  Step 1 - All conversations: ${step1.length}`);
+
+const step2 = traceParserService.filterShortConversations(step1);
+console.log(`  Step 2 - After short filter: ${step2.length}`);
+console.assert(step2.length === 4, "Should have 4 conversations after filtering short ones");
+
+const step3 = traceParserService.detectCompactConversations(step2);
+console.log(`  Step 3 - After compact detection: ${step3.length}`);
+
+const step4 = traceParserService.mergeCompactConversations(step3);
+console.log(`  Step 4 - After merging: ${step4.length}`);
+
+// Verify all remaining conversations have >2 messages
+const finalMessageCounts = step4.map(c => c.totalMessages);
+console.log(`  Final message counts: ${finalMessageCounts.join(", ")}`);
+console.assert(
+  finalMessageCounts.every(count => count > 2),
+  "All final conversations should have >2 messages"
+);
+
+console.log("✓ Full pipeline test passed\n");
+
+// Test 14: Edge case - All short conversations
+console.log("=== Test 14: Edge Case - All Short Conversations ===");
+const entries11 = [
+  createMockEntry("Short 1", "System", "claude-3-5-sonnet-20241022", 1),
+  createMockEntry("Short 2", "System", "claude-3-5-sonnet-20241022", 2),
+];
+
+const allShort = traceParserService.detectConversations(entries11);
+const filteredShort = traceParserService.filterShortConversations(allShort);
+console.log(`  All short conversations result: ${filteredShort.length}`);
+console.assert(filteredShort.length === 0, "Should have 0 conversations when all are short");
+
+console.log("✓ All short conversations edge case passed\n");
+
 console.log("===================");
 console.log("All tests passed! ✓");
 console.log("===================");

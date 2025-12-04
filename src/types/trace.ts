@@ -126,6 +126,10 @@ export interface ConversationGroup {
   longestRequestIndex: number;
   models: Set<string>;
   totalMessages: number;
+  // Enhanced filtering fields (Phase 2.5)
+  isCompact?: boolean; // True if this conversation is a compact representation (full history in one call)
+  compactedFrom?: string; // Parent conversation ID if this is a compact conversation
+  allPairs?: ClaudeTraceEntry[]; // All request/response pairs (used for merged conversations)
 }
 
 export interface ConversationMetadata {

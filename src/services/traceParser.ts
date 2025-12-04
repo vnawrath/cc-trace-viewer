@@ -285,9 +285,20 @@ export class TraceParserService {
       }
     }
 
-    // Detect conversations and get count
-    const conversations = this.detectConversations(entries);
-    const conversationCount = conversations.length;
+    // Detect conversations and get count (with Phase 2.5 enhanced filtering)
+    // Step 1: Detect all conversations
+    const allConversations = this.detectConversations(entries);
+
+    // Step 2: Filter out short conversations (≤2 messages)
+    const substantialConversations = this.filterShortConversations(allConversations);
+
+    // Step 3: Detect compact conversations
+    const withCompactDetection = this.detectCompactConversations(substantialConversations);
+
+    // Step 4: Merge compact conversations with their parents
+    const finalConversations = this.mergeCompactConversations(withCompactDetection);
+
+    const conversationCount = finalConversations.length;
 
     return {
       userId: firstEntry.request.body.metadata.user_id,
@@ -692,6 +703,158 @@ export class TraceParserService {
       if (messageCount > conversation.totalMessages) {
         conversation.totalMessages = messageCount;
         conversation.longestRequestIndex = conversation.requests.length - 1;
+      }
+
+      // Initialize allPairs with all requests for potential merging
+      if (!conversation.allPairs) {
+        conversation.allPairs = [];
+      }
+      conversation.allPairs.push(entry);
+    }
+
+    return Array.from(conversationMap.values());
+  }
+
+  /**
+   * Filter out short conversations (≤2 messages)
+   * This removes background tasks, title generation, and single Q&A exchanges
+   * that are not substantial multi-turn conversations
+   */
+  filterShortConversations(conversations: ConversationGroup[]): ConversationGroup[] {
+    return conversations.filter(conversation => conversation.totalMessages > 2);
+  }
+
+  /**
+   * Helper function to compare messages for similarity
+   * Used to detect if a compact conversation is a continuation of another
+   */
+  private messagesRoughlyEqual(msg1: any, msg2: any): boolean {
+    if (msg1.role !== msg2.role) return false;
+
+    // Extract text content from both messages
+    const getText = (content: string | Array<{type: string; [key: string]: unknown}>): string => {
+      if (typeof content === 'string') return content;
+      if (Array.isArray(content)) {
+        return content
+          .filter(block => block.type === 'text' && 'text' in block)
+          .map(block => block.text as string)
+          .join(' ');
+      }
+      return '';
+    };
+
+    const text1 = getText(msg1.content);
+    const text2 = getText(msg2.content);
+
+    // Simple similarity check: normalize and compare length and first characters
+    const normalize = (s: string) => s.trim().toLowerCase().substring(0, 100);
+    return normalize(text1) === normalize(text2);
+  }
+
+  /**
+   * Detect compact conversations - conversations where the full history was sent in a single API call
+   * These need to be merged with their parent conversations to avoid double-counting
+   */
+  detectCompactConversations(conversations: ConversationGroup[]): ConversationGroup[] {
+    if (conversations.length <= 1) return conversations;
+
+    // Sort by first request timestamp to process chronologically
+    const sortedConversations = [...conversations].sort((a, b) => {
+      const aTime = a.requests[0]?.request.timestamp || 0;
+      const bTime = b.requests[0]?.request.timestamp || 0;
+      return aTime - bTime;
+    });
+
+    // Detect compact conversations
+    for (let i = 0; i < sortedConversations.length; i++) {
+      const currentConv = sortedConversations[i];
+
+      // A compact conversation has only 1 API pair but >2 messages
+      if (currentConv.requests.length === 1 && currentConv.totalMessages > 2) {
+        // Try to find a parent conversation with exactly 2 fewer messages
+        for (let j = 0; j < sortedConversations.length; j++) {
+          if (j === i) continue;
+
+          const otherConv = sortedConversations[j];
+
+          // Check if other conversation has exactly 2 fewer messages
+          if (otherConv.totalMessages === currentConv.totalMessages - 2) {
+            // Get the messages from both conversations
+            const currentMessages = currentConv.requests[0].request.body.messages;
+            const longestRequest = otherConv.requests[otherConv.longestRequestIndex];
+            const otherMessages = longestRequest.request.body.messages;
+
+            // Compare messages (skip first as it's normalized, compare from index 1)
+            let messagesMatch = true;
+            const compareLength = Math.min(otherMessages.length, currentMessages.length);
+
+            for (let k = 1; k < compareLength && k < otherMessages.length; k++) {
+              if (!this.messagesRoughlyEqual(otherMessages[k], currentMessages[k])) {
+                messagesMatch = false;
+                break;
+              }
+            }
+
+            if (messagesMatch) {
+              // Mark this as a compact conversation
+              currentConv.isCompact = true;
+              currentConv.compactedFrom = otherConv.id;
+              break;
+            }
+          }
+        }
+
+        // If no parent found, still mark as compact (orphaned compact conversation)
+        if (!currentConv.isCompact) {
+          currentConv.isCompact = true;
+        }
+      }
+    }
+
+    return sortedConversations;
+  }
+
+  /**
+   * Merge compact conversations with their parent conversations
+   * Returns a deduplicated list with compact conversations merged into their parents
+   */
+  mergeCompactConversations(conversations: ConversationGroup[]): ConversationGroup[] {
+    const conversationMap = new Map<string, ConversationGroup>();
+    const compactConversations: ConversationGroup[] = [];
+
+    // First pass: separate compact and non-compact conversations
+    for (const conv of conversations) {
+      if (conv.isCompact && conv.compactedFrom) {
+        compactConversations.push(conv);
+      } else {
+        conversationMap.set(conv.id, conv);
+      }
+    }
+
+    // Second pass: merge compact conversations into their parents
+    for (const compactConv of compactConversations) {
+      const parent = conversationMap.get(compactConv.compactedFrom!);
+
+      if (parent) {
+        // Merge the compact conversation into the parent
+        if (!parent.allPairs) {
+          parent.allPairs = [...parent.requests];
+        }
+
+        // Add the compact conversation's requests to allPairs
+        parent.allPairs.push(...compactConv.requests);
+
+        // Update total messages to the maximum
+        parent.totalMessages = Math.max(parent.totalMessages, compactConv.totalMessages);
+
+        // Update longest request if needed
+        if (compactConv.totalMessages > parent.requests[parent.longestRequestIndex].request.body.messages.length) {
+          parent.longestRequestIndex = parent.requests.length;
+          parent.requests.push(...compactConv.requests);
+        }
+      } else {
+        // Parent not found, keep the orphaned compact conversation
+        conversationMap.set(compactConv.id, compactConv);
       }
     }
 
