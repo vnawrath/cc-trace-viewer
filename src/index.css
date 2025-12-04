@@ -109,6 +109,17 @@
   --color-accent-900: #581c87;
 
   /* ============================================
+     SEMANTIC TERMINAL COLORS
+     Shorthand aliases for terminal aesthetics
+     ============================================ */
+
+  --color-terminal-green: #26c281;
+  --color-terminal-red: #ef4444;
+  --color-terminal-cyan: #22d3ee;
+  --color-terminal-amber: #fbbf24;
+  --color-terminal-purple: #a855f7;
+
+  /* ============================================
      COMPACT SPACING SCALE
      Information-dense layouts
      ============================================ */

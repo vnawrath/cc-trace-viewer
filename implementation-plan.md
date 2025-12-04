@@ -393,52 +393,72 @@ This plan redesigns the CC Trace Viewer as a professional, information-dense deb
 
 ### Tasks
 
-- [ ] Use `/frontend-design` skill for design consistency review
-- [ ] Review HomePage (Session List Table)
-  - [ ] Verify table styling matches terminal aesthetic
-  - [ ] Check color consistency (status dots, hover states)
-  - [ ] Ensure typography matches global design (monospace for data, DM Sans for labels)
-  - [ ] Verify spacing and padding consistency
-- [ ] Review RequestListPage (Session Detail)
-  - [ ] Verify sidebar styling matches overall design
-  - [ ] Check table consistency with HomePage table
-  - [ ] Ensure filter panel styling is cohesive with rest of UI
-  - [ ] Verify hover states and transitions match other tables
-- [ ] Review RequestDetailPage (Request Detail)
-  - [ ] Verify sidebar styling matches RequestListPage sidebar
-  - [ ] Check tab styling is consistent and professional
-  - [ ] Ensure message cards have consistent styling (borders, padding, colors)
-  - [ ] Verify code blocks and JSON formatting are uniform
-- [ ] Cross-page Consistency
-  - [ ] Ensure all cards/panels use consistent backgrounds (gray-900/gray-800)
-  - [ ] Verify borders use consistent colors and widths
-  - [ ] Check that all tables have the same row heights and styling
-  - [ ] Ensure status indicators (dots, icons) are consistent across all pages
-  - [ ] Verify hover states behave the same way everywhere
-  - [ ] Check that spacing between sections is uniform
-  - [ ] Ensure all interactive elements share the same visual language
-- [ ] Typography Audit
-  - [ ] Verify monospace fonts are used consistently for all data
-  - [ ] Check that DM Sans is used consistently for all UI text
-  - [ ] Ensure font sizes are consistent across similar elements
-  - [ ] Verify text colors have sufficient contrast and are used consistently
+- [x] Use `/frontend-design` skill for design consistency review
+- [x] Review HomePage (Session List Table)
+  - [x] Verify table styling matches terminal aesthetic
+  - [x] Check color consistency (status dots, hover states)
+  - [x] Ensure typography matches global design (monospace for data, DM Sans for labels)
+  - [x] Verify spacing and padding consistency
+- [x] Review RequestListPage (Session Detail)
+  - [x] Verify sidebar styling matches overall design
+  - [x] Check table consistency with HomePage table
+  - [x] Ensure filter panel styling is cohesive with rest of UI
+  - [x] Verify hover states and transitions match other tables
+- [x] Review RequestDetailPage (Request Detail)
+  - [x] Verify sidebar styling matches RequestListPage sidebar
+  - [x] Check tab styling is consistent and professional
+  - [x] Ensure message cards have consistent styling (borders, padding, colors)
+  - [x] Verify code blocks and JSON formatting are uniform
+- [x] Cross-page Consistency
+  - [x] Ensure all cards/panels use consistent backgrounds (base-900/base-800)
+  - [x] Verify borders use consistent colors and widths
+  - [x] Check that all tables have the same row heights and styling
+  - [x] Ensure status indicators (dots, icons) are consistent across all pages
+  - [x] Verify hover states behave the same way everywhere
+  - [x] Check that spacing between sections is uniform
+  - [x] Ensure all interactive elements share the same visual language
+- [x] Typography Audit
+  - [x] Verify monospace fonts are used consistently for all data
+  - [x] Check that DM Sans is used consistently for all UI text
+  - [x] Ensure font sizes are consistent across similar elements
+  - [x] Verify text colors have sufficient contrast and are used consistently
 
 ### Verification
 
-- [ ] All pages feel like they belong to the same application
-- [ ] Navigation between pages feels seamless (no jarring visual changes)
-- [ ] Color palette is used consistently across all pages
-- [ ] Typography system is applied uniformly
-- [ ] All tables have consistent styling and behavior
-- [ ] Sidebars look similar and share the same design patterns
-- [ ] Cards and panels have uniform styling
-- [ ] Interactive elements (buttons, links) behave consistently
-- [ ] Hover states and transitions are uniform across the app
-- [ ] The dark terminal aesthetic is maintained throughout
+- [x] All pages feel like they belong to the same application
+- [x] Navigation between pages feels seamless (no jarring visual changes)
+- [x] Color palette is used consistently across all pages
+- [x] Typography system is applied uniformly
+- [x] All tables have consistent styling and behavior
+- [x] Sidebars look similar and share the same design patterns
+- [x] Cards and panels have uniform styling
+- [x] Interactive elements (buttons, links) behave consistently
+- [x] Hover states and transitions are uniform across the app
+- [x] The dark terminal aesthetic is maintained throughout
 
-**Files**: `src/pages/HomePage.tsx`, `src/pages/RequestListPage.tsx`, `src/pages/RequestDetailPage.tsx`, `src/components/SessionTable.tsx`, `src/components/SessionSummary.tsx`, `src/components/RequestCard.tsx`, `src/components/CopyableText.tsx`
+**Files**: `src/pages/HomePage.tsx`, `src/pages/RequestListPage.tsx`, `src/pages/RequestDetailPage.tsx`, `src/components/SessionTable.tsx`, `src/components/SessionSummary.tsx`, `src/components/RequestCard.tsx`, `src/components/CopyableText.tsx`, `src/index.css`
 
 **Related**: All components and styling from Phases 1-4
+
+**Status**: ✅ **IMPLEMENTED** - Phase 5 is complete. Design consistency has been ensured across all pages with:
+
+- **Color Token Standardization**: Added semantic terminal color tokens (terminal-green, terminal-red, terminal-cyan, terminal-amber, terminal-purple) to `src/index.css` for consistent color usage
+- **HomePage Updates**:
+  - Replaced hardcoded Tailwind colors with semantic tokens (base-*, text-*, error-*, success-*, data-*)
+  - Updated container styling for consistent shadow and border treatment
+  - Unified button hover states with data-400 color
+- **SessionTable Updates**:
+  - Replaced all gray-* colors with base-* semantic tokens
+  - Updated status indicators to use success-500/error-500 with shadow-glow-* effects
+  - Unified data colors (data-400 for numeric values, warning-400 for duration, accent-400 for tools)
+  - Updated sort icons and hover states for consistency
+  - Updated skeleton loader to use semantic tokens
+- **Cross-component Consistency**:
+  - All tables now share identical styling (borders, backgrounds, hover states)
+  - Status indicators unified across HomePage and RequestListPage tables
+  - Typography tokens (text-primary, text-secondary, text-tertiary, text-muted) used consistently
+  - Hover transitions standardized with data-400 highlight color
+- **Build Verification**: Build completed successfully with no TypeScript or compile errors
 
 ---
 
