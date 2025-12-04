@@ -164,9 +164,21 @@ function SessionRow({ session }: SessionRowProps) {
         </div>
       </td>
 
-      {/* Session ID - full display */}
-      <td className="px-3 py-2 font-mono text-xs text-text-secondary group-hover:text-data-400 transition-colors">
-        {sessionId}
+      {/* Session ID with conversation preview */}
+      <td className="px-3 py-2">
+        <div className="flex flex-col gap-0.5">
+          <div className="font-mono text-xs text-text-secondary group-hover:text-data-400 transition-colors">
+            {sessionId}
+          </div>
+          {metadata.conversationPreview && (
+            <div
+              className="text-[10px] text-text-muted italic truncate"
+              title={metadata.conversationPreview}
+            >
+              {metadata.conversationPreview}
+            </div>
+          )}
+        </div>
       </td>
 
       {/* Request Count */}

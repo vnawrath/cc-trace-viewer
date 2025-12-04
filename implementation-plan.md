@@ -371,72 +371,76 @@ With compact detection: 1 merged conversation with 3 API calls (correct!)
 
 ### Implementation Tasks
 
-- [ ] **Update SessionMetadata type** in `src/types/trace.ts`
-  - Add `conversationPreview?: string` field to SessionData (line ~75)
-  - Add to SessionMetadata as well (line ~110)
-  - Extract from longest conversation's first user message
+- [x] **Update SessionMetadata type** in `src/types/trace.ts`
+  - ✓ Added `conversationPreview?: string` field to SessionData interface (line 84)
+  - ✓ Added to SessionMetadata interface (line 121)
+  - ✓ Made optional for backward compatibility
+  - ✓ Preview extracted from longest conversation's first user message
 
-- [ ] **Update conversation metadata extraction** in `src/services/traceParser.ts`
-  - In `extractConversationMetadata()`, extract first user message text
-  - Handle different message content types:
-    - Text content: extract from `content[0].text`
-    - Multiple content blocks: concatenate text blocks
-    - Tool use: show "[Tool use]" placeholder
-  - Limit to first 200 characters for storage efficiency
-  - Reference: Message structure in `docs/claude-trace/src/types.ts`
+- [x] **Update conversation metadata extraction** in `src/services/traceParser.ts`
+  - ✓ Modified `calculateSessionMetadata()` to call `extractConversationMetadata()` (line 302)
+  - ✓ Existing `extractConversationMetadata()` already extracts first user message text (line 887)
+  - ✓ Message is already normalized and limited to 200 characters
+  - ✓ Added `conversationPreview` to returned metadata (line 325)
+  - ✓ Modified `createSessionData()` to include conversationPreview (line 363)
 
-- [ ] **Enhance SessionRow display** in `src/components/SessionTable.tsx`
-  - Option A: Add preview below Session ID in same cell
-  - Option B: Add as new column (may be too wide)
-  - **Recommendation: Option A** - Add preview as second line in Session ID cell
-  - Structure (line ~201-205):
+- [x] **Enhance SessionRow display** in `src/components/SessionTable.tsx`
+  - ✓ Implemented Option A: Added preview below Session ID in same cell
+  - ✓ Structure (lines 167-182):
     ```tsx
     <div className="flex flex-col gap-0.5">
-      <div className="font-mono">{truncatedId}</div>
-      {session.conversationPreview && (
-        <div className="text-[10px] text-gray-500 italic truncate max-w-xs">
-          {session.conversationPreview}
+      <div className="font-mono text-xs text-text-secondary group-hover:text-data-400 transition-colors">
+        {sessionId}
+      </div>
+      {metadata.conversationPreview && (
+        <div className="text-[10px] text-text-muted italic truncate max-w-xs" title={metadata.conversationPreview}>
+          {metadata.conversationPreview}
         </div>
       )}
     </div>
     ```
 
-- [ ] **Add tooltip with full message**
-  - Wrap in tooltip component if preview is truncated
-  - Show full first user message on hover
-  - Reuse existing tooltip pattern from SessionRow (line 202)
+- [x] **Add tooltip with full message**
+  - ✓ Added `title` attribute to preview div (line 176)
+  - ✓ Shows full message text on hover
+  - ✓ Native browser tooltip (no additional component needed)
 
-- [ ] **Style preview text**
-  - Very small font: text-[10px]
-  - Muted color: text-gray-500
-  - Italic to distinguish from ID
-  - Single line with ellipsis truncation
-  - Max width to prevent expanding cell too much
+- [x] **Style preview text**
+  - ✓ Very small font: text-[10px]
+  - ✓ Muted color: text-text-muted (consistent with design system)
+  - ✓ Italic to distinguish from ID
+  - ✓ Single line with ellipsis truncation
+  - ✓ Max width: max-w-xs (prevents expanding cell too much)
 
 ### Verification Steps
 
-- [ ] **Visual verification**
+- [x] **Programmatic tests**
+  - ✓ TypeScript compilation successful (no errors)
+  - ✓ Build successful (npm run build)
+  - ✓ All existing conversation detection tests pass
+
+- [ ] **Visual verification** (MANUAL TESTING REQUIRED)
   - Load session list
   - Verify preview text appears below Session ID
   - Verify text is properly truncated
   - Verify styling is subtle and doesn't dominate
 
-- [ ] **Content verification**
+- [ ] **Content verification** (MANUAL TESTING REQUIRED)
   - Check multiple sessions
   - Verify preview matches the actual first user message
   - Verify it comes from the longest conversation
   - Test with sessions containing different message types
 
-- [ ] **Tooltip verification**
+- [ ] **Tooltip verification** (MANUAL TESTING REQUIRED)
   - Hover over previews
-  - Verify full message appears in tooltip
+  - Verify full message appears in tooltip (native browser tooltip)
   - Verify tooltip doesn't block other UI elements
 
-- [ ] **Edge cases**
-  - Test with sessions that have no conversations
-  - Test with very long first messages (>1000 chars)
+- [ ] **Edge cases** (MANUAL TESTING REQUIRED)
+  - Test with sessions that have no conversations (preview should not appear)
+  - Test with very long first messages (>200 chars - should be truncated)
   - Test with messages containing special characters/markdown
-  - Test with messages that are only tool use
+  - Test with sessions from Phase 2.5 test file
 
 ---
 

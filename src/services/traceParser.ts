@@ -298,7 +298,8 @@ export class TraceParserService {
     // Step 4: Merge compact conversations with their parents
     const finalConversations = this.mergeCompactConversations(withCompactDetection);
 
-    const conversationCount = finalConversations.length;
+    // Extract conversation metadata (count and preview)
+    const conversationMetadata = this.extractConversationMetadata(finalConversations);
 
     return {
       userId: firstEntry.request.body.metadata.user_id,
@@ -320,7 +321,8 @@ export class TraceParserService {
       toolsAvailable,
       toolsUsed,
       hasErrors,
-      conversationCount,
+      conversationCount: conversationMetadata.conversationCount,
+      conversationPreview: conversationMetadata.longestConversation?.firstUserMessage,
     };
   }
 
@@ -358,6 +360,7 @@ export class TraceParserService {
       toolsUsed: Array.from(metadata.toolsUsed),
       hasErrors: metadata.hasErrors,
       conversationCount: metadata.conversationCount,
+      conversationPreview: metadata.conversationPreview,
     };
   }
 
