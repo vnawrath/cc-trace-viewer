@@ -285,6 +285,10 @@ export class TraceParserService {
       }
     }
 
+    // Detect conversations and get count
+    const conversations = this.detectConversations(entries);
+    const conversationCount = conversations.length;
+
     return {
       userId: firstEntry.request.body.metadata.user_id,
       requestCount: entries.length,
@@ -305,6 +309,7 @@ export class TraceParserService {
       toolsAvailable,
       toolsUsed,
       hasErrors,
+      conversationCount,
     };
   }
 
@@ -341,6 +346,7 @@ export class TraceParserService {
       toolsAvailable: Array.from(metadata.toolsAvailable),
       toolsUsed: Array.from(metadata.toolsUsed),
       hasErrors: metadata.hasErrors,
+      conversationCount: metadata.conversationCount,
     };
   }
 

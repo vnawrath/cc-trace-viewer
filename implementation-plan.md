@@ -153,57 +153,238 @@ RequestCard Component [ENHANCED]
 
 ### Implementation Tasks
 
-- [ ] **Update SessionData type** in `src/types/trace.ts`
-  - Add `conversationCount: number` field to SessionData interface (line ~75)
-  - Add to SessionMetadata interface as well (line ~110)
-  - Make it optional initially for backward compatibility: `conversationCount?: number`
+- [x] **Update SessionData type** in `src/types/trace.ts`
+  - ✓ Added `conversationCount?: number` field to SessionData interface (line 83)
+  - ✓ Added to SessionMetadata interface (line 119)
+  - ✓ Made optional for backward compatibility
 
-- [ ] **Update session discovery** in `src/services/sessionManager.ts`
-  - Modify `extractSessionMetadata()` to call conversation detection
-  - Add conversation count to returned metadata
-  - Ensure performance: conversation detection should be fast (O(n) where n = requests)
+- [x] **Update session metadata calculation** in `src/services/traceParser.ts`
+  - ✓ Modified `calculateSessionMetadata()` to call conversation detection (line 289-290)
+  - ✓ Added conversation count to returned metadata (line 312)
+  - ✓ Modified `createSessionData()` to include conversationCount (line 349)
+  - ✓ Performance: O(n) complexity where n = requests
 
-- [ ] **Add Conversations column** in `src/components/SessionTable.tsx`
-  - Add column header after "Requests" column (line ~100)
-  - Make it sortable (add to sort logic, lines 14-62)
-  - Use icon: Chat bubble or message icon from your icon library
-  - Header text: "Convs" (abbreviated for space)
+- [x] **Add Conversations column** in `src/components/SessionTable.tsx`
+  - ✓ Added "Convs" column header after "Requests" column (line 118-126)
+  - ✓ Made sortable (added to SortColumn type and sort logic, lines 10, 48-52)
+  - ✓ Header text: "Convs" (abbreviated for space)
+  - ✓ Right-aligned to match other numeric columns
 
-- [ ] **Display conversation count in SessionRow**
-  - Add new `<td>` cell after request count (line ~215)
-  - Display conversation count with same styling as request count
-  - Right-aligned, monospace font, text-xs
-  - Show dash "—" if conversationCount is undefined (backward compat)
-  - Color: Use existing data color (cyan)
+- [x] **Display conversation count in SessionRow**
+  - ✓ Added new `<td>` cell after request count (line 231-234)
+  - ✓ Display conversation count with same styling as request count
+  - ✓ Right-aligned, monospace font, text-sm
+  - ✓ Shows dash "—" if conversationCount is undefined (backward compat)
+  - ✓ Color: Uses existing data color (data-400 cyan)
 
-- [ ] **Adjust column widths**
-  - Ensure table doesn't become too wide
-  - Slightly reduce width of other columns if needed
-  - Test responsive behavior
+- [x] **Update SessionTableSkeleton**
+  - ✓ Added "Convs" column header in skeleton (line 301)
+  - ✓ Added skeleton cell for conversation count (line 324-326)
 
 ### Verification Steps
 
-- [ ] **Visual verification**
+- [x] **Programmatic tests**
+  - ✓ All conversation detection tests pass (src/tests/conversationDetection.test.ts)
+  - ✓ TypeScript compilation successful (no errors)
+  - ✓ Build successful (npm run build)
+
+- [ ] **Visual verification** (MANUAL TESTING REQUIRED)
   - Load application and view session list
   - Verify "Convs" column appears after "Requests"
   - Verify conversation counts display correctly
   - Verify column alignment matches other numeric columns
 
-- [ ] **Sorting verification**
+- [ ] **Sorting verification** (MANUAL TESTING REQUIRED)
   - Click "Convs" column header
   - Verify sorting works (ascending/descending)
   - Verify sort indicator appears
   - Verify sessions reorder correctly
 
-- [ ] **Data accuracy**
+- [ ] **Data accuracy** (MANUAL TESTING REQUIRED)
   - Manually count conversations in a test session
   - Verify displayed count matches manual count
   - Test with sessions containing 1, 2, 5+ conversations
 
-- [ ] **Backward compatibility**
+- [ ] **Backward compatibility** (MANUAL TESTING REQUIRED)
   - Test with sessions parsed before conversation detection was added
   - Verify dash "—" displays when conversationCount is missing
   - Verify no console errors
+
+---
+
+## Phase 2.5: Enhanced Conversation Filtering (Match claude-trace Logic)
+
+**Goal**: Implement advanced conversation filtering to match claude-trace's counting methodology, including short conversation filtering and compact conversation detection.
+
+### Context
+
+**Current Issue**: Our implementation counts all unique conversation threads (e.g., 25 in test file), while claude-trace shows fewer conversations (e.g., 3) due to sophisticated filtering:
+1. **Short conversation filtering**: Excludes conversations with ≤2 messages (removes background tasks, single-turn exchanges)
+2. **Compact conversation detection**: Detects when full conversation history is sent in a single API call
+3. **Conversation merging**: Merges compact conversations back to their original threads to avoid double-counting
+
+**Discrepancy Example**: `.claude-trace/log-2025-12-04-22-20-10.html`
+- Our count: 25 conversations (all unique conversation threads)
+- Claude-trace count: 3 conversations (substantial multi-turn conversations only)
+- Difference: 22 short/background conversations filtered out by claude-trace
+
+**Reference**: `docs/claude-trace/src/shared-conversation-processor.ts`
+- Lines 576-579: Short conversation filtering (>2 messages)
+- Lines 643-713: Compact conversation detection and merging logic
+
+**Files**:
+- `src/services/traceParser.ts` - Enhance conversation detection logic
+- `src/types/trace.ts` - Add compact conversation tracking fields
+
+### Implementation Tasks
+
+- [ ] **Add compact conversation tracking** in `src/types/trace.ts`
+  - Add `isCompact?: boolean` field to ConversationGroup
+  - Add `compactedFrom?: string` to track parent conversation ID
+  - Add `allPairs?: ClaudeTraceEntry[]` to store all request/response pairs
+  - Keep fields optional for backward compatibility
+
+- [ ] **Implement short conversation filtering** in `traceParser.ts`
+  - Modify `detectConversations()` to track all pairs per conversation (not just longest)
+  - Create `filterShortConversations(conversations: ConversationGroup[]): ConversationGroup[]`
+  - Filter out conversations where `totalMessages <= 2`
+  - This removes: background tasks, title generation, single Q&A exchanges
+  - Return filtered conversation list
+
+- [ ] **Implement compact conversation detection** in `traceParser.ts`
+  - Create new function: `detectCompactConversations(conversations: ConversationGroup[]): ConversationGroup[]`
+  - **Logic for identifying compact conversations**:
+    1. Conversation has only 1 API pair but >2 messages (indicator: full history in one call)
+    2. Find potential "parent" conversations with exactly 2 fewer messages
+    3. Compare message content to verify it's a continuation of the same conversation
+    4. Mark as compact and link to parent conversation ID
+  - **Why this happens**: When user continues a conversation, Claude receives entire history in the request, creating a "compact" representation
+  - Reference: `docs/claude-trace/src/shared-conversation-processor.ts:643-713`
+
+- [ ] **Implement conversation merging** in `traceParser.ts`
+  - Create new function: `mergeCompactConversations(conversations: ConversationGroup[]): ConversationGroup[]`
+  - **Merging logic**:
+    1. Group conversations by conversation ID
+    2. For each compact conversation, find its parent by comparing message counts
+    3. Merge the compact conversation's pairs into parent's `allPairs` array
+    4. Update parent's `totalMessages` to the maximum across all pairs
+    5. Remove compact conversation from final results (to avoid duplication)
+  - Return merged conversation list with no duplicates
+
+- [ ] **Update conversation detection flow** in `traceParser.ts`
+  - Modify `calculateSessionMetadata()` to implement full filtering pipeline:
+    ```typescript
+    // Step 1: Detect all conversations (current logic)
+    const allConversations = this.detectConversations(entries);
+
+    // Step 2: Filter out short conversations (≤2 messages)
+    const substantialConversations = this.filterShortConversations(allConversations);
+
+    // Step 3: Detect compact conversations
+    const withCompactDetection = this.detectCompactConversations(substantialConversations);
+
+    // Step 4: Merge compact conversations with their parents
+    const finalConversations = this.mergeCompactConversations(withCompactDetection);
+
+    const conversationCount = finalConversations.length;
+    ```
+  - Pipeline should be modular for easy testing and debugging
+
+- [ ] **Add configuration option** (optional, for future flexibility)
+  - Consider adding filtering mode to conversation detection options
+  - Modes: `"simple"` (current, count all) vs `"advanced"` (claude-trace, with filtering)
+  - Could be exposed in UI as a toggle in future phases
+  - For now, hardcode to `"advanced"` to match claude-trace
+
+- [ ] **Update conversation metadata extraction** in `traceParser.ts`
+  - Modify `extractConversationMetadata()` to work with merged conversations
+  - When extracting preview, use `allPairs` if available (merged conversation)
+  - Otherwise fall back to single `requests` array (simple conversation)
+  - Ensure longest conversation logic considers all pairs
+
+### Verification Steps
+
+- [ ] **Unit test: Short conversation filtering**
+  - Create test session with 5 conversations:
+    - 2 long conversations (5 and 10 messages)
+    - 3 short conversations (1, 2, and 2 messages)
+  - Apply `filterShortConversations()`
+  - Verify result contains only 2 long conversations
+  - Verify short ones are removed
+
+- [ ] **Unit test: Compact conversation detection**
+  - Create conversation thread with continuation:
+    - Request A: 10 messages (user1, asst1, user2, asst2, ..., user5, asst5)
+    - Request B: 12 messages (user1, asst1, ..., user5, asst5, user6, asst6)
+    - Request B includes all of A's history plus 2 new messages
+  - Apply `detectCompactConversations()`
+  - Verify Request B is marked as compact (`isCompact: true`)
+  - Verify Request B is linked to Request A (`compactedFrom: A.id`)
+
+- [ ] **Unit test: Conversation merging**
+  - Given conversations with compact markings from previous test
+  - Apply `mergeCompactConversations()`
+  - Verify:
+    - Parent conversation's `allPairs` contains both A and B
+    - Parent conversation's `totalMessages` = 12 (max of both)
+    - Compact conversation B is removed from final list
+    - Final list length = 1 (not 2)
+
+- [ ] **Integration test: Match claude-trace counts**
+  - Load test file: `.claude-trace/log-2025-12-04-22-20-10.html`
+  - **Before enhancement**: 25 conversations
+  - **After enhancement**: Should show ~3 conversations (matching claude-trace)
+  - Document breakdown:
+    - How many filtered by short conversation filter
+    - How many merged by compact detection
+    - Final count matches claude-trace output
+
+- [ ] **Performance test**
+  - Test with large trace file (100+ requests, 20+ conversations)
+  - Verify enhanced filtering completes in <100ms
+  - Check complexity is still O(n²) at worst (acceptable for trace file sizes)
+  - No noticeable UI lag
+
+- [ ] **Manual verification**
+  - Load `.claude-trace/log-2025-12-04-22-20-10.html` in UI
+  - Verify conversation count: 3 (not 25)
+  - Compare with claude-trace HTML output
+  - Verify counts match exactly
+
+- [ ] **Edge cases**
+  - **All short**: Session with only short conversations → Result: 0 conversations (expected)
+  - **All compact**: Session where every conversation is compact → Verify all merged correctly
+  - **Mixed**: Session with both standalone and compact conversations → Verify correct separation
+  - **Long chains**: Conversation with 10+ continuation requests → Verify all merged into one
+  - **No parent**: Compact conversation with no matching parent → Keep as-is, don't crash
+
+### Expected Outcome
+
+After Phase 2.5:
+- ✅ Conversation counts match claude-trace's methodology exactly
+- ✅ Test file (`.claude-trace/log-2025-12-04-22-20-10.html`): 25 → 3 conversations
+- ✅ More accurate representation of "substantial conversations"
+- ✅ Background tasks, title generation, and single-turn exchanges filtered out
+- ✅ Compact conversations (continuation requests) merged with originals
+- ✅ No double-counting of the same conversation thread
+- ✅ Clearer understanding of actual conversation complexity in sessions
+
+### Implementation Notes
+
+**Why filtering matters**:
+- Users care about substantial conversations, not background noise
+- Matches user's mental model of "conversations" (multi-turn interactions)
+- Consistent with claude-trace's established behavior
+- Better signal-to-noise ratio in session list
+
+**Compact conversation scenario**:
+```
+API Request 1: [user1, asst1, user2, asst2, user3, asst3]  → 6 messages
+API Request 2: [user1, asst1, ..., user3, asst3, user4, asst4]  → 8 messages
+API Request 3: [user1, asst1, ..., user4, asst4, user5, asst5]  → 10 messages
+```
+Without compact detection: 3 separate conversations (wrong!)
+With compact detection: 1 merged conversation with 3 API calls (correct!)
 
 ---
 

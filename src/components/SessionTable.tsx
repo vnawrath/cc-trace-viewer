@@ -7,24 +7,12 @@ interface SessionTableProps {
   sessions: SessionSummary[];
 }
 
-type SortColumn = 'startTime' | 'requestCount' | 'totalTokens' | 'duration' | 'errors';
+type SortColumn = 'sessionId' | 'requestCount' | 'conversationCount' | 'totalTokens' | 'duration';
 type SortDirection = 'asc' | 'desc';
 
 export function SessionTable({ sessions }: SessionTableProps) {
-  const [sortColumn, setSortColumn] = useState<SortColumn>('startTime');
+  const [sortColumn, setSortColumn] = useState<SortColumn>('sessionId');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
-
-  const formatDate = (timestamp: number): string => {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false
-    });
-  };
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
@@ -39,22 +27,22 @@ export function SessionTable({ sessions }: SessionTableProps) {
     let comparison = 0;
 
     switch (sortColumn) {
-      case 'startTime':
-        comparison = a.metadata.startTime - b.metadata.startTime;
+      case 'sessionId':
+        comparison = a.sessionId.localeCompare(b.sessionId);
         break;
       case 'requestCount':
         comparison = a.metadata.requestCount - b.metadata.requestCount;
+        break;
+      case 'conversationCount':
+        const aConvs = a.metadata.conversationCount ?? 0;
+        const bConvs = b.metadata.conversationCount ?? 0;
+        comparison = aConvs - bConvs;
         break;
       case 'totalTokens':
         comparison = a.metadata.totalTokens - b.metadata.totalTokens;
         break;
       case 'duration':
         comparison = a.metadata.duration - b.metadata.duration;
-        break;
-      case 'errors':
-        const aErrors = a.metadata.hasErrors ? 1 : 0;
-        const bErrors = b.metadata.hasErrors ? 1 : 0;
-        comparison = aErrors - bErrors;
         break;
     }
 
@@ -86,19 +74,15 @@ export function SessionTable({ sessions }: SessionTableProps) {
       <table className="w-full text-xs">
         <thead className="sticky top-0 bg-base-900 border-b border-base-800 z-10">
           <tr>
-            <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">
-              Status
-            </th>
-            <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">
-              Session ID
+            <th className="w-8 px-2 py-2">
             </th>
             <th
               className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group"
-              onClick={() => handleSort('startTime')}
+              onClick={() => handleSort('sessionId')}
             >
               <div className="flex items-center gap-1.5">
-                <span>Start Time</span>
-                <SortIcon column="startTime" />
+                <span>Session ID</span>
+                <SortIcon column="sessionId" />
               </div>
             </th>
             <th
@@ -108,6 +92,15 @@ export function SessionTable({ sessions }: SessionTableProps) {
               <div className="flex items-center justify-end gap-1.5">
                 <span>Requests</span>
                 <SortIcon column="requestCount" />
+              </div>
+            </th>
+            <th
+              className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group"
+              onClick={() => handleSort('conversationCount')}
+            >
+              <div className="flex items-center justify-end gap-1.5">
+                <span>Convs</span>
+                <SortIcon column="conversationCount" />
               </div>
             </th>
             <th
@@ -128,26 +121,11 @@ export function SessionTable({ sessions }: SessionTableProps) {
                 <SortIcon column="duration" />
               </div>
             </th>
-            <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">
-              Models
-            </th>
-            <th className="text-center px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">
-              Tools
-            </th>
-            <th
-              className="text-center px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group"
-              onClick={() => handleSort('errors')}
-            >
-              <div className="flex items-center justify-center gap-1.5">
-                <span>Errors</span>
-                <SortIcon column="errors" />
-              </div>
-            </th>
           </tr>
         </thead>
         <tbody className="bg-base-950 divide-y divide-base-900">
           {sortedSessions.map((session) => (
-            <SessionRow key={session.sessionId} session={session} formatDate={formatDate} />
+            <SessionRow key={session.sessionId} session={session} />
           ))}
         </tbody>
       </table>
@@ -157,23 +135,12 @@ export function SessionTable({ sessions }: SessionTableProps) {
 
 interface SessionRowProps {
   session: SessionSummary;
-  formatDate: (timestamp: number) => string;
 }
 
-function SessionRow({ session, formatDate }: SessionRowProps) {
+function SessionRow({ session }: SessionRowProps) {
   const { sessionId, metadata } = session;
   const formatDuration = traceParserService.formatDuration;
   const formatTokenCount = traceParserService.formatTokenCount;
-
-  const models = Array.from(metadata.modelsUsed);
-  const tools = Array.from(metadata.toolsUsed);
-  const errorCount = metadata.hasErrors ? 1 : 0;
-
-  const modelsDisplay = models
-    .map(m => m.replace('claude-3-', '').replace('claude-', ''))
-    .join(', ');
-
-  const toolsTitle = tools.length > 0 ? tools.join(', ') : 'No tools used';
 
   return (
     <Link
@@ -181,7 +148,7 @@ function SessionRow({ session, formatDate }: SessionRowProps) {
       className="table-row group hover:bg-base-900/50 transition-colors relative"
     >
       {/* Status dot */}
-      <td className="px-3 py-2">
+      <td className="w-8 px-2 py-2">
         <div className="flex items-center">
           {metadata.hasErrors ? (
             <div
@@ -197,21 +164,19 @@ function SessionRow({ session, formatDate }: SessionRowProps) {
         </div>
       </td>
 
-      {/* Session ID with tooltip */}
-      <td className="px-3 py-2 font-mono text-sm text-text-secondary group-hover:text-data-400 transition-colors relative">
-        <span className="inline-block" title={sessionId}>
-          {sessionId.slice(0, 12)}...
-        </span>
-      </td>
-
-      {/* Start Time */}
-      <td className="px-3 py-2 font-mono text-xs text-text-tertiary whitespace-nowrap">
-        {formatDate(metadata.startTime)}
+      {/* Session ID - full display */}
+      <td className="px-3 py-2 font-mono text-xs text-text-secondary group-hover:text-data-400 transition-colors">
+        {sessionId}
       </td>
 
       {/* Request Count */}
       <td className="px-3 py-2 font-mono text-sm text-right text-data-400 tabular-nums">
         {metadata.requestCount}
+      </td>
+
+      {/* Conversation Count */}
+      <td className="px-3 py-2 font-mono text-sm text-right text-data-400 tabular-nums">
+        {metadata.conversationCount ?? '—'}
       </td>
 
       {/* Total Tokens with input/output breakdown */}
@@ -227,36 +192,6 @@ function SessionRow({ session, formatDate }: SessionRowProps) {
       {/* Duration */}
       <td className="px-3 py-2 font-mono text-sm text-right text-warning-400 tabular-nums">
         {formatDuration(metadata.duration)}
-      </td>
-
-      {/* Models */}
-      <td className="px-3 py-2 text-xs text-text-tertiary truncate max-w-[200px]" title={modelsDisplay}>
-        {modelsDisplay || 'N/A'}
-      </td>
-
-      {/* Tools count */}
-      <td className="px-3 py-2 text-center">
-        {tools.length > 0 ? (
-          <span
-            className="inline-flex items-center justify-center font-mono text-xs text-accent-400 tabular-nums"
-            title={toolsTitle}
-          >
-            {tools.length}
-          </span>
-        ) : (
-          <span className="text-text-muted">—</span>
-        )}
-      </td>
-
-      {/* Errors */}
-      <td className="px-3 py-2 text-center">
-        {errorCount > 0 ? (
-          <span className="inline-flex items-center justify-center font-mono text-xs text-error-400 tabular-nums">
-            {errorCount}
-          </span>
-        ) : (
-          <span className="text-text-muted">—</span>
-        )}
       </td>
 
       {/* Hover effect overlay */}
@@ -275,28 +210,25 @@ export function SessionTableSkeleton({ count = 10 }: SessionTableSkeletonProps) 
       <table className="w-full text-xs">
         <thead className="bg-base-900 border-b border-base-800">
           <tr>
-            <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Status</th>
+            <th className="w-8 px-2 py-2"></th>
             <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Session ID</th>
-            <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Start Time</th>
             <th className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Requests</th>
+            <th className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Convs</th>
             <th className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Total Tokens</th>
             <th className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Duration</th>
-            <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Models</th>
-            <th className="text-center px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Tools</th>
-            <th className="text-center px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Errors</th>
           </tr>
         </thead>
         <tbody className="bg-base-950 divide-y divide-base-900">
           {Array.from({ length: count }).map((_, index) => (
             <tr key={index} className="animate-pulse">
-              <td className="px-3 py-2">
+              <td className="w-8 px-2 py-2">
                 <div className="w-2 h-2 bg-base-800 rounded-full" />
               </td>
               <td className="px-3 py-2">
-                <div className="h-4 bg-base-800 rounded w-24" />
+                <div className="h-3 bg-base-800 rounded w-64" />
               </td>
               <td className="px-3 py-2">
-                <div className="h-3 bg-base-800 rounded w-32" />
+                <div className="h-4 bg-base-800 rounded w-8 ml-auto" />
               </td>
               <td className="px-3 py-2">
                 <div className="h-4 bg-base-800 rounded w-8 ml-auto" />
@@ -307,15 +239,6 @@ export function SessionTableSkeleton({ count = 10 }: SessionTableSkeletonProps) 
               </td>
               <td className="px-3 py-2">
                 <div className="h-4 bg-base-800 rounded w-12 ml-auto" />
-              </td>
-              <td className="px-3 py-2">
-                <div className="h-3 bg-base-800 rounded w-24" />
-              </td>
-              <td className="px-3 py-2">
-                <div className="h-3 bg-base-800 rounded w-6 mx-auto" />
-              </td>
-              <td className="px-3 py-2">
-                <div className="h-3 bg-base-800 rounded w-6 mx-auto" />
               </td>
             </tr>
           ))}

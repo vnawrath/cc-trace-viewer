@@ -80,6 +80,7 @@ export interface SessionData {
   toolsAvailable: string[];
   toolsUsed: string[];
   hasErrors: boolean;
+  conversationCount?: number;
 }
 
 export interface DirectoryHandle extends FileSystemDirectoryHandle {
@@ -115,6 +116,7 @@ export interface SessionMetadata {
   toolsAvailable: Set<string>;
   toolsUsed: Set<string>;
   hasErrors: boolean;
+  conversationCount?: number;
 }
 
 export interface ConversationGroup {
