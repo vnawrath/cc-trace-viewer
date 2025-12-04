@@ -1,5 +1,6 @@
 Please help create an implementation plan to achieve the goal described in goal.md.
 Read goal.md, then inspect the codebase to understand the current implementation, relevant files, functions, fields and API that will be relevant to the plan.
+Use subagents to offload the research work.
 Then write the plan into implementation-plan.md, with general overview and further broken down into individual implementation phases.
 Each phase should be deliverable on it's own, with a clear verifiable and testable outcome. Phases should be rougly equal in scope and effort.
 For every phase, you should:
