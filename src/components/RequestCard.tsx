@@ -150,7 +150,7 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
 
   // Get messages for preview components
   const messages = (request.rawRequest?.body?.messages || []) as Message[];
-  const assistantContent = request.rawResponse?.body?.content || [];
+  const assistantContent = request.responseContent;
   const errorMessage = request.hasError ? `Error: ${request.rawResponse?.body_raw || 'Unknown error'}` : '';
 
   // Format timestamp properly (Unix timestamp in seconds needs * 1000)

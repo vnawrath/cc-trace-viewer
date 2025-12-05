@@ -1,5 +1,6 @@
 import type { ClaudeTraceEntry, TokenUsage } from '../types/trace';
 import { traceParserService } from './traceParser';
+import type { ContentBlock } from '../utils/messageFormatting';
 
 export interface RequestMetrics {
   id: string;
@@ -28,6 +29,7 @@ export interface RequestMetrics {
   systemPromptLength: number;
   contentPreview: string;
   stopReason: string | null;
+  responseContent: ContentBlock[];
   rawRequest: import('../types/trace').TraceRequest;
   rawResponse: import('../types/trace').TraceResponse;
 }
@@ -127,6 +129,19 @@ export class RequestAnalyzerService {
       return total + item.text.length;
     }, 0) || 0;
 
+    // Extract response content from body or body_raw (for streaming)
+    let responseContent: ContentBlock[] = [];
+    if (response.body?.content) {
+      // Non-streaming response: content is directly available
+      responseContent = response.body.content as ContentBlock[];
+    } else if (response.body_raw) {
+      // Streaming response: reconstruct content from body_raw
+      const reconstructed = traceParserService.reconstructResponseFromStream(response.body_raw);
+      if (reconstructed?.content && Array.isArray(reconstructed.content)) {
+        responseContent = reconstructed.content as ContentBlock[];
+      }
+    }
+
     // Generate unique ID from timestamp and index
     const id = `${request.timestamp}-${index}`;
 
@@ -152,6 +167,7 @@ export class RequestAnalyzerService {
       systemPromptLength,
       contentPreview: contentPreview + (contentPreview.length >= 100 ? '...' : ''),
       stopReason: response.body?.stop_reason || null,
+      responseContent,
       rawRequest: request,
       rawResponse: response
     };

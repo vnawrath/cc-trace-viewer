@@ -8,6 +8,9 @@ import {
   hasThinkingContent,
   getToolsUsed,
   truncate,
+  hasToolResults,
+  extractToolResultContent,
+  getFormattedToolCalls,
   type Message,
   type ContentBlock
 } from '../utils/messageFormatting';
@@ -88,15 +91,36 @@ export function UserMessagePreview({
   // Extract last user message
   const userMessages = messages.filter(m => m.role === 'user');
   const lastUserMsg = userMessages.length > 0 ? userMessages[userMessages.length - 1] : null;
-  const content = lastUserMsg ? extractTextFromMessage(lastUserMsg.content) : '';
 
-  if (!content) {
+  if (!lastUserMsg) {
+    return <span className="text-[10px] text-gray-600">—</span>;
+  }
+
+  // Try to extract text content first
+  const textContent = extractTextFromMessage(lastUserMsg.content);
+
+  // If no text content, check for tool results
+  if (!textContent && hasToolResults(lastUserMsg.content)) {
+    const toolResultContent = extractToolResultContent(lastUserMsg.content);
+    if (toolResultContent) {
+      const truncatedContent = truncate(toolResultContent, maxLength);
+      return (
+        <div className={`truncate ${className}`} title={toolResultContent}>
+          <span className="text-gray-500 text-[10px]">[Tool result] </span>
+          <span>{truncatedContent}</span>
+        </div>
+      );
+    }
+  }
+
+  // If still no content, show dash
+  if (!textContent) {
     return <span className="text-[10px] text-gray-600">—</span>;
   }
 
   return (
     <MessagePreview
-      content={content}
+      content={textContent}
       maxLength={maxLength}
       className={className}
     />
@@ -142,6 +166,21 @@ export function AssistantMessagePreview({
   // Detect thinking and tools
   const hasThinking = hasThinkingContent(content);
   const toolsUsed = getToolsUsed(content);
+  const formattedToolCalls = getFormattedToolCalls(content);
+
+  // If no text content but has tool calls, show formatted tool calls
+  if (!textContent && formattedToolCalls.length > 0) {
+    const toolCallsText = formattedToolCalls.join(', ');
+    const truncatedToolCalls = truncate(toolCallsText, maxLength);
+    return (
+      <div className={`truncate ${className}`} title={toolCallsText}>
+        {hasThinking && (
+          <span className="text-purple-400 font-medium">[Thinking] </span>
+        )}
+        <span className="text-amber-400">{truncatedToolCalls}</span>
+      </div>
+    );
+  }
 
   // If no text content but has thinking or tools, show only indicators
   if (!textContent && (hasThinking || toolsUsed.length > 0)) {
