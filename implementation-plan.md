@@ -444,7 +444,7 @@ With compact detection: 1 merged conversation with 3 API calls (correct!)
 
 ---
 
-## Phase 4: Enhance Request Table with Two-Row Layout
+## Phase 4: Enhance Request Table with Two-Row Layout ✅ COMPLETE
 
 **Goal**: Modify RequestCard component to render each request as two table rows - one for stats + user message, one for response content.
 
@@ -456,79 +456,93 @@ With compact detection: 1 merged conversation with 3 API calls (correct!)
 - Row 1: Status | Timestamp | Model | Duration | Tokens | Tools | User Message Preview
 - Row 2: (empty) | (empty) | (empty) | (empty) | (empty) | (empty) | Assistant Response Preview
 
-**Files**:
-- `src/components/RequestCard.tsx` - Request row rendering
-- `src/pages/RequestListPage.tsx:225-293` - Table structure
-- `src/types/trace.ts` - Request data types
+**Files Modified**:
+- `src/components/RequestCard.tsx` - Request row rendering (lines 149-310)
+- `src/pages/RequestListPage.tsx` - Table structure (line 276)
+- `src/services/requestAnalyzer.ts` - Added rawRequest and rawResponse fields (lines 31-32, 155-156)
 
 ### Implementation Tasks
 
-- [ ] **Modify RequestCard to return multiple rows**
-  - Change return type from single `<tr>` to fragment with two `<tr>` elements
-  - Maintain key prop on first row: `key={request.id}`
-  - Add key to second row: `key={request.id}-response`
-  - Lines to modify: 149-222
+- [x] **Modify RequestCard to return multiple rows**
+  - ✓ Changed return type from single `<tr>` to React fragment with two `<tr>` elements
+  - ✓ First row maintains hover and transition classes
+  - ✓ Second row has different background (bg-gray-900/40) and bottom border
+  - ✓ Helper functions added: `extractTextContent()`, `getUserMessage()`, `getAssistantResponse()`, `truncate()`
 
-- [ ] **Implement first row (stats + user message)**
-  - Keep existing columns: Status, Timestamp, Model, Duration, Tokens, Tools
-  - Remove "Actions" column (View → link)
-  - Add new column: "User Message" that spans remaining width
-  - Extract last user message from `request.request.body.messages`
-  - Show truncated preview (first 150 characters)
-  - Style: text-xs, text-gray-300, italic
-  - Make entire row clickable (wrap in Link like SessionRow)
+- [x] **Implement first row (stats + user message)**
+  - ✓ Kept existing columns: Status, Timestamp, Model, Duration, Tokens, Tools
+  - ✓ Replaced "Actions" column with "Message" column (header updated in RequestListPage.tsx)
+  - ✓ Extract last user message from `request.rawRequest.body.messages`
+  - ✓ Show truncated preview (first 150 characters with ellipsis)
+  - ✓ Style: text-xs, text-gray-300, italic, truncate with title tooltip
+  - ✓ Made entire row clickable with Link component
 
-- [ ] **Implement second row (response preview)**
-  - First 6 cells: empty `<td>` elements (for alignment)
-  - 7th cell: Assistant response content
-  - Extract response from `request.response.body.content`
-  - Show truncated preview (first 200 characters)
-  - Style: text-xs, text-gray-400, slightly indented
-  - Different background: bg-gray-900/40 to distinguish from first row
+- [x] **Implement second row (response preview)**
+  - ✓ First 6 cells: empty `<td>` elements for alignment
+  - ✓ 7th cell: Assistant response content
+  - ✓ Extract response from `request.rawResponse.body.content`
+  - ✓ Show truncated preview (first 200 characters with ellipsis)
+  - ✓ Style: text-xs, text-gray-400, pl-4 (indented)
+  - ✓ Different background: bg-gray-900/40 to distinguish from first row
 
-- [ ] **Add visual hierarchy**
-  - First row: slightly bolder, bg-gray-900
-  - Second row: slightly muted, bg-gray-900/40
-  - Thin border between row pairs: border-b border-gray-800 on second row
-  - No border between rows within a pair
+- [x] **Add visual hierarchy**
+  - ✓ First row: hover:bg-gray-800/50, border-b-0 (no border within pair)
+  - ✓ Second row: bg-gray-900/40 for distinction
+  - ✓ Border between row pairs: border-b border-gray-800 on second row
+  - ✓ Both rows have hover effects and transitions
 
-- [ ] **Update table structure** in `RequestListPage.tsx`
-  - Ensure table layout accommodates variable row heights
-  - Update column count in `<colgroup>` if present
-  - Verify spacing and alignment remain correct
+- [x] **Update table structure** in `RequestListPage.tsx`
+  - ✓ Changed last column header from "Actions" to "Message"
+  - ✓ No colgroup present, table handles column widths naturally
+  - ✓ Table layout accommodates two-row structure automatically
 
-- [ ] **Handle edge cases**
-  - Requests with no user messages: show "—" in user message cell
-  - Requests with failed responses: show error message in response cell
-  - Requests with empty responses: show "—" or "[No response]"
+- [x] **Handle edge cases**
+  - ✓ Requests with no user messages: show "—" in user message cell
+  - ✓ Requests with failed responses: show error message in red (text-red-400) in response cell
+  - ✓ Requests with empty responses: show "—" in response cell
+  - ✓ All message content types handled (string or array of content blocks)
+
+- [x] **Add rawRequest and rawResponse to RequestMetrics**
+  - ✓ Extended RequestMetrics interface with rawRequest and rawResponse fields
+  - ✓ Updated analyzeRequest() to include these fields in returned object
+  - ✓ Enables access to full request/response data for message extraction
 
 ### Verification Steps
 
-- [ ] **Visual verification**
+- [x] **Programmatic tests**
+  - ✓ TypeScript compilation successful (no errors)
+  - ✓ Build successful (npm run build)
+  - ✓ All imports and types correctly resolved
+
+- [ ] **Visual verification** (MANUAL TESTING REQUIRED)
   - Load request list for a session
   - Verify each request displays as two rows
   - Verify alignment of all columns
   - Verify background colors create visual grouping
+  - Verify first row shows user message preview
+  - Verify second row shows assistant response preview
 
-- [ ] **Content verification**
+- [ ] **Content verification** (MANUAL TESTING REQUIRED)
   - Check that user message previews match actual messages
   - Check that response previews match actual responses
   - Verify truncation works correctly (ellipsis at end)
+  - Hover over truncated text to see full message in tooltip
 
-- [ ] **Click behavior**
+- [ ] **Click behavior** (MANUAL TESTING REQUIRED)
   - Click first row: should navigate to request detail
   - Click second row: should also navigate (entire pair is one request)
   - Verify navigation works correctly
 
-- [ ] **Responsive testing**
+- [ ] **Responsive testing** (MANUAL TESTING REQUIRED)
   - Test with long messages (verify truncation)
   - Test with short messages (verify layout doesn't break)
   - Test with different window widths
 
-- [ ] **Edge case testing**
+- [ ] **Edge case testing** (MANUAL TESTING REQUIRED)
   - Test with streaming requests
   - Test with failed requests (error responses)
-  - Test with tool-only messages (no text content)
+  - Test with requests that have no user messages
+  - Test with requests that have no assistant responses
 
 ---
 

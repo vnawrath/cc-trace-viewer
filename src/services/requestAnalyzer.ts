@@ -28,6 +28,8 @@ export interface RequestMetrics {
   systemPromptLength: number;
   contentPreview: string;
   stopReason: string | null;
+  rawRequest: import('../types/trace').TraceRequest;
+  rawResponse: import('../types/trace').TraceResponse;
 }
 
 export interface RequestFilters {
@@ -149,7 +151,9 @@ export class RequestAnalyzerService {
       messageCount: request.body.messages.length,
       systemPromptLength,
       contentPreview: contentPreview + (contentPreview.length >= 100 ? '...' : ''),
-      stopReason: response.body?.stop_reason || null
+      stopReason: response.body?.stop_reason || null,
+      rawRequest: request,
+      rawResponse: response
     };
   }
 

@@ -250,30 +250,24 @@ export function RequestListPage() {
                 </button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full">
+              <div className="overflow-hidden">
+                <table className="min-w-full table-fixed">
                   <thead className="bg-gray-950 sticky top-0 z-10">
                     <tr>
                       <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                        Message
+                      </th>
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider w-16">
                         Status
                       </th>
-                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider w-24">
                         Timestamp
                       </th>
-                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
-                        Model
-                      </th>
-                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider w-20">
                         Duration
                       </th>
-                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider w-24">
                         Tokens
-                      </th>
-                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
-                        Tools
-                      </th>
-                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider">
-                        Actions
                       </th>
                     </tr>
                   </thead>

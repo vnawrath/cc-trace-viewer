@@ -8,10 +8,10 @@ interface RequestCardProps {
 }
 
 export function RequestCard({ request, sessionId, showDetailedView = false }: RequestCardProps) {
-  const formatDuration = (ms: number) => {
-    if (ms < 1000) return `${ms}ms`;
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-    return `${(ms / 60000).toFixed(1)}m`;
+  const formatDuration = (seconds: number) => {
+    if (seconds < 1) return `${(seconds * 1000).toFixed(0)}ms`;
+    if (seconds < 60) return `${seconds.toFixed(1)}s`;
+    return `${(seconds / 60).toFixed(1)}m`;
   };
 
   const formatTokens = (count: number) => {
@@ -146,78 +146,158 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
     );
   }
 
-  // Compact table row view (~36px height, dark theme)
+  // Helper function to extract text content from message content
+  const extractTextContent = (content: string | Array<{type: string; text?: string; [key: string]: unknown}>): string => {
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) {
+      return content
+        .filter(block => block.type === 'text' && block.text)
+        .map(block => block.text)
+        .join(' ');
+    }
+    return '';
+  };
+
+  // Extract last user message from request
+  const getUserMessage = (): string => {
+    const messages = request.rawRequest?.body?.messages || [];
+    const userMessages = messages.filter(m => m.role === 'user');
+    if (userMessages.length === 0) return '';
+
+    const lastUserMsg = userMessages[userMessages.length - 1];
+    return extractTextContent(lastUserMsg.content);
+  };
+
+  // Extract assistant response text
+  const getAssistantResponse = (): string => {
+    if (request.hasError) {
+      return `Error: ${request.rawResponse?.body_raw || 'Unknown error'}`;
+    }
+
+    const content = request.rawResponse?.body?.content;
+    if (!content || !Array.isArray(content)) return '';
+
+    return content
+      .filter(block => block.type === 'text' && block.text)
+      .map(block => block.text)
+      .join(' ');
+  };
+
+  const userMessage = getUserMessage();
+  const assistantResponse = getAssistantResponse();
+
+  // Format timestamp properly (Unix timestamp in seconds needs * 1000)
+  const formatTime = (timestamp: number) => {
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  };
+
+  const formatFullDateTime = (timestamp: number) => {
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+  };
+
+  // Two-row compact table view (dark theme)
   return (
-    <tr className="hover:bg-gray-800/50 transition-colors group" title={request.stopReason ? `Stop reason: ${request.stopReason}` : undefined}>
-      {/* Status Icon */}
-      <td className="px-3 py-2 whitespace-nowrap">
-        <div className="flex items-center gap-1.5">
-          {request.hasError ? (
-            <svg className="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-          {request.isStreaming && (
-            <svg className="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          )}
-        </div>
-      </td>
+    <>
+      {/* First row: User Message + Stats */}
+      <tr className="hover:bg-gray-800/50 transition-colors group border-b-0" title={request.stopReason ? `Stop reason: ${request.stopReason}` : undefined}>
+        {/* User Message Preview - Takes available space */}
+        <td className="px-3 py-2 max-w-0">
+          <Link
+            to={`/sessions/${sessionId}/requests/${request.id}`}
+            className="block"
+          >
+            {userMessage ? (
+              <div className="text-xs text-gray-300 italic truncate" title={userMessage}>
+                {userMessage}
+              </div>
+            ) : (
+              <span className="text-[10px] text-gray-600">—</span>
+            )}
+          </Link>
+        </td>
 
-      {/* Timestamp */}
-      <td className="px-3 py-2 whitespace-nowrap text-[11px] text-gray-400 font-mono">
-        {new Date(request.timestamp).toLocaleTimeString()}
-      </td>
-
-      {/* Model */}
-      <td className="px-3 py-2 whitespace-nowrap">
-        <span className="text-[11px] text-purple-400 font-mono">
-          {request.model.replace('claude-3-5-', '').replace('claude-3-', '').replace('-20241022', '').replace('-20240229', '').replace('-20240307', '')}
-        </span>
-      </td>
-
-      {/* Duration */}
-      <td className="px-3 py-2 whitespace-nowrap text-[11px] text-cyan-400 font-mono">
-        {formatDuration(request.duration)}
-      </td>
-
-      {/* Tokens */}
-      <td className="px-3 py-2 whitespace-nowrap">
-        <div className="flex flex-col">
-          <span className="text-[11px] font-mono font-medium text-cyan-400">{formatTokens(request.totalTokens)}</span>
-          <span className="text-[10px] text-gray-500 font-mono">{formatTokens(request.inputTokens)} / {formatTokens(request.outputTokens)}</span>
-        </div>
-      </td>
-
-      {/* Tools */}
-      <td className="px-3 py-2 whitespace-nowrap">
-        {request.toolsUsed.length > 0 ? (
-          <div className="flex items-center gap-1" title={request.toolsUsed.join(', ')}>
-            <svg className="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <span className="text-[11px] text-amber-400 font-mono">{request.toolsUsed.length}</span>
+        {/* Status Icon */}
+        <td className="px-3 py-2 whitespace-nowrap">
+          <div className="flex items-center gap-1.5">
+            {request.hasError ? (
+              <svg className="w-3.5 h-3.5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-3.5 h-3.5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+            {request.isStreaming && (
+              <svg className="w-3 h-3 text-indigo-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            )}
           </div>
-        ) : (
-          <span className="text-[10px] text-gray-600">—</span>
-        )}
-      </td>
+        </td>
 
-      {/* Actions */}
-      <td className="px-3 py-2 whitespace-nowrap text-right">
-        <Link
-          to={`/sessions/${sessionId}/requests/${request.id}`}
-          className="text-[11px] text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
-        >
-          View →
-        </Link>
-      </td>
-    </tr>
+        {/* Timestamp */}
+        <td className="px-3 py-2 whitespace-nowrap text-[11px] text-gray-400 font-mono" title={formatFullDateTime(request.timestamp)}>
+          {formatTime(request.timestamp)}
+        </td>
+
+        {/* Duration */}
+        <td className="px-3 py-2 whitespace-nowrap text-[11px] text-cyan-400 font-mono">
+          {formatDuration(request.duration)}
+        </td>
+
+        {/* Tokens */}
+        <td className="px-3 py-2 whitespace-nowrap">
+          <div className="flex flex-col">
+            <span className="text-[11px] font-mono font-medium text-cyan-400">{formatTokens(request.totalTokens)}</span>
+            <span className="text-[10px] text-gray-500 font-mono">{formatTokens(request.inputTokens)} / {formatTokens(request.outputTokens)}</span>
+          </div>
+        </td>
+      </tr>
+
+      {/* Second row: Assistant Response Preview */}
+      <tr className="hover:bg-gray-800/50 transition-colors group bg-gray-900/40 border-b border-gray-800">
+        {/* Assistant Response Preview */}
+        <td className="px-3 py-2 max-w-0">
+          <Link
+            to={`/sessions/${sessionId}/requests/${request.id}`}
+            className="block"
+          >
+            {assistantResponse ? (
+              <div className="text-xs text-gray-400 pl-4 truncate" title={assistantResponse}>
+                {assistantResponse}
+              </div>
+            ) : request.hasError ? (
+              <div className="text-xs text-red-400 pl-4 italic truncate">
+                {assistantResponse}
+              </div>
+            ) : (
+              <span className="text-[10px] text-gray-600 pl-4">—</span>
+            )}
+          </Link>
+        </td>
+
+        {/* Empty cells for alignment */}
+        <td className="px-3 py-2"></td>
+        <td className="px-3 py-2"></td>
+        <td className="px-3 py-2"></td>
+        <td className="px-3 py-2"></td>
+      </tr>
+    </>
   );
 }
