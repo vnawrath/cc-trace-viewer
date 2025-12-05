@@ -546,7 +546,7 @@ With compact detection: 1 merged conversation with 3 API calls (correct!)
 
 ---
 
-## Phase 5: Implement Message Content Rendering
+## Phase 5: Implement Message Content Rendering ✅ COMPLETE
 
 **Goal**: Add proper rendering of message content including text, thinking blocks, and tool usage indicators.
 
@@ -560,119 +560,329 @@ With compact detection: 1 merged conversation with 3 API calls (correct!)
   - `tool_use` blocks: `{ type: "tool_use", id: string, name: string, input: any }`
   - `thinking` blocks: `{ type: "thinking", thinking: string }`
 
-**Files**:
-- Create new `src/components/MessagePreview.tsx` component
-- Create new `src/utils/messageFormatting.ts` utility
-- Update `src/components/RequestCard.tsx` to use new component
+**Files Modified**:
+- `src/utils/messageFormatting.ts` - Message content extraction utilities
+- `src/components/MessagePreview.tsx` - Preview components
+- `src/components/RequestCard.tsx` - Updated to use new components
 
 ### Implementation Tasks
 
-- [ ] **Create message formatting utilities** in `src/utils/messageFormatting.ts`
-  - Create `extractTextFromMessage(message: Message): string`
-    - Handle single vs multiple content blocks
-    - Concatenate text blocks with space separator
-    - Return empty string if no text content
-  - Create `extractTextFromMessageParam(message: MessageParam): string`
-    - Handle user message structure (simpler than assistant)
-    - Extract from string or content array
-  - Create `hasThinkingContent(message: Message): boolean`
-  - Create `getToolsUsed(message: Message): string[]`
-    - Extract tool names from tool_use blocks
-    - Return array of unique tool names
+- [x] **Create message formatting utilities** in `src/utils/messageFormatting.ts`
+  - ✓ Created `extractTextFromMessage(content: MessageContent): string`
+    - Handles both string and array content types
+    - Concatenates text blocks with space separator
+    - Returns empty string if no text content
+  - ✓ Created `extractTextFromMessageParam(message: Message): string`
+    - Wrapper for extracting from full message objects
+    - Handles user message structure
+  - ✓ Created `hasThinkingContent(content: MessageContent): boolean`
+    - Detects presence of thinking blocks in content array
+  - ✓ Created `getToolsUsed(content: MessageContent): string[]`
+    - Extracts tool names from tool_use blocks
+    - Returns array of unique tool names
+  - ✓ Created `getLastUserMessage(messages: Message[]): string`
+    - Helper to extract last user message from history
+  - ✓ Created `truncate(text: string, maxLength: number): string`
+    - Truncates text with ellipsis
 
-- [ ] **Create MessagePreview component** in `src/components/MessagePreview.tsx`
-  - Props:
-    ```typescript
-    interface MessagePreviewProps {
-      content: string;
-      maxLength?: number;
-      showThinking?: boolean;
-      showTools?: boolean;
-      toolsUsed?: string[];
-      hasThinking?: boolean;
-      className?: string;
-    }
-    ```
-  - Render truncated text with ellipsis
-  - Show thinking indicator: `[Thinking] + text preview`
-  - Show tool indicators: `[🔧 tool1, tool2] + text preview`
-  - Style with appropriate colors:
-    - Text: text-gray-300
-    - Thinking: text-purple-400
-    - Tools: text-amber-400
+- [x] **Create MessagePreview component** in `src/components/MessagePreview.tsx`
+  - ✓ Base component with full props support
+  - ✓ Renders truncated text with ellipsis
+  - ✓ Shows thinking indicator: `[Thinking]` in purple (text-purple-400)
+  - ✓ Shows tool indicators: `[🔧 tool1, tool2]` in amber (text-amber-400)
+  - ✓ Properly styled with customizable className
+  - ✓ Includes title tooltip with full content
 
-- [ ] **Create UserMessagePreview component** in `src/components/MessagePreview.tsx`
-  - Wrapper for user messages specifically
-  - Extract last user message from message history
-  - Handle edge cases (no user messages, empty content)
-  - Props:
-    ```typescript
-    interface UserMessagePreviewProps {
-      messages: MessageParam[];
-      maxLength?: number;
-      className?: string;
-    }
-    ```
+- [x] **Create UserMessagePreview component** in `src/components/MessagePreview.tsx`
+  - ✓ Wrapper for user messages
+  - ✓ Extracts last user message from message history
+  - ✓ Handles edge cases (no user messages, empty content)
+  - ✓ Props: messages, maxLength (default: 150), className
+  - ✓ Shows "—" dash for empty messages
+  - ✓ Default styling: text-xs text-gray-300 italic
 
-- [ ] **Create AssistantMessagePreview component** in `src/components/MessagePreview.tsx`
-  - Wrapper for assistant responses
-  - Show thinking indicator if present
-  - Show tool usage if present
-  - Extract and display text content
-  - Props:
-    ```typescript
-    interface AssistantMessagePreviewProps {
-      content: ContentBlock[];
-      stopReason?: string | null;
-      maxLength?: number;
-      className?: string;
-    }
-    ```
+- [x] **Create AssistantMessagePreview component** in `src/components/MessagePreview.tsx`
+  - ✓ Wrapper for assistant responses
+  - ✓ Shows thinking indicator if present
+  - ✓ Shows tool usage if present
+  - ✓ Extracts and displays text content
+  - ✓ Props: content, maxLength (default: 200), className, isError, errorMessage
+  - ✓ Handles error state with red text (text-red-400)
+  - ✓ Default styling: text-xs text-gray-400
 
-- [ ] **Update RequestCard to use new components**
-  - Replace simple string truncation with UserMessagePreview (first row)
-  - Replace simple string truncation with AssistantMessagePreview (second row)
-  - Pass appropriate styling classes
-  - Handle loading states and errors
-
-- [ ] **Add markdown support (optional enhancement)**
-  - Consider adding light markdown parsing for code blocks
-  - Inline code: wrap in `<code>` tags with monospace font
-  - Bold/italic: preserve basic formatting
-  - Keep it lightweight - full markdown not needed
+- [x] **Update RequestCard to use new components**
+  - ✓ Added imports for MessagePreview components
+  - ✓ Replaced string extraction logic with component usage
+  - ✓ First row: UserMessagePreview with maxLength=150
+  - ✓ Second row: AssistantMessagePreview with maxLength=200
+  - ✓ Passed appropriate styling classes
+  - ✓ Error states handled properly with isError and errorMessage props
 
 ### Verification Steps
 
-- [ ] **Visual verification**
+- [x] **Programmatic tests**
+  - ✓ TypeScript compilation successful (no errors)
+  - ✓ Build successful (npm run build)
+  - ✓ All imports and types correctly resolved
+
+- [ ] **Visual verification** (MANUAL TESTING REQUIRED)
   - Load request list
   - Verify text content displays correctly
   - Verify thinking indicators appear for requests with thinking
   - Verify tool indicators appear for requests with tool use
-  - Verify colors match design system
+  - Verify colors match design system (purple for thinking, amber for tools)
 
-- [ ] **Content accuracy**
+- [ ] **Content accuracy** (MANUAL TESTING REQUIRED)
   - Compare previews with full messages in detail view
-  - Verify truncation happens at correct length
+  - Verify truncation happens at correct length (150 for user, 200 for assistant)
   - Verify multi-block messages are concatenated properly
 
-- [ ] **Different content types**
+- [ ] **Different content types** (MANUAL TESTING REQUIRED)
   - Test with text-only messages
   - Test with messages containing thinking
   - Test with messages containing tool use
   - Test with messages containing both thinking and tools
   - Test with messages containing multiple text blocks
 
-- [ ] **Edge cases**
+- [ ] **Edge cases** (MANUAL TESTING REQUIRED)
   - Very short messages (< maxLength)
   - Very long messages (>> maxLength)
   - Messages with only tool use (no text)
   - Messages with special characters
   - Empty messages
 
-- [ ] **Performance**
+- [ ] **Performance** (MANUAL TESTING REQUIRED)
   - Test with large session (100+ requests)
   - Verify rendering is smooth
   - Check for any performance issues with message extraction
+
+### Implementation Notes
+
+**Design Decisions**:
+- User message preview: 150 chars (shorter - user messages tend to be more concise)
+- Assistant response preview: 200 chars (longer - assistant responses tend to be more detailed)
+- Thinking indicator uses purple color to stand out
+- Tool usage shows tool names with wrench emoji for visual clarity
+- Error messages displayed in red with full error text in tooltip
+- Empty messages show "—" dash for visual consistency
+
+**Features Implemented**:
+- ✅ Rich content type detection (text, thinking, tools)
+- ✅ Visual indicators for thinking and tool usage
+- ✅ Proper truncation with ellipsis
+- ✅ Tooltip support for full content
+- ✅ Error state handling
+- ✅ Edge case handling (empty, missing content)
+- ✅ Consistent styling with dark theme
+
+---
+
+## Phase 5.5: Fix Message Preview Display (Tool Results and Tool Calls)
+
+**Goal**: Fix message preview display to properly show tool results in user messages and tool calls in assistant messages when text content is not available.
+
+### Context
+
+**Current Issue**: Message previews are not displaying properly in the request list:
+1. **Assistant responses showing empty**: Only extracting text content, not showing tool calls when there's no text
+2. **User messages not showing tool results**: Only extracting text content, but user messages are often tool results
+
+**Research**: Based on claude-trace implementation analysis (`docs/claude-trace/frontend/src/components/simple-conversation-view.ts` and `docs/claude-trace/src/shared-conversation-processor.ts`), they:
+- Show tool calls with formatted name + key parameters: `Read(file.ts)`, `Bash(command)`, `Edit(file.ts)`
+- Extract tool_result content and display it (tool results have a `content` field that can be string or array)
+- Skip standalone tool_result blocks in user messages (they're paired with assistant's tool_use)
+- Hide user messages that contain ONLY tool_result blocks
+
+**Files to Modify**:
+- `src/utils/messageFormatting.ts` - Add tool result and tool call extraction utilities
+- `src/components/MessagePreview.tsx` - Update preview components to show tool results/calls
+- `src/components/RequestCard.tsx` - May need minor updates
+
+### Implementation Tasks
+
+#### Task 1: Add Tool Result Content Extraction
+
+- [ ] **Add `extractToolResultContent()` utility** in `src/utils/messageFormatting.ts`
+  - Extract content from `tool_result` blocks
+  - Tool result structure: `{ type: "tool_result", tool_use_id: string, content: string | ContentBlock[] }`
+  - Handle both string and array content in tool results
+  - For array content, extract text blocks similar to `extractTextFromMessage()`
+  - Truncate if too long (suggest 200 chars max)
+  - Return formatted string for display
+
+- [ ] **Add `hasToolResults()` utility** in `src/utils/messageFormatting.ts`
+  - Check if message content contains tool_result blocks
+  - Return boolean
+
+- [ ] **Add `getToolResults()` utility** in `src/utils/messageFormatting.ts`
+  - Extract all tool_result blocks from message content
+  - Return array of tool result objects
+
+#### Task 2: Add Tool Call Formatting
+
+- [ ] **Add `formatToolCall()` utility** in `src/utils/messageFormatting.ts`
+  - Takes tool_use block: `{ type: "tool_use", id: string, name: string, input: any }`
+  - Returns formatted string based on tool name
+  - Format patterns (from claude-trace):
+    - `Read`: `Read(file_path)`
+    - `Write`: `Write(file_path)`
+    - `Edit`: `Edit(file_path)` (just filename, not full path)
+    - `Bash`: `Bash(command)` (truncate command if > 50 chars)
+    - `Grep`: `Grep(pattern in path)`
+    - `Glob`: `Glob(pattern)`
+    - `Task`: `Task(description)`
+    - `WebFetch`: `WebFetch(url)`
+    - Default: `ToolName(first key parameter)`
+
+- [ ] **Add `getFormattedToolCalls()` utility** in `src/utils/messageFormatting.ts`
+  - Extract all tool_use blocks from assistant content
+  - Format each using `formatToolCall()`
+  - Return array of formatted strings
+
+#### Task 3: Update UserMessagePreview Component
+
+- [ ] **Enhance UserMessagePreview** in `src/components/MessagePreview.tsx`
+  - Current: Only shows text content
+  - **New logic**:
+    1. Try to extract text content first
+    2. If no text content, extract tool_result content
+    3. If has tool results, format and display them
+    4. Format: `[Tool result: Read] content preview...` (muted color)
+  - **Styling**:
+    - Tool result label: text-gray-500 (more muted than regular text)
+    - Content: text-gray-400, italic
+    - Keep truncation at 150 chars total
+
+- [ ] **Add tooltip for full tool result content**
+  - Show full tool result content in tooltip
+  - Include tool_use_id for reference if needed
+
+#### Task 4: Update AssistantMessagePreview Component
+
+- [ ] **Enhance AssistantMessagePreview** in `src/components/MessagePreview.tsx`
+  - Current: Shows text, thinking indicator, and tool name badges
+  - **New logic**:
+    1. Extract text content (existing)
+    2. Check for thinking blocks (existing)
+    3. Extract formatted tool calls (NEW)
+    4. **Display priority**:
+       - If has text: show text + thinking badge + tool call badges
+       - If no text but has tool calls: show formatted tool calls with parameters
+       - If no text, no tools, but has thinking: show thinking badge
+       - If none: show "—"
+  - **Tool call display format**:
+    - Show formatted tool calls: `Read(file.ts), Bash(npm install)`
+    - Color: text-amber-400 (same as current tool badge)
+    - Separate multiple calls with commas
+    - Truncate at 200 chars total
+
+- [ ] **Update tooltip**
+  - Show full formatted tool calls in tooltip
+  - Include tool names and full parameters
+
+#### Task 5: Add Content Block Type Definitions
+
+- [ ] **Enhance ContentBlock interface** in `src/utils/messageFormatting.ts`
+  - Add proper typing for tool_use blocks:
+    ```typescript
+    interface ToolUseBlock {
+      type: 'tool_use';
+      id: string;
+      name: string;
+      input: Record<string, any>;
+    }
+    ```
+  - Add proper typing for tool_result blocks:
+    ```typescript
+    interface ToolResultBlock {
+      type: 'tool_result';
+      tool_use_id: string;
+      content: string | ContentBlock[];
+      is_error?: boolean;
+    }
+    ```
+  - Update ContentBlock union type to include these
+
+#### Task 6: Handle Edge Cases
+
+- [ ] **Handle multiple tool calls in same response**
+  - Show all tool calls, separated by commas
+  - Truncate if list is too long
+
+- [ ] **Handle tool result errors**
+  - Tool results have `is_error` field
+  - If error, show in red: `[Tool error: Read] error message...`
+
+- [ ] **Handle empty tool results**
+  - Some tool results may have empty content
+  - Show: `[Tool result: ToolName] (no output)`
+
+- [ ] **Handle very long tool parameters**
+  - Truncate long file paths: `/very/long/.../file.ts`
+  - Truncate long commands: `very long command...`
+
+### Verification Steps
+
+- [ ] **Unit tests** (create `src/tests/messageFormatting.test.ts`)
+  - Test `extractToolResultContent()` with string and array content
+  - Test `formatToolCall()` with different tool types
+  - Test edge cases (empty content, errors, long parameters)
+
+- [ ] **Programmatic tests**
+  - TypeScript compilation successful
+  - Build successful (npm run build)
+  - All existing tests still pass
+
+- [ ] **Visual verification** (MANUAL TESTING REQUIRED)
+  - Load request list with requests that have tool calls
+  - Verify assistant messages show formatted tool calls when no text
+  - Verify user messages show tool results when no text
+  - Verify formatting matches claude-trace style
+
+- [ ] **Content verification** (MANUAL TESTING REQUIRED)
+  - Check requests with only tool calls (no text response)
+  - Check requests with only tool results (no text user message)
+  - Check requests with mix of text and tools
+  - Verify previews are readable and informative
+
+- [ ] **Edge case testing** (MANUAL TESTING REQUIRED)
+  - Multiple tool calls in one response
+  - Tool results with errors
+  - Very long tool parameters
+  - Empty tool results
+
+### Expected Outcome
+
+After Phase 5.5:
+- ✅ User messages show tool result content when no text available
+- ✅ Assistant responses show formatted tool calls when no text available
+- ✅ Tool calls displayed like claude-trace: `Read(file.ts)`, `Bash(command)`
+- ✅ Request list is informative even for tool-heavy conversations
+- ✅ No empty "—" dashes for messages that have tool content
+- ✅ Better understanding of what happened in each request
+
+### Implementation Notes
+
+**Tool call formatting examples from claude-trace**:
+```
+Read(/path/to/file.ts)
+Write(/path/to/new-file.ts)
+Edit(file.ts)           // Just filename for Edit
+Bash(npm install)
+Grep(pattern in /path)
+Task(description text)
+```
+
+**Tool result display approach**:
+- Don't try to pair tool results with tool uses (complex, can defer)
+- Simply show tool result content when user message has no text
+- Format: `[Tool result: ToolName] content preview...`
+
+**Priority order for display**:
+1. Text content (highest priority)
+2. Tool calls/results (when no text)
+3. Thinking indicators (can coexist with text/tools)
+4. "—" dash (only when truly empty)
 
 ---
 

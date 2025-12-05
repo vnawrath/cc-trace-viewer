@@ -1,5 +1,7 @@
 import { Link } from 'react-router';
 import type { RequestMetrics } from '../services/requestAnalyzer';
+import { UserMessagePreview, AssistantMessagePreview } from './MessagePreview';
+import type { Message } from '../utils/messageFormatting';
 
 interface RequestCardProps {
   request: RequestMetrics;
@@ -146,45 +148,10 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
     );
   }
 
-  // Helper function to extract text content from message content
-  const extractTextContent = (content: string | Array<{type: string; text?: string; [key: string]: unknown}>): string => {
-    if (typeof content === 'string') return content;
-    if (Array.isArray(content)) {
-      return content
-        .filter(block => block.type === 'text' && block.text)
-        .map(block => block.text)
-        .join(' ');
-    }
-    return '';
-  };
-
-  // Extract last user message from request
-  const getUserMessage = (): string => {
-    const messages = request.rawRequest?.body?.messages || [];
-    const userMessages = messages.filter(m => m.role === 'user');
-    if (userMessages.length === 0) return '';
-
-    const lastUserMsg = userMessages[userMessages.length - 1];
-    return extractTextContent(lastUserMsg.content);
-  };
-
-  // Extract assistant response text
-  const getAssistantResponse = (): string => {
-    if (request.hasError) {
-      return `Error: ${request.rawResponse?.body_raw || 'Unknown error'}`;
-    }
-
-    const content = request.rawResponse?.body?.content;
-    if (!content || !Array.isArray(content)) return '';
-
-    return content
-      .filter(block => block.type === 'text' && block.text)
-      .map(block => block.text)
-      .join(' ');
-  };
-
-  const userMessage = getUserMessage();
-  const assistantResponse = getAssistantResponse();
+  // Get messages for preview components
+  const messages = (request.rawRequest?.body?.messages || []) as Message[];
+  const assistantContent = request.rawResponse?.body?.content || [];
+  const errorMessage = request.hasError ? `Error: ${request.rawResponse?.body_raw || 'Unknown error'}` : '';
 
   // Format timestamp properly (Unix timestamp in seconds needs * 1000)
   const formatTime = (timestamp: number) => {
@@ -221,13 +188,11 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
             to={`/sessions/${sessionId}/requests/${request.id}`}
             className="block"
           >
-            {userMessage ? (
-              <div className="text-xs text-gray-300 italic truncate" title={userMessage}>
-                {userMessage}
-              </div>
-            ) : (
-              <span className="text-[10px] text-gray-600">—</span>
-            )}
+            <UserMessagePreview
+              messages={messages}
+              maxLength={150}
+              className="text-xs text-gray-300 italic"
+            />
           </Link>
         </td>
 
@@ -276,19 +241,15 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
         <td className="px-3 py-2 max-w-0">
           <Link
             to={`/sessions/${sessionId}/requests/${request.id}`}
-            className="block"
+            className="block pl-4"
           >
-            {assistantResponse ? (
-              <div className="text-xs text-gray-400 pl-4 truncate" title={assistantResponse}>
-                {assistantResponse}
-              </div>
-            ) : request.hasError ? (
-              <div className="text-xs text-red-400 pl-4 italic truncate">
-                {assistantResponse}
-              </div>
-            ) : (
-              <span className="text-[10px] text-gray-600 pl-4">—</span>
-            )}
+            <AssistantMessagePreview
+              content={assistantContent}
+              maxLength={200}
+              className="text-xs text-gray-400"
+              isError={request.hasError}
+              errorMessage={errorMessage}
+            />
           </Link>
         </td>
 
