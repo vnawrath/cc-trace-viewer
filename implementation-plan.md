@@ -47,7 +47,7 @@ ClaudeTraceEntry
 
 ### Tasks
 
-- [ ] Create new utility service `src/services/conversationProcessor.ts`
+- [x] Create new utility service `src/services/conversationProcessor.ts`
   - Export `ConversationMessage` interface with fields:
     - `role: 'system' | 'user' | 'assistant'`
     - `content: ContentBlock[]` - Array of content blocks (text, tool_use, tool_result)
@@ -60,7 +60,7 @@ ClaudeTraceEntry
     - Appends final assistant response from `entry.response.body.content` or reconstructed from `entry.response.body_raw`
     - Returns array of `ConversationMessage` objects
 
-- [ ] Create new component `src/components/ConversationView.tsx`
+- [x] Create new component `src/components/ConversationView.tsx`
   - Accept props: `entry: ClaudeTraceEntry`
   - Call `processConversation()` to get messages
   - Render messages in order:
@@ -70,7 +70,7 @@ ClaudeTraceEntry
   - For now, render only text blocks from each message (ignore tool blocks)
   - Use similar styling to current `CopyableText` component for consistency
 
-- [ ] Update `src/pages/RequestDetailPage.tsx`
+- [x] Update `src/pages/RequestDetailPage.tsx`
   - Replace the Messages tab content (lines 365-388) with `<ConversationView entry={request} />`
   - Remove or deprecate `extractMessageContent()` function (lines 40-76) as it's replaced by `processConversation()`
   - Keep other tabs (Raw Request, Raw Response, Headers, Tools) unchanged

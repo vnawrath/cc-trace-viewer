@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router';
 import { DocumentHead } from '../components/DocumentHead';
 import { CopyableText } from '../components/CopyableText';
+import { ConversationView } from '../components/ConversationView';
 import { useRequestDetail } from '../hooks/useRequestDetail';
 import { useDirectory } from '../contexts/DirectoryContext';
 import { traceParserService } from '../services/traceParser';
@@ -37,43 +38,8 @@ function extractReconstructedResponse(response: TraceResponse): string {
   return 'No response body available';
 }
 
-function extractMessageContent(request: any): Array<{ role: string; content: string; type?: string }> {
-  const messages = [];
-
-  // System messages
-  if (request.body.system) {
-    messages.push({
-      role: 'system',
-      type: 'system',
-      content: request.body.system.map((s: any) => s.text).join('\n\n')
-    });
-  }
-
-  // Conversation messages
-  if (request.body.messages) {
-    for (const message of request.body.messages) {
-      let content = '';
-
-      if (typeof message.content === 'string') {
-        content = message.content;
-      } else if (Array.isArray(message.content)) {
-        content = message.content
-          .filter((c: any) => c.type === 'text' && c.text)
-          .map((c: any) => c.text)
-          .join('\n\n');
-      }
-
-      if (content.trim()) {
-        messages.push({
-          role: message.role,
-          content
-        });
-      }
-    }
-  }
-
-  return messages;
-}
+// Deprecated: extractMessageContent() has been replaced by conversationProcessor.processConversation()
+// Keeping this comment for reference during migration
 
 function extractToolCallsFromResponse(response: TraceResponse): Array<{
   id?: string;
@@ -261,7 +227,6 @@ export function RequestDetailPage() {
 
   const duration = traceParserService.getRequestDuration(request);
   const formattedDuration = traceParserService.formatDuration(duration);
-  const messages = extractMessageContent(request.request);
   const responseText = extractReconstructedResponse(request.response);
   const toolCalls = extractToolCallsFromResponse(request.response);
   const toolsAvailable = traceParserService.extractToolsAvailableFromRequest(request.request);
@@ -363,28 +328,7 @@ export function RequestDetailPage() {
           <div className="bg-gray-900 border-x border-b border-gray-800 rounded-b-lg p-6">
             {/* Messages Tab */}
             {activeTab === 'messages' && (
-              <div className="space-y-4">
-                {messages.length === 0 ? (
-                  <p className="text-gray-500 text-sm">No messages found</p>
-                ) : (
-                  messages.map((message, index) => (
-                    <div key={index}>
-                      <CopyableText
-                        text={message.content}
-                        label={`${message.role.charAt(0).toUpperCase() + message.role.slice(1)} ${message.type === 'system' ? 'Prompt' : 'Message'}`}
-                        className={`${
-                          message.role === 'system'
-                            ? 'border-l-4 border-terminal-purple bg-terminal-purple/5'
-                            : message.role === 'user'
-                            ? 'border-l-4 border-terminal-cyan bg-terminal-cyan/5'
-                            : 'border-l-4 border-terminal-green bg-terminal-green/5'
-                        } pl-4`}
-                        maxHeight="400px"
-                      />
-                    </div>
-                  ))
-                )}
-              </div>
+              <ConversationView entry={request} />
             )}
 
             {/* Raw Request Tab */}
