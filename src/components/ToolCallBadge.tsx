@@ -12,13 +12,32 @@ export const ToolCallBadge: React.FC<ToolCallBadgeProps> = ({ toolUse, hasResult
     ? "inline-flex items-center gap-1.5 px-2 py-1 mx-1 text-xs font-medium rounded-md bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 hover:border-green-500/50 transition-colors cursor-pointer"
     : "inline-flex items-center gap-1.5 px-2 py-1 mx-1 text-xs font-medium rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-colors cursor-pointer";
 
-  const title = hasResult ? `Tool: ${toolUse.name} (completed)` : `Tool: ${toolUse.name} (pending)`;
+  // Generate informative tooltip with key parameter
+  const getKeyParameter = (): string => {
+    // Common parameter names by tool type
+    const keyParams = ['file_path', 'path', 'command', 'pattern', 'url', 'query'];
+    for (const param of keyParams) {
+      if (toolUse.input[param]) {
+        const value = String(toolUse.input[param]);
+        // Truncate long values
+        return value.length > 50 ? `${value.substring(0, 50)}...` : value;
+      }
+    }
+    return '';
+  };
+
+  const keyParam = getKeyParameter();
+  const status = hasResult ? 'completed' : 'pending';
+  const title = keyParam
+    ? `${toolUse.name} (${status})\n${keyParam}`
+    : `${toolUse.name} (${status})`;
 
   return (
     <button
       onClick={onClick}
       className={badgeClasses}
       title={title}
+      aria-label={`${toolUse.name} tool call - ${status}. Click to view details.`}
     >
       {hasResult ? (
         // Checkmark icon for completed tools
@@ -27,6 +46,7 @@ export const ToolCallBadge: React.FC<ToolCallBadgeProps> = ({ toolUse, hasResult
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"
@@ -42,6 +62,7 @@ export const ToolCallBadge: React.FC<ToolCallBadgeProps> = ({ toolUse, hasResult
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
+          aria-hidden="true"
         >
           <path
             strokeLinecap="round"

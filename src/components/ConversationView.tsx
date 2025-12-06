@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { ClaudeTraceEntry } from '../types/trace';
 import { processConversation, type ConversationMessage, type TextBlock, type ToolUseBlock, type ToolResultBlock } from '../services/conversationProcessor';
 import { ToolCallBadge } from './ToolCallBadge';
 import { ToolCallModal } from './ToolCallModal';
+import { parseMarkdown, sanitizeHtml } from '../utils/markdown';
 
 interface ConversationViewProps {
   entry: ClaudeTraceEntry;
@@ -14,9 +15,10 @@ interface SelectedToolState {
 }
 
 export function ConversationView({ entry }: ConversationViewProps) {
-  const allMessages = processConversation(entry);
+  // Memoize conversation processing for performance
+  const allMessages = useMemo(() => processConversation(entry), [entry]);
   // Filter out hidden messages (tool-only user messages)
-  const messages = allMessages.filter(msg => !msg.hide);
+  const messages = useMemo(() => allMessages.filter(msg => !msg.hide), [allMessages]);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [selectedTool, setSelectedTool] = useState<SelectedToolState | null>(null);
 
@@ -64,16 +66,20 @@ export function ConversationView({ entry }: ConversationViewProps) {
       .join('\n\n');
   };
 
-  // Render content blocks (text and tool badges)
+  // Render content blocks (text with markdown and tool badges)
   const renderContentBlocks = (message: ConversationMessage) => {
     const elements: React.ReactNode[] = [];
 
     message.content.forEach((block, blockIndex) => {
       if (block.type === 'text') {
+        // Parse markdown and render as HTML
+        const htmlContent = sanitizeHtml(parseMarkdown(block.text || ''));
         elements.push(
-          <span key={`text-${blockIndex}`} className="whitespace-pre-wrap break-all">
-            {block.text}
-          </span>
+          <div
+            key={`text-${blockIndex}`}
+            className="prose prose-invert prose-sm max-w-none markdown-content"
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+          />
         );
       } else if (block.type === 'tool_use') {
         // Check if this tool has a result
