@@ -169,7 +169,7 @@ const reconstructedMessage = {
 
 ### Tasks
 
-- [ ] Define tool block types in `src/services/conversationProcessor.ts` (types already exist, verify they match streaming parser output)
+- [x] Define tool block types in `src/services/conversationProcessor.ts` (types already exist, verify they match streaming parser output)
 
   - Add `ToolUseBlock` interface:
     - `type: 'tool_use'`
@@ -179,7 +179,7 @@ const reconstructedMessage = {
   - Update `ContentBlock` union to include `ToolUseBlock`
   - Update `processConversation()` to extract tool_use blocks from assistant messages
 
-- [ ] Create `src/components/ToolCallBadge.tsx` component
+- [x] Create `src/components/ToolCallBadge.tsx` component
 
   - Props: `toolUse: ToolUseBlock`, `onClick: () => void`
   - Render compact badge with:
@@ -189,7 +189,7 @@ const reconstructedMessage = {
     - Clickable, triggers `onClick` to open modal
   - Styling: Small, inline badge (similar to tool badges in Tools tab)
 
-- [ ] Create `src/components/ToolCallModal.tsx` component
+- [x] Create `src/components/ToolCallModal.tsx` component
 
   - Props: `toolUse: ToolUseBlock | null`, `onClose: () => void`
   - Render modal overlay when `toolUse` is not null
@@ -201,7 +201,7 @@ const reconstructedMessage = {
     - Close button (X) and click outside to close
   - Use similar styling to existing modals in the app
 
-- [ ] Update `src/components/ConversationView.tsx`
+- [x] Update `src/components/ConversationView.tsx`
   - Add state for modal: `const [selectedTool, setSelectedTool] = useState<ToolUseBlock | null>(null)`
   - When rendering content blocks, check for tool_use type
   - For each tool_use block, render `<ToolCallBadge>` inline with text
@@ -216,6 +216,7 @@ const reconstructedMessage = {
 
 ### Verification & Testing
 
+- [x] Build passes with no type errors
 - [ ] Verify tool_use blocks appear as compact badges inline with message text
 - [ ] Verify clicking badge opens modal with tool details
 - [ ] Verify modal displays tool name, ID, and formatted input parameters
