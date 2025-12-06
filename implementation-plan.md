@@ -1,7 +1,9 @@
 # Implementation Plan: Enhanced Message Display
 
 ## Goal
+
 Reconstruct and display the complete conversation flow in the Messages tab of the Request Detail page, showing:
+
 - System message at the top
 - Alternating user and assistant messages with all content blocks
 - Tool calls (tool_use blocks) with their parameters
@@ -15,6 +17,7 @@ Currently, the Messages tab in `RequestDetailPage.tsx` only displays text conten
 ### Architecture
 
 **Data Flow:**
+
 ```
 ClaudeTraceEntry
   → processConversation()
@@ -23,6 +26,7 @@ ClaudeTraceEntry
 ```
 
 **Key Design Decisions:**
+
 - **Tool Display:** Compact badges showing tool name + status, click to open modal with full details
 - **Content Handling:** Tool parameters and results always collapsed, require user interaction to expand
 - **Phase Strategy:** Incremental UI development (structure → tool calls → tool results → polish)
@@ -36,18 +40,63 @@ ClaudeTraceEntry
 ### Context & Relevant Files
 
 **Current Implementation:**
+
 - `src/pages/RequestDetailPage.tsx:40-76` - `extractMessageContent()` function extracts only text content
 - `src/pages/RequestDetailPage.tsx:364-388` - Messages tab renders only text messages
 - `src/types/trace.ts:1-49` - Type definitions for `ClaudeTraceEntry`, `TraceRequest`, `TraceResponse`
 
 **Claude-Trace Reference:**
+
 - `docs/claude-trace/src/shared-conversation-processor.ts:590-638` - `processToolResults()` pairs tool_use with tool_result
 - `docs/claude-trace/src/types.ts:28-32` - `EnhancedMessageParam` type with `toolResults` map
 - `docs/claude-trace/frontend/src/components/simple-conversation-view.ts:671-729` - Conversation rendering
 
+### Critical Bug: Streaming Response Parsing Does Not Extract Tool Calls
+
+**Problem:** The current `reconstructResponseFromStream()` function in `src/services/traceParser.ts:409-478` has a fundamental flaw - it only extracts text content from streaming responses, completely ignoring tool_use blocks.
+
+**Current Behavior:**
+
+```typescript
+// Line 461-464: Only builds a single text block
+const reconstructedMessage = {
+  content: [{ type: "text", text: contentPieces.join("") }], // Missing tool_use blocks!
+};
+```
+
+**How Streaming Tool Calls Work (SSE format):**
+
+1. `content_block_start` at index 0: `{"type":"text","text":""}` - initial text block
+2. `content_block_delta` with `text_delta`: `{"text":"I'll implement..."}` - builds text
+3. `content_block_start` at index 1: `{"type":"tool_use","id":"toolu_...","name":"Read","input":{}}` - tool block with empty input
+4. `content_block_delta` with `input_json_delta`: `{"partial_json":"{\"file_path\": \"/Users..."}` - partial JSON
+5. More `input_json_delta` events building up the JSON string
+6. `content_block_stop` - signals to parse accumulated JSON into `input` object
+
+**What's Missing:**
+
+- Not tracking multiple content blocks by index
+- Not processing `content_block_start` events for tool_use blocks (id, name)
+- Not handling `input_json_delta` events (tool parameters)
+- Not parsing accumulated JSON on `content_block_stop`
+
+**Reference Implementation:** See `docs/claude-trace/src/shared-conversation-processor.ts:292-440` (`buildMessageFromEvents`) for the correct approach.
+
 ### Tasks
 
+- [ ] **Fix `reconstructResponseFromStream()` in `src/services/traceParser.ts` to properly extract tool_use blocks**
+
+  - Refactor to track all content blocks by their `index` field (use array: `contentBlocks[]`)
+  - On `content_block_start`: initialize block at `contentBlocks[event.index]` with initial data (type, id, name for tool_use)
+  - On `content_block_delta`:
+    - For `text_delta`: append `delta.text` to the text block
+    - For `input_json_delta`: accumulate `delta.partial_json` as a string on the tool_use block
+  - On `content_block_stop`: if block is `tool_use` with string input, parse JSON into `input` object
+  - Build final content array: `content: contentBlocks.filter(block => block != null)`
+  - Reference: `docs/claude-trace/src/shared-conversation-processor.ts:292-440` (`buildMessageFromEvents`)
+
 - [x] Create new utility service `src/services/conversationProcessor.ts`
+
   - Export `ConversationMessage` interface with fields:
     - `role: 'system' | 'user' | 'assistant'`
     - `content: ContentBlock[]` - Array of content blocks (text, tool_use, tool_result)
@@ -61,6 +110,7 @@ ClaudeTraceEntry
     - Returns array of `ConversationMessage` objects
 
 - [x] Create new component `src/components/ConversationView.tsx`
+
   - Accept props: `entry: ClaudeTraceEntry`
   - Call `processConversation()` to get messages
   - Render messages in order:
@@ -77,19 +127,24 @@ ClaudeTraceEntry
 
 ### Verification & Testing
 
+- [ ] Verify `reconstructResponseFromStream()` correctly extracts tool_use blocks from streaming responses
+- [ ] Verify tool_use blocks have proper id, name, and parsed input object (not empty `{}`)
 - [ ] Verify system message displays at top with purple styling
 - [ ] Verify user and assistant messages alternate correctly
-- [ ] Verify final assistant response appears at the end
+- [ ] Verify final assistant response appears at the end (including any tool calls)
 - [ ] Test with streaming responses (body_raw) and non-streaming responses (body)
 - [ ] Test with conversations containing multiple message pairs
 - [ ] Confirm no regression in other tabs (Raw Request, Raw Response, Headers, Tools)
 
 **Test Cases:**
+
 1. Request with system message + 1 user/assistant pair + final response
 2. Request with no system message
 3. Request with multiple user/assistant pairs (conversation history)
-4. Streaming response (body_raw present)
-5. Non-streaming response (body present)
+4. Streaming response (body_raw present) with text-only content
+5. **Streaming response with tool_use blocks** (verify tool id, name, and input are extracted)
+6. Streaming response with multiple content blocks (text + multiple tool_use)
+7. Non-streaming response (body present) with tool_use blocks
 
 ---
 
@@ -97,20 +152,25 @@ ClaudeTraceEntry
 
 **Goal:** Display tool_use blocks from assistant messages as compact badges with modal for details.
 
+**Dependency:** Phase 1 must be complete, including the `reconstructResponseFromStream()` fix. Without proper streaming response parsing, tool_use blocks from streaming responses won't be available for display.
+
 ### Context & Relevant Files
 
 **Current Implementation:**
+
 - `src/pages/RequestDetailPage.tsx:78-133` - `extractToolCallsFromResponse()` extracts tool calls (currently used in Tools tab)
 - `src/components/ToolUsageDisplay.tsx` - Existing component for displaying tool summaries
 - `src/pages/RequestDetailPage.tsx:441-548` - Tools tab shows tool definitions and calls
 
 **Claude-Trace Reference:**
+
 - `docs/claude-trace/frontend/src/components/simple-conversation-view.ts:544-574` - `renderToolContainer()` for tool display
 - `docs/claude-trace/frontend/src/components/simple-conversation-view.ts:325-391` - `getToolDisplayName()` formats tool names
 
 ### Tasks
 
-- [ ] Define tool block types in `src/services/conversationProcessor.ts`
+- [ ] Define tool block types in `src/services/conversationProcessor.ts` (types already exist, verify they match streaming parser output)
+
   - Add `ToolUseBlock` interface:
     - `type: 'tool_use'`
     - `id: string`
@@ -120,6 +180,7 @@ ClaudeTraceEntry
   - Update `processConversation()` to extract tool_use blocks from assistant messages
 
 - [ ] Create `src/components/ToolCallBadge.tsx` component
+
   - Props: `toolUse: ToolUseBlock`, `onClick: () => void`
   - Render compact badge with:
     - Tool icon (gear/settings icon)
@@ -129,6 +190,7 @@ ClaudeTraceEntry
   - Styling: Small, inline badge (similar to tool badges in Tools tab)
 
 - [ ] Create `src/components/ToolCallModal.tsx` component
+
   - Props: `toolUse: ToolUseBlock | null`, `onClose: () => void`
   - Render modal overlay when `toolUse` is not null
   - Display in modal:
@@ -163,6 +225,7 @@ ClaudeTraceEntry
 - [ ] Test with different tool types (Read, Bash, Edit, Grep, etc.)
 
 **Test Cases:**
+
 1. Assistant message with single tool_use block
 2. Assistant message with multiple tool_use blocks
 3. Assistant message with text before and after tool_use
@@ -178,14 +241,17 @@ ClaudeTraceEntry
 ### Context & Relevant Files
 
 **Current Implementation:**
+
 - Tool results currently not extracted or displayed anywhere in the UI
 
 **Claude-Trace Reference:**
+
 - `docs/claude-trace/src/shared-conversation-processor.ts:590-638` - `processToolResults()` implements pairing logic
 - `docs/claude-trace/src/types.ts:28-32` - `EnhancedMessageParam` with `toolResults` map
 - `docs/claude-trace/frontend/src/components/simple-conversation-view.ts:544-574` - Renders tool results below tool_use
 
 **Pairing Algorithm (from claude-trace):**
+
 1. Scan through messages sequentially
 2. When assistant message has tool_use block, track it by `tool_use.id`
 3. When user message has tool_result block, match it to pending tool_use by `tool_result.tool_use_id`
@@ -195,6 +261,7 @@ ClaudeTraceEntry
 ### Tasks
 
 - [ ] Define tool result types in `src/services/conversationProcessor.ts`
+
   - Add `ToolResultBlock` interface:
     - `type: 'tool_result'`
     - `tool_use_id: string`
@@ -206,6 +273,7 @@ ClaudeTraceEntry
     - `hide?: boolean` - Flag to hide messages with only tool_result blocks
 
 - [ ] Implement tool pairing in `src/services/conversationProcessor.ts`
+
   - Add `pairToolResults(messages: ConversationMessage[]): ConversationMessage[]` function
   - Algorithm:
     ```
@@ -224,6 +292,7 @@ ClaudeTraceEntry
   - Call `pairToolResults()` at the end of `processConversation()` before returning
 
 - [ ] Update `src/components/ToolCallModal.tsx`
+
   - Add prop: `toolResult?: ToolResultBlock`
   - Update layout to show result if present:
     - Tool input section (collapsible)
@@ -234,6 +303,7 @@ ClaudeTraceEntry
   - Style error results with red tint, success with green tint
 
 - [ ] Update `src/components/ToolCallBadge.tsx`
+
   - Add prop: `hasResult: boolean`
   - Update status indicator:
     - If `hasResult === true`: Show green checkmark icon + green tint
@@ -259,6 +329,7 @@ ClaudeTraceEntry
 - [ ] Test with unpaired tool calls (result not yet available)
 
 **Test Cases:**
+
 1. Assistant message with tool_use → User message with tool_result (proper pairing)
 2. Assistant message with multiple tool_use → User message with multiple tool_result
 3. User message with only tool_result blocks (should be hidden)
@@ -276,17 +347,20 @@ ClaudeTraceEntry
 ### Context & Relevant Files
 
 **Current Implementation:**
+
 - `src/components/CopyableText.tsx` - Reusable component with copy functionality
 - `src/pages/RequestDetailPage.tsx:302-360` - Tab navigation with keyboard shortcuts
 - `src/utils/messageFormatting.ts` - Utility functions for formatting messages
 
 **Claude-Trace Reference:**
+
 - `docs/claude-trace/frontend/src/utils/markdown.ts` - Markdown rendering for text content
 - `docs/claude-trace/frontend/src/components/simple-conversation-view.ts:82-145` - Content formatting with markdown
 
 ### Tasks
 
 - [ ] Enhance text content rendering in `src/components/ConversationView.tsx`
+
   - Add markdown rendering for text blocks (similar to claude-trace)
   - Install and configure markdown parser (e.g., `marked` or `markdown-it`)
   - Apply syntax highlighting for code blocks in text
@@ -294,6 +368,7 @@ ClaudeTraceEntry
   - Handle edge cases: empty content, malformed markdown
 
 - [ ] Improve tool result display in `src/components/ToolCallModal.tsx`
+
   - Add line numbers for large text outputs
   - Add "Copy" button for result content
   - Add "Download" button for very large results (>10KB)
@@ -302,17 +377,20 @@ ClaudeTraceEntry
   - Add search/filter for long results
 
 - [ ] Add keyboard shortcuts to modal
+
   - `Escape` key to close modal
   - `Ctrl+C` / `Cmd+C` to copy content
   - `Tab` to switch between input and result sections
 
 - [ ] Enhance tool badge UI in `src/components/ToolCallBadge.tsx`
+
   - Add tooltip on hover showing tool name and status
   - Add loading animation for pending results (if applicable)
   - Add icons for different tool types (file icon for Read, terminal for Bash, etc.)
   - Consider showing key parameter in badge (e.g., "Read(file.txt)" instead of just "Read")
 
 - [ ] Handle edge cases in `src/services/conversationProcessor.ts`
+
   - Handle missing response body (failed requests)
   - Handle malformed content blocks
   - Handle unpaired tool calls (tool_use without tool_result)
@@ -320,11 +398,13 @@ ClaudeTraceEntry
   - Handle very large conversations (>100 messages)
 
 - [ ] Add loading states and error handling
+
   - Show skeleton loader while processing conversation
   - Show error message if conversation processing fails
   - Gracefully degrade if tool pairing fails (show unmatched tools separately)
 
 - [ ] Performance optimizations
+
   - Memoize `processConversation()` result with `useMemo`
   - Virtualize message list for very long conversations (react-window or similar)
   - Lazy-load tool result content when modal opens (don't process until needed)
@@ -349,6 +429,7 @@ ClaudeTraceEntry
 - [ ] Test with unpaired tool calls
 
 **Test Cases:**
+
 1. Message with markdown formatting (bold, italic, code, lists)
 2. Message with code blocks (JavaScript, Python, Bash)
 3. Very long conversation (>100 messages)
@@ -367,6 +448,7 @@ ClaudeTraceEntry
 ### File Structure
 
 New files to create:
+
 ```
 src/
   services/
@@ -378,6 +460,7 @@ src/
 ```
 
 Modified files:
+
 ```
 src/
   pages/
@@ -389,6 +472,7 @@ src/
 ### Dependencies
 
 Potential new dependencies:
+
 - **markdown-it** or **marked** (Phase 4): Markdown parsing and rendering
 - **highlight.js** or **prism** (Phase 4): Syntax highlighting for code blocks
 - **react-window** (Phase 4, optional): Virtual scrolling for long conversations
@@ -396,6 +480,7 @@ Potential new dependencies:
 ### Design System Consistency
 
 Maintain consistency with existing components:
+
 - Use existing color tokens from Tailwind config (`terminal-cyan`, `terminal-green`, etc.)
 - Match styling of `CopyableText` component for text blocks
 - Match badge styling from Tools tab
@@ -421,6 +506,7 @@ ToolCallModal (overlay)
 ### Testing Strategy
 
 For each phase:
+
 1. **Unit Tests:** Test service functions in isolation (conversationProcessor)
 2. **Component Tests:** Test components with mock data (ConversationView, ToolCallBadge, ToolCallModal)
 3. **Integration Tests:** Test full flow from RequestDetailPage with real trace data
@@ -440,23 +526,29 @@ For each phase:
 ## Success Criteria
 
 **Phase 1:**
+
+- ✅ Streaming response parser extracts all content blocks (text AND tool_use)
+- ✅ Tool_use blocks from streaming responses have correct id, name, and parsed input
 - ✅ System message visible at top
 - ✅ All user and assistant messages display in order
-- ✅ Final assistant response included
+- ✅ Final assistant response included (with tool calls if any)
 - ✅ Text content properly formatted
 
 **Phase 2:**
+
 - ✅ Tool calls visible as badges in messages
 - ✅ Modal opens with tool details on click
 - ✅ Tool parameters formatted and copyable
 
 **Phase 3:**
+
 - ✅ Tool results paired with tool calls
 - ✅ Badge indicates result availability
 - ✅ Modal shows both input and result
 - ✅ User messages with only results are hidden
 
 **Phase 4:**
+
 - ✅ Markdown and code rendering working
 - ✅ Keyboard shortcuts functional
 - ✅ Edge cases handled gracefully
