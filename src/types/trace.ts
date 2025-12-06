@@ -86,6 +86,8 @@ export interface SessionData {
   hasErrors: boolean;
   conversationCount?: number;
   conversationPreview?: string;
+  totalCost: number | null; // Total cost in USD, null if any request has unknown pricing
+  costByModel?: Record<string, number>; // Optional: cost breakdown by model
 }
 
 export interface DirectoryHandle extends FileSystemDirectoryHandle {

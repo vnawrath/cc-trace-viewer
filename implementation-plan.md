@@ -126,18 +126,18 @@ Extend existing TypeScript interfaces to include cost information at both sessio
 
 ### Implementation Steps
 
-- [ ] Open `/src/types/trace.ts`
-- [ ] Add cost fields to `SessionData` interface (after line 89):
+- [x] Open `/src/types/trace.ts`
+- [x] Add cost fields to `SessionData` interface (after line 89):
   ```typescript
   totalCost: number | null; // Total cost in USD, null if any request has unknown pricing
   costByModel?: Record<string, number>; // Optional: cost breakdown by model
   ```
-- [ ] Open `/src/services/requestAnalyzer.ts`
-- [ ] Add cost field to `RequestMetrics` interface (after line 35):
+- [x] Open `/src/services/requestAnalyzer.ts`
+- [x] Add cost field to `RequestMetrics` interface (after line 35):
   ```typescript
   cost: number | null; // Cost in USD, null if model pricing is unknown
   ```
-- [ ] Add cost fields to `AggregateMetrics` type (around line 388):
+- [x] Add cost fields to `AggregateMetrics` type (around line 388):
   ```typescript
   totalCost: number | null; // Sum of all request costs, null if any unknown
   ```
@@ -148,23 +148,25 @@ Extend existing TypeScript interfaces to include cost information at both sessio
 
 ### Verification Steps
 
-1. **Type Check**:
-   ```bash
-   npm run type-check
-   ```
-   - Verify no TypeScript errors
-   - Verify all usages of `SessionData` and `RequestMetrics` are compatible
+✅ **Completed**: All verification tests passed
 
-2. **IDE Verification**:
-   - Open files that use `SessionData` (e.g., `SessionTable.tsx`, `SessionCard.tsx`)
-   - Verify new fields are accessible with autocomplete
-   - Verify no type errors in editor
+1. **Type Check**: ✅
+   - TypeScript compiler runs with no errors
+   - All usages of `SessionData` and `RequestMetrics` are compatible
+   - Placeholder `null` values added to satisfy type requirements
 
-3. **Build Test**:
-   ```bash
-   npm run build
-   ```
-   - Ensure build succeeds without errors
+2. **Build Test**: ✅
+   - Build completes successfully with no errors
+   - All TypeScript code compiles correctly
+
+**Implementation Notes**:
+- Added `totalCost` and `costByModel` fields to `SessionData` interface in `src/types/trace.ts:89-90`
+- Added `cost` field to `RequestMetrics` interface in `src/services/requestAnalyzer.ts:36`
+- Added `totalCost` field to return type of `calculateAggregateMetrics()` in `src/services/requestAnalyzer.ts:363,389`
+- Initialized all new cost fields with `null` placeholder values
+- Added placeholder in `requestAnalyzer.ts:189` for `cost` field creation
+- Added placeholder in `traceParser.ts:373` for `totalCost` field creation
+- All changes are backward compatible and ready for Phase 3 integration
 
 ---
 

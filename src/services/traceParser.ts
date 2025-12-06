@@ -370,6 +370,7 @@ export class TraceParserService {
       hasErrors: metadata.hasErrors,
       conversationCount: metadata.conversationCount,
       conversationPreview: metadata.conversationPreview,
+      totalCost: null, // Will be calculated in Phase 3
     };
   }
 

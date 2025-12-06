@@ -33,6 +33,7 @@ export interface RequestMetrics {
   responseContent: ContentBlock[];
   rawRequest: import('../types/trace').TraceRequest;
   rawResponse: import('../types/trace').TraceResponse;
+  cost: number | null; // Cost in USD, null if model pricing is unknown
 }
 
 export interface RequestFilters {
@@ -184,7 +185,8 @@ export class RequestAnalyzerService {
       stopReason: !isTokenCountRequest && response.body && 'stop_reason' in response.body ? response.body.stop_reason : null,
       responseContent,
       rawRequest: request,
-      rawResponse: response
+      rawResponse: response,
+      cost: null // Will be calculated in Phase 3
     };
   }
 
@@ -358,7 +360,8 @@ export class RequestAnalyzerService {
         errorCount: 0,
         errorRate: 0,
         streamingCount: 0,
-        streamingRate: 0
+        streamingRate: 0,
+        totalCost: null as number | null
       };
     }
 
@@ -383,7 +386,8 @@ export class RequestAnalyzerService {
       errorCount,
       errorRate,
       streamingCount,
-      streamingRate
+      streamingRate,
+      totalCost: null as number | null
     };
   }
 }
