@@ -177,33 +177,32 @@ Key decisions:
 
 ### Implementation Tasks
 
-- [ ] **Task 3.1**: Update User ID display in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/SessionSummary.tsx`
-  - Import `CopyableText` component
-  - Replace plain text user ID at line 73 with `<CopyableText value={metadata.userId} />`
-  - Update styling to maintain single-line box with copy icon on right
-  - Ensure copy icon is visible and properly aligned
+- [x] **Task 3.1**: Update User ID display in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/SessionSummary.tsx`
+  - ✅ Import `useState` from React
+  - ✅ Create `handleCopyUserId` function with clipboard API
+  - ✅ Replace plain text user ID at line 70 with box containing text and copy button
+  - ✅ Update styling to maintain single-line box with copy icon on right
+  - ✅ Add hover states and visual feedback (checkmark when copied)
 
-- [ ] **Task 3.2**: Create detailed token breakdown section in SessionSummary
-  - Locate token display sections in sidebar variant (around lines 100-130)
-  - Add "Total Input" label with breakdown:
-    - Show: `{totalInput}` as main value
-    - Show breakdown below: `Cache Read: {cacheRead}`, `Cache Write: {cacheWrite}`, `Input: {input}`
-  - Add "Total Output" label with `{totalOutput}`
-  - Use `formatTokenBreakdown()` from Phase 1 for consistent formatting
-  - Apply similar updates to full variant if needed
+- [x] **Task 3.2**: Create detailed token breakdown section in SessionSummary
+  - ✅ Updated token display sections in sidebar variant (lines 123-153)
+  - ✅ Added "Total Input" label with calculated total
+  - ✅ Added breakdown below showing: Cache Read, Cache Write, Input (indented)
+  - ✅ Added "Total Output" label with total output tokens
+  - ✅ Used `formatTokens()` for consistent formatting with K/M suffixes
+  - ✅ Maintained dark theme styling with proper borders and spacing
 
-- [ ] **Task 3.3**: Fix average duration calculation
-  - Locate duration display: line 119 (sidebar), line 291 (full)
-  - The issue: `aggregateMetrics.avgDuration` is in **seconds** (from requestAnalyzer.ts:355)
-  - The fix: Multiply by 1000 before passing to `formatDuration()`
-  - Change: `formatDuration(aggregateMetrics.avgDuration)` → `formatDuration(aggregateMetrics.avgDuration * 1000)`
-  - Add `.toFixed(2)` after formatDuration if more precision needed for seconds display
+- [x] **Task 3.3**: Fix average duration calculation
+  - ✅ Located duration display: line 169 (sidebar), line 342 (full)
+  - ✅ Issue confirmed: `aggregateMetrics.avgDuration` is in **seconds**
+  - ✅ Fixed in both locations: `formatDuration(aggregateMetrics.avgDuration * 1000)`
+  - ✅ Now correctly displays duration in proper units
 
-- [ ] **Task 3.4**: Remove redundant tools section in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/ToolUsageDisplay.tsx`
-  - Remove "Actually Used" section (lines 181-197)
-  - Keep only "Available Tools" section (lines 163-179)
-  - Ensure highlighting of used tools remains (green vs gray badges)
-  - Adjust grid/layout if needed after removal
+- [x] **Task 3.4**: Remove redundant tools section in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/ToolUsageDisplay.tsx`
+  - ✅ Removed "Actually Used" section (lines 181-197)
+  - ✅ Kept single "Available Tools" section with improved layout
+  - ✅ Enhanced highlighting: used tools show green badges, unused show gray badges
+  - ✅ Simplified from 2-column grid to single box layout
 
 ### Verification Steps
 

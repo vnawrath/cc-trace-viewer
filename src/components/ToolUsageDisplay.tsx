@@ -159,42 +159,29 @@ export function ToolUsageDisplay({ request }: ToolUsageDisplayProps) {
       <h3 className="text-lg font-semibold text-gray-900">Tool Usage</h3>
 
       {/* Tools Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">Tools Available</h4>
-          {toolsAvailable.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {toolsAvailable.map((tool) => (
+      <div className="bg-gray-50 p-4 rounded-lg">
+        <h4 className="text-sm font-semibold text-gray-900 mb-2">Available Tools</h4>
+        {toolsAvailable.length > 0 ? (
+          <div className="flex flex-wrap gap-2">
+            {toolsAvailable.map((tool) => {
+              const isUsed = toolsUsed.includes(tool);
+              return (
                 <span
                   key={tool}
-                  className="inline-flex px-2 py-1 text-xs bg-gray-200 text-gray-700 rounded-full"
+                  className={`inline-flex px-2 py-1 text-xs rounded-full ${
+                    isUsed
+                      ? 'bg-green-100 text-green-800 font-medium'
+                      : 'bg-gray-200 text-gray-600'
+                  }`}
                 >
                   {tool}
                 </span>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-600">None</p>
-          )}
-        </div>
-
-        <div className="bg-amber-50 p-4 rounded-lg">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">Tools Actually Used</h4>
-          {toolsUsed.length > 0 ? (
-            <div className="flex flex-wrap gap-2">
-              {toolsUsed.map((tool) => (
-                <span
-                  key={tool}
-                  className="inline-flex px-2 py-1 text-xs bg-amber-200 text-amber-800 rounded-full"
-                >
-                  {tool}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p className="text-sm text-gray-600">None</p>
-          )}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600">None</p>
+        )}
       </div>
 
       {/* Tool Definitions */}

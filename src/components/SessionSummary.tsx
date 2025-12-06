@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
+import { useState } from 'react';
 import type { SessionData } from '../types/trace';
 import { traceParserService } from '../services/traceParser';
-import { TokenBreakdownDisplay } from './TokenBreakdownDisplay';
 
 interface SessionSummaryProps {
   sessionId: string;
@@ -22,6 +22,8 @@ interface SessionSummaryProps {
 }
 
 export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant = 'full' }: SessionSummaryProps) {
+  const [copiedUserId, setCopiedUserId] = useState(false);
+
   const formatDuration = (ms: number) => {
     if (ms < 1000) return `${ms}ms`;
     if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
@@ -30,6 +32,16 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
   };
 
   const formatTokens = traceParserService.formatTokenCount;
+
+  const handleCopyUserId = async () => {
+    try {
+      await navigator.clipboard.writeText(metadata.userId);
+      setCopiedUserId(true);
+      setTimeout(() => setCopiedUserId(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy user ID:', error);
+    }
+  };
 
   const formatPercentage = (value: number) => {
     return `${(value * 100).toFixed(1)}%`;
@@ -67,7 +79,25 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
           </div>
           <div className="mb-3">
             <div className="text-[10px] text-gray-500 mb-1">User</div>
-            <div className="font-mono text-xs text-gray-300">{metadata.userId}</div>
+            <div className="flex items-center justify-between gap-2 bg-gray-950 border border-gray-800 rounded px-2 py-1.5">
+              <span className="font-mono text-xs text-gray-300 truncate">{metadata.userId}</span>
+              <button
+                onClick={handleCopyUserId}
+                className="flex-shrink-0 text-gray-500 hover:text-cyan-400 transition-colors"
+                type="button"
+                title="Copy user ID"
+              >
+                {copiedUserId ? (
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
           <div>
             <div className="text-[10px] text-gray-500 mb-1">Time Range</div>
@@ -89,16 +119,36 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
             <span className="font-mono text-sm font-semibold text-cyan-400">{metadata.totalRequests}</span>
           </div>
 
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] text-gray-500">Tokens</span>
-            <span className="font-mono text-[11px] font-semibold">
-              <TokenBreakdownDisplay
-                cacheRead={metadata.totalCacheReadTokens}
-                cacheWrite={metadata.totalCacheCreationTokens}
-                input={metadata.totalInputTokens}
-                output={metadata.totalOutputTokens}
-              />
-            </span>
+          <div className="pt-2 border-t border-gray-800">
+            <div className="text-[11px] text-gray-500 mb-2">Token Breakdown</div>
+
+            <div className="space-y-1.5 mb-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] text-gray-500">Total Input</span>
+                <span className="font-mono text-xs text-cyan-400 font-semibold">
+                  {formatTokens(metadata.totalCacheReadTokens + metadata.totalCacheCreationTokens + metadata.totalInputTokens)}
+                </span>
+              </div>
+              <div className="pl-3 space-y-0.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-gray-600">Cache Read</span>
+                  <span className="font-mono text-[10px] text-gray-400">{formatTokens(metadata.totalCacheReadTokens)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-gray-600">Cache Write</span>
+                  <span className="font-mono text-[10px] text-gray-400">{formatTokens(metadata.totalCacheCreationTokens)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-gray-600">Input</span>
+                  <span className="font-mono text-[10px] text-gray-400">{formatTokens(metadata.totalInputTokens)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-gray-500">Total Output</span>
+              <span className="font-mono text-xs text-cyan-400 font-semibold">{formatTokens(metadata.totalOutputTokens)}</span>
+            </div>
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-gray-800">
@@ -115,7 +165,7 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
             <>
               <div className="flex items-center justify-between">
                 <span className="text-[11px] text-gray-500">Avg Duration</span>
-                <span className="font-mono text-xs text-gray-400">{formatDuration(aggregateMetrics.avgDuration)}</span>
+                <span className="font-mono text-xs text-gray-400">{formatDuration(aggregateMetrics.avgDuration * 1000)}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -190,36 +240,19 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
         )}
 
         {/* Tools */}
-        {(metadata.toolsAvailable.length > 0 || metadata.toolsUsed.length > 0) && (
-          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4 space-y-3">
-            {metadata.toolsAvailable.length > 0 && (
-              <div>
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Tools Available</h3>
-                <div className="space-y-1">
-                  {metadata.toolsAvailable.map(tool => (
-                    <div
-                      key={tool}
-                      className={`text-[11px] font-mono ${metadata.toolsUsed.includes(tool) ? 'text-amber-400 font-medium' : 'text-gray-500'}`}
-                    >
-                      {tool}
-                    </div>
-                  ))}
+        {metadata.toolsAvailable.length > 0 && (
+          <div className="bg-gray-900 border border-gray-700 rounded-lg p-4">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Available Tools</h3>
+            <div className="space-y-1">
+              {metadata.toolsAvailable.map(tool => (
+                <div
+                  key={tool}
+                  className={`text-[11px] font-mono ${metadata.toolsUsed.includes(tool) ? 'text-green-400 font-medium' : 'text-gray-500'}`}
+                >
+                  {tool}
                 </div>
-              </div>
-            )}
-
-            {metadata.toolsUsed.length > 0 && metadata.toolsUsed.length !== metadata.toolsAvailable.length && (
-              <div className="pt-3 border-t border-gray-800">
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Actually Used</h3>
-                <div className="space-y-1">
-                  {metadata.toolsUsed.map(tool => (
-                    <div key={tool} className="text-[11px] text-amber-400 font-mono font-medium">
-                      {tool}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -288,7 +321,7 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
       {aggregateMetrics && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 pt-4 border-t border-gray-200">
           <div className="text-center">
-            <div className="text-lg font-semibold text-gray-900">{formatDuration(aggregateMetrics.avgDuration)}</div>
+            <div className="text-lg font-semibold text-gray-900">{formatDuration(aggregateMetrics.avgDuration * 1000)}</div>
             <div className="text-xs text-gray-500">Avg Duration</div>
           </div>
           <div className="text-center">
