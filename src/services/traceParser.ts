@@ -83,16 +83,57 @@ export class TraceParserService {
 
     const obj = entry as Record<string, unknown>;
 
-    return Boolean(
-      obj.request &&
-        typeof obj.request === "object" &&
-        obj.response &&
-        typeof obj.response === "object" &&
-        typeof obj.logged_at === "string" &&
-        typeof (obj.request as Record<string, unknown>).timestamp ===
-          "number" &&
-        typeof (obj.response as Record<string, unknown>).timestamp === "number"
-    );
+    // Basic structure check
+    if (
+      !obj.request ||
+      typeof obj.request !== "object" ||
+      !obj.response ||
+      typeof obj.response !== "object" ||
+      typeof obj.logged_at !== "string"
+    ) {
+      return false;
+    }
+
+    const request = obj.request as Record<string, unknown>;
+    const response = obj.response as Record<string, unknown>;
+
+    // Check for required timestamps
+    if (
+      typeof request.timestamp !== "number" ||
+      typeof response.timestamp !== "number"
+    ) {
+      console.warn(
+        "Trace entry missing timestamps:",
+        "request.timestamp=" +
+          typeof request.timestamp +
+          ", response.timestamp=" +
+          typeof response.timestamp
+      );
+      return false;
+    }
+
+    // Check for required body and metadata
+    if (
+      !request.body ||
+      typeof request.body !== "object"
+    ) {
+      console.warn("Trace entry missing request.body");
+      return false;
+    }
+
+    const body = request.body as Record<string, unknown>;
+    if (!body.metadata || typeof body.metadata !== "object") {
+      console.warn("Trace entry missing request.body.metadata");
+      return false;
+    }
+
+    const metadata = body.metadata as Record<string, unknown>;
+    if (typeof metadata.user_id !== "string") {
+      console.warn("Trace entry missing request.body.metadata.user_id");
+      return false;
+    }
+
+    return true;
   }
 
   parseJsonlContent(content: string): ClaudeTraceEntry[] {
@@ -301,8 +342,12 @@ export class TraceParserService {
     // Extract conversation metadata (count and preview)
     const conversationMetadata = this.extractConversationMetadata(finalConversations);
 
+    // Safely extract user_id with fallback
+    const userId =
+      firstEntry.request.body?.metadata?.user_id || "unknown-user";
+
     return {
-      userId: firstEntry.request.body.metadata.user_id,
+      userId,
       requestCount: entries.length,
       totalTokens,
       totalInputTokens,
