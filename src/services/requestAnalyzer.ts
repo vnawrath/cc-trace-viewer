@@ -1,6 +1,7 @@
 import type { ClaudeTraceEntry, TokenUsage } from '../types/trace';
 import { traceParserService } from './traceParser';
 import type { ContentBlock } from '../utils/messageFormatting';
+import { calculateRequestCost } from './costCalculator';
 
 export interface RequestMetrics {
   id: string;
@@ -157,6 +158,21 @@ export class RequestAnalyzerService {
       }
     }
 
+    // Calculate cost
+    let cost: number | null = null;
+    if (tokenUsage) {
+      cost = calculateRequestCost(
+        request.body.model,
+        tokenUsage,
+        inputTokens
+      );
+
+      // Log warning for unknown models
+      if (cost === null) {
+        console.warn(`Unknown pricing for model: ${request.body.model}`);
+      }
+    }
+
     // Generate unique ID from timestamp and index
     const id = `${request.timestamp}-${index}`;
 
@@ -186,7 +202,7 @@ export class RequestAnalyzerService {
       responseContent,
       rawRequest: request,
       rawResponse: response,
-      cost: null // Will be calculated in Phase 3
+      cost
     };
   }
 
@@ -376,6 +392,17 @@ export class RequestAnalyzerService {
     const streamingCount = requests.filter(req => req.isStreaming).length;
     const streamingRate = streamingCount / totalRequests;
 
+    // Calculate total cost
+    let totalCost: number | null = 0;
+    for (const req of requests) {
+      if (req.cost === null) {
+        // If any request has unknown pricing, set total to null
+        totalCost = null;
+        break;
+      }
+      totalCost += req.cost;
+    }
+
     return {
       totalRequests,
       totalTokens,
@@ -387,7 +414,7 @@ export class RequestAnalyzerService {
       errorRate,
       streamingCount,
       streamingRate,
-      totalCost: null as number | null
+      totalCost
     };
   }
 }

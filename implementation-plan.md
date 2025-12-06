@@ -193,23 +193,23 @@ Integrate cost calculations into the existing data processing pipeline - calcula
 
 ### Implementation Steps
 
-- [ ] Import `CostCalculatorService` into `requestAnalyzer.ts`
-- [ ] In `analyzeRequest()` method (around line 175, after token extraction):
+- [x] Import `calculateRequestCost` into `requestAnalyzer.ts`
+- [x] In `analyzeRequest()` method (around line 175, after token extraction):
   - Get `TokenUsage` from response body
-  - Call `CostCalculatorService.calculateRequestCost(model, tokenUsage, totalInputTokens)`
+  - Call `calculateRequestCost(model, tokenUsage, totalInputTokens)`
   - Store result in `metrics.cost`
   - If cost is `null`, log warning: `"Unknown pricing for model: ${model}"`
-- [ ] In `calculateAggregateMetrics()` method (around line 388):
+- [x] In `calculateAggregateMetrics()` method (around line 388):
   - Sum costs from all requests in the array
   - Set `aggregateMetrics.totalCost` to sum
   - If any request has `null` cost, set `totalCost` to `null`
-- [ ] Import `CostCalculatorService` into `traceParser.ts`
-- [ ] In `calculateSessionMetadata()` method (around line 335, before return):
-  - Calculate total cost by summing costs from all `RequestMetrics`
-  - Optionally calculate `costByModel` by grouping requests by model
+- [x] Import `requestAnalyzerService` into `traceParser.ts`
+- [x] In `createSessionData()` method (around line 373):
+  - Calculate total cost by analyzing all requests with `requestAnalyzerService.analyzeRequests()`
+  - Sum costs from all `RequestMetrics`
   - Set `sessionData.totalCost`
   - If any request has `null` cost, set `totalCost` to `null`
-- [ ] Add error handling for edge cases (no requests, all failed requests, etc.)
+- [x] Add error handling for edge cases (no requests, all failed requests, etc.)
 
 ### Files to Modify
 - `/src/services/requestAnalyzer.ts` - Modify `analyzeRequest()` and `calculateAggregateMetrics()` (~10 lines added)
@@ -217,31 +217,25 @@ Integrate cost calculations into the existing data processing pipeline - calcula
 
 ### Verification Steps
 
-1. **Load Sample Trace**:
-   - Use an existing `.jsonl` trace file with known models
-   - Open browser console and check for warnings about unknown models
-   - Verify no errors during parsing
+✅ **Completed**: All implementation steps completed successfully
 
-2. **Inspect Data Structure**:
-   - In browser DevTools, inspect `SessionData` objects
-   - Verify `totalCost` is a number (not `null`) for known models
-   - Verify `cost` is present on each `RequestMetrics` object
+**Implementation Notes**:
+- Imported `calculateRequestCost` function into `requestAnalyzer.ts:4`
+- Added cost calculation in `analyzeRequest()` method at `requestAnalyzer.ts:161-174`
+  - Calculates cost using `calculateRequestCost(model, tokenUsage, inputTokens)`
+  - Logs warning to console for unknown models
+  - Stores result in `metrics.cost` field
+- Added cost aggregation in `calculateAggregateMetrics()` at `requestAnalyzer.ts:395-404`
+  - Sums costs from all requests
+  - Sets `totalCost` to `null` if any request has unknown pricing
+- Imported `requestAnalyzerService` into `traceParser.ts:12`
+- Added session cost calculation in `createSessionData()` at `traceParser.ts:350-361`
+  - Analyzes all requests using `requestAnalyzerService.analyzeRequests()`
+  - Sums costs from all `RequestMetrics` objects
+  - Sets `sessionData.totalCost` to sum or `null` if any request has unknown pricing
+- Build completed successfully with no TypeScript errors
 
-3. **Manual Cost Calculation**:
-   - Pick a sample request from trace data
-   - Note: model, input tokens, output tokens, cache tokens
-   - Calculate expected cost manually using pricing from Phase 1
-   - Compare with calculated `cost` value (should match within rounding)
-
-4. **Test Unknown Model**:
-   - Create or modify a trace file to include a fictional model name
-   - Verify `cost` is `null` for that request
-   - Verify session `totalCost` is `null` if it includes the unknown request
-   - Verify console warning is logged
-
-5. **Test Long-Context Sonnet 4.5**:
-   - Find or create a trace with Sonnet 4.5 request >200K input tokens
-   - Verify premium pricing is applied (should be roughly 2x for input)
+**Manual Testing Required** (see test-plan-3.md)
 
 ---
 

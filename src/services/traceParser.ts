@@ -9,6 +9,7 @@ import type {
   ConversationMetadata,
 } from "../types/trace";
 import { extractCleanTextFromMessage } from "../utils/messageFormatting";
+import { requestAnalyzerService } from "./requestAnalyzer";
 
 export class TraceParserService {
   parseJsonLine(line: string): ClaudeTraceEntry | null {
@@ -346,6 +347,19 @@ export class TraceParserService {
     const metadata = this.calculateSessionMetadata(entries);
     const sessionId = this.extractSessionId(metadata.userId) || filename;
 
+    // Calculate total cost by analyzing all requests
+    let totalCost: number | null = 0;
+    const requestMetrics = requestAnalyzerService.analyzeRequests(entries);
+
+    for (const metrics of requestMetrics) {
+      if (metrics.cost === null) {
+        // If any request has unknown pricing, set total to null
+        totalCost = null;
+        break;
+      }
+      totalCost += metrics.cost;
+    }
+
     return {
       sessionId,
       userId: metadata.userId,
@@ -370,7 +384,7 @@ export class TraceParserService {
       hasErrors: metadata.hasErrors,
       conversationCount: metadata.conversationCount,
       conversationPreview: metadata.conversationPreview,
-      totalCost: null, // Will be calculated in Phase 3
+      totalCost,
     };
   }
 
