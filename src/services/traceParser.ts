@@ -421,7 +421,8 @@ export class TraceParserService {
       return lastEvent;
     }
 
-    const contentPieces: string[] = [];
+    // Track all content blocks by their index
+    const contentBlocks: Array<Record<string, unknown>> = [];
     let finalMessage: Record<string, unknown> | null = null;
     let usage: Record<string, unknown> | null = null;
     let messageStart: Record<string, unknown> | null = null;
@@ -433,14 +434,46 @@ export class TraceParserService {
         event.message
       ) {
         messageStart = event.message as Record<string, unknown>;
-      } else if (
-        event.type === "content_block_delta" &&
-        typeof event.delta === "object" &&
-        event.delta &&
-        "text" in event.delta &&
-        typeof (event.delta as { text: unknown }).text === "string"
-      ) {
-        contentPieces.push((event.delta as { text: string }).text);
+      } else if (event.type === "content_block_start") {
+        // Initialize a new content block at the specified index
+        const index = typeof event.index === "number" ? event.index : -1;
+        if (index >= 0 && event.content_block && typeof event.content_block === "object") {
+          // Initialize block with type and initial data (id, name for tool_use)
+          contentBlocks[index] = { ...event.content_block } as Record<string, unknown>;
+        }
+      } else if (event.type === "content_block_delta") {
+        // Update the content block with delta
+        const index = typeof event.index === "number" ? event.index : -1;
+        if (index >= 0 && contentBlocks[index] && event.delta && typeof event.delta === "object") {
+          const block = contentBlocks[index];
+          const delta = event.delta as Record<string, unknown>;
+
+          if (delta.type === "text_delta" && typeof delta.text === "string") {
+            // Append text to text block
+            if (block.type === "text") {
+              block.text = (typeof block.text === "string" ? block.text : "") + delta.text;
+            }
+          } else if (delta.type === "input_json_delta" && typeof delta.partial_json === "string") {
+            // Accumulate JSON string for tool_use blocks
+            if (block.type === "tool_use") {
+              block.input = (typeof block.input === "string" ? block.input : "") + delta.partial_json;
+            }
+          }
+        }
+      } else if (event.type === "content_block_stop") {
+        // Finalize content block - parse JSON input if it's a tool_use block
+        const index = typeof event.index === "number" ? event.index : -1;
+        if (index >= 0 && contentBlocks[index]) {
+          const block = contentBlocks[index];
+          if (block.type === "tool_use" && typeof block.input === "string") {
+            try {
+              block.input = JSON.parse(block.input as string);
+            } catch (e) {
+              console.warn("Failed to parse tool input JSON:", block.input, e);
+              // Keep as string if parsing fails
+            }
+          }
+        }
       } else if (
         event.type === "message_delta" &&
         typeof event.delta === "object" &&
@@ -458,9 +491,12 @@ export class TraceParserService {
       }
     }
 
+    // Build final content array, filtering out null/undefined blocks
+    const finalContent = contentBlocks.filter((block) => block != null);
+
     const reconstructedMessage: Record<string, unknown> = {
       type: "message",
-      content: [{ type: "text", text: contentPieces.join("") }],
+      content: finalContent,
       ...finalMessage,
     };
 

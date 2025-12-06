@@ -84,7 +84,7 @@ const reconstructedMessage = {
 
 ### Tasks
 
-- [ ] **Fix `reconstructResponseFromStream()` in `src/services/traceParser.ts` to properly extract tool_use blocks**
+- [x] **Fix `reconstructResponseFromStream()` in `src/services/traceParser.ts` to properly extract tool_use blocks**
 
   - Refactor to track all content blocks by their `index` field (use array: `contentBlocks[]`)
   - On `content_block_start`: initialize block at `contentBlocks[event.index]` with initial data (type, id, name for tool_use)
@@ -127,8 +127,8 @@ const reconstructedMessage = {
 
 ### Verification & Testing
 
-- [ ] Verify `reconstructResponseFromStream()` correctly extracts tool_use blocks from streaming responses
-- [ ] Verify tool_use blocks have proper id, name, and parsed input object (not empty `{}`)
+- [x] Verify `reconstructResponseFromStream()` correctly extracts tool_use blocks from streaming responses
+- [x] Verify tool_use blocks have proper id, name, and parsed input object (not empty `{}`)
 - [ ] Verify system message displays at top with purple styling
 - [ ] Verify user and assistant messages alternate correctly
 - [ ] Verify final assistant response appears at the end (including any tool calls)
