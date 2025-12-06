@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import type { ToolUseBlock } from '../services/conversationProcessor';
+import type { ToolUseBlock, ToolResultBlock } from '../services/conversationProcessor';
 
 interface ToolCallModalProps {
   toolUse: ToolUseBlock | null;
+  toolResult?: ToolResultBlock;
   onClose: () => void;
 }
 
-export const ToolCallModal: React.FC<ToolCallModalProps> = ({ toolUse, onClose }) => {
-  const [copied, setCopied] = useState(false);
+export const ToolCallModal: React.FC<ToolCallModalProps> = ({ toolUse, toolResult, onClose }) => {
+  const [copiedInput, setCopiedInput] = useState(false);
+  const [copiedResult, setCopiedResult] = useState(false);
+  const [inputExpanded, setInputExpanded] = useState(true);
+  const [resultExpanded, setResultExpanded] = useState(false);
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -23,15 +27,37 @@ export const ToolCallModal: React.FC<ToolCallModalProps> = ({ toolUse, onClose }
 
   if (!toolUse) return null;
 
-  const handleCopy = async () => {
+  const handleCopyInput = async () => {
     const jsonString = JSON.stringify(toolUse.input, null, 2);
     try {
       await navigator.clipboard.writeText(jsonString);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setCopiedInput(true);
+      setTimeout(() => setCopiedInput(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
     }
+  };
+
+  const handleCopyResult = async () => {
+    if (!toolResult) return;
+    const content = typeof toolResult.content === 'string'
+      ? toolResult.content
+      : JSON.stringify(toolResult.content, null, 2);
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedResult(true);
+      setTimeout(() => setCopiedResult(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const formatResultContent = () => {
+    if (!toolResult) return '';
+    if (typeof toolResult.content === 'string') {
+      return toolResult.content;
+    }
+    return JSON.stringify(toolResult.content, null, 2);
   };
 
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -79,23 +105,94 @@ export const ToolCallModal: React.FC<ToolCallModalProps> = ({ toolUse, onClose }
             {/* Input Parameters Section */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-gray-300">Input Parameters</h3>
                 <button
-                  onClick={handleCopy}
-                  className="px-3 py-1 text-xs font-medium rounded-md
-                           bg-gray-700 text-gray-300 border border-gray-600
-                           hover:bg-gray-600 hover:border-gray-500
-                           transition-colors"
+                  onClick={() => setInputExpanded(!inputExpanded)}
+                  className="flex items-center gap-2 text-sm font-semibold text-gray-300 hover:text-gray-100 transition-colors"
                 >
-                  {copied ? 'Copied!' : 'Copy JSON'}
+                  <svg
+                    className={`w-4 h-4 transition-transform ${inputExpanded ? 'rotate-90' : ''}`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  Input Parameters
                 </button>
+                {inputExpanded && (
+                  <button
+                    onClick={handleCopyInput}
+                    className="px-3 py-1 text-xs font-medium rounded-md
+                             bg-gray-700 text-gray-300 border border-gray-600
+                             hover:bg-gray-600 hover:border-gray-500
+                             transition-colors"
+                  >
+                    {copiedInput ? 'Copied!' : 'Copy JSON'}
+                  </button>
+                )}
               </div>
-              <pre className="bg-gray-950 border border-gray-700 rounded-md p-4 overflow-x-auto">
-                <code className="text-sm text-gray-300">
-                  {JSON.stringify(toolUse.input, null, 2)}
-                </code>
-              </pre>
+              {inputExpanded && (
+                <pre className="bg-gray-950 border border-gray-700 rounded-md p-4 overflow-x-auto">
+                  <code className="text-sm text-gray-300">
+                    {JSON.stringify(toolUse.input, null, 2)}
+                  </code>
+                </pre>
+              )}
             </div>
+
+            {/* Tool Result Section */}
+            {toolResult && (
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <button
+                    onClick={() => setResultExpanded(!resultExpanded)}
+                    className="flex items-center gap-2 text-sm font-semibold text-gray-300 hover:text-gray-100 transition-colors"
+                  >
+                    <svg
+                      className={`w-4 h-4 transition-transform ${resultExpanded ? 'rotate-90' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    Tool Result
+                    {toolResult.is_error && (
+                      <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-900/50 text-red-300 border border-red-700 rounded">
+                        Error
+                      </span>
+                    )}
+                    {!toolResult.is_error && (
+                      <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-green-900/50 text-green-300 border border-green-700 rounded">
+                        Success
+                      </span>
+                    )}
+                  </button>
+                  {resultExpanded && (
+                    <button
+                      onClick={handleCopyResult}
+                      className="px-3 py-1 text-xs font-medium rounded-md
+                               bg-gray-700 text-gray-300 border border-gray-600
+                               hover:bg-gray-600 hover:border-gray-500
+                               transition-colors"
+                    >
+                      {copiedResult ? 'Copied!' : 'Copy'}
+                    </button>
+                  )}
+                </div>
+                {resultExpanded && (
+                  <pre className={`border rounded-md p-4 overflow-x-auto ${
+                    toolResult.is_error
+                      ? 'bg-red-950/30 border-red-700'
+                      : 'bg-green-950/30 border-green-700'
+                  }`}>
+                    <code className="text-sm text-gray-300 whitespace-pre-wrap break-words">
+                      {formatResultContent()}
+                    </code>
+                  </pre>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

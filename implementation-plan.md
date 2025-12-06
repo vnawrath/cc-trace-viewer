@@ -261,7 +261,7 @@ const reconstructedMessage = {
 
 ### Tasks
 
-- [ ] Define tool result types in `src/services/conversationProcessor.ts`
+- [x] Define tool result types in `src/services/conversationProcessor.ts`
 
   - Add `ToolResultBlock` interface:
     - `type: 'tool_result'`
@@ -273,7 +273,7 @@ const reconstructedMessage = {
     - `toolResults?: Map<string, ToolResultBlock>` - Maps tool_use_id to result
     - `hide?: boolean` - Flag to hide messages with only tool_result blocks
 
-- [ ] Implement tool pairing in `src/services/conversationProcessor.ts`
+- [x] Implement tool pairing in `src/services/conversationProcessor.ts`
 
   - Add `pairToolResults(messages: ConversationMessage[]): ConversationMessage[]` function
   - Algorithm:
@@ -292,7 +292,7 @@ const reconstructedMessage = {
     ```
   - Call `pairToolResults()` at the end of `processConversation()` before returning
 
-- [ ] Update `src/components/ToolCallModal.tsx`
+- [x] Update `src/components/ToolCallModal.tsx`
 
   - Add prop: `toolResult?: ToolResultBlock`
   - Update layout to show result if present:
@@ -303,7 +303,7 @@ const reconstructedMessage = {
     - Copy button for result content
   - Style error results with red tint, success with green tint
 
-- [ ] Update `src/components/ToolCallBadge.tsx`
+- [x] Update `src/components/ToolCallBadge.tsx`
 
   - Add prop: `hasResult: boolean`
   - Update status indicator:
@@ -311,7 +311,7 @@ const reconstructedMessage = {
     - If `hasResult === false`: Show cyan pending icon + cyan tint
   - Keep clickable behavior to open modal with result
 
-- [ ] Update `src/components/ConversationView.tsx`
+- [x] Update `src/components/ConversationView.tsx`
   - Filter out hidden messages when rendering: `messages.filter(msg => !msg.hide)`
   - When rendering tool_use blocks, check if `message.toolResults` has matching result
   - Pass `toolResult` to modal when tool is clicked

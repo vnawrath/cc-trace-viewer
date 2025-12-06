@@ -32,6 +32,72 @@ export interface ConversationMessage {
 }
 
 /**
+ * Pairs tool_result blocks from user messages with tool_use blocks from assistant messages.
+ * Returns a new array with toolResults maps populated and tool-only user messages hidden.
+ */
+export function pairToolResults(messages: ConversationMessage[]): ConversationMessage[] {
+  // Create a mutable copy of messages
+  const enhancedMessages = messages.map(msg => ({ ...msg }));
+
+  // Track pending tool uses: { [tool_use_id]: messageIndex }
+  const pendingToolUses = new Map<string, number>();
+
+  for (let i = 0; i < enhancedMessages.length; i++) {
+    const message = enhancedMessages[i];
+
+    // If assistant message, track all tool_use blocks
+    if (message.role === 'assistant') {
+      for (const block of message.content) {
+        if (block.type === 'tool_use') {
+          pendingToolUses.set(block.id, i);
+        }
+      }
+    }
+
+    // If user message, process tool_result blocks
+    if (message.role === 'user') {
+      const toolResults: ToolResultBlock[] = [];
+      const nonToolBlocks: ContentBlock[] = [];
+
+      // Separate tool_result blocks from other content
+      for (const block of message.content) {
+        if (block.type === 'tool_result') {
+          toolResults.push(block);
+        } else {
+          nonToolBlocks.push(block);
+        }
+      }
+
+      // Pair each tool_result with its corresponding tool_use
+      for (const toolResult of toolResults) {
+        const assistantMsgIndex = pendingToolUses.get(toolResult.tool_use_id);
+        if (assistantMsgIndex !== undefined) {
+          const assistantMsg = enhancedMessages[assistantMsgIndex];
+
+          // Initialize toolResults map if not present
+          if (!assistantMsg.toolResults) {
+            assistantMsg.toolResults = new Map();
+          }
+
+          // Add the pairing
+          assistantMsg.toolResults.set(toolResult.tool_use_id, toolResult);
+
+          // Remove from pending
+          pendingToolUses.delete(toolResult.tool_use_id);
+        }
+      }
+
+      // Hide user messages that contain ONLY tool_result blocks
+      if (toolResults.length > 0 && nonToolBlocks.length === 0) {
+        enhancedMessages[i].hide = true;
+      }
+    }
+  }
+
+  return enhancedMessages;
+}
+
+/**
  * Process a ClaudeTraceEntry into an array of ConversationMessages
  * with proper content block extraction and ordering
  */
@@ -152,5 +218,6 @@ export function processConversation(entry: ClaudeTraceEntry): ConversationMessag
     });
   }
 
-  return messages;
+  // Pair tool results with tool uses
+  return pairToolResults(messages);
 }

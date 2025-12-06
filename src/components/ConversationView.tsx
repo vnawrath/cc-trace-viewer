@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ClaudeTraceEntry } from '../types/trace';
-import { processConversation, type ConversationMessage, type TextBlock, type ToolUseBlock } from '../services/conversationProcessor';
+import { processConversation, type ConversationMessage, type TextBlock, type ToolUseBlock, type ToolResultBlock } from '../services/conversationProcessor';
 import { ToolCallBadge } from './ToolCallBadge';
 import { ToolCallModal } from './ToolCallModal';
 
@@ -8,10 +8,17 @@ interface ConversationViewProps {
   entry: ClaudeTraceEntry;
 }
 
+interface SelectedToolState {
+  toolUse: ToolUseBlock;
+  toolResult?: ToolResultBlock;
+}
+
 export function ConversationView({ entry }: ConversationViewProps) {
-  const messages = processConversation(entry);
+  const allMessages = processConversation(entry);
+  // Filter out hidden messages (tool-only user messages)
+  const messages = allMessages.filter(msg => !msg.hide);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  const [selectedTool, setSelectedTool] = useState<ToolUseBlock | null>(null);
+  const [selectedTool, setSelectedTool] = useState<SelectedToolState | null>(null);
 
   const handleCopy = async (text: string, index: number) => {
     try {
@@ -69,11 +76,16 @@ export function ConversationView({ entry }: ConversationViewProps) {
           </span>
         );
       } else if (block.type === 'tool_use') {
+        // Check if this tool has a result
+        const hasResult = message.toolResults?.has(block.id) ?? false;
+        const toolResult = message.toolResults?.get(block.id);
+
         elements.push(
           <ToolCallBadge
             key={`tool-${blockIndex}`}
             toolUse={block}
-            onClick={() => setSelectedTool(block)}
+            hasResult={hasResult}
+            onClick={() => setSelectedTool({ toolUse: block, toolResult })}
           />
         );
       }
@@ -150,7 +162,11 @@ export function ConversationView({ entry }: ConversationViewProps) {
       </div>
 
       {/* Tool Call Modal */}
-      <ToolCallModal toolUse={selectedTool} onClose={() => setSelectedTool(null)} />
+      <ToolCallModal
+        toolUse={selectedTool?.toolUse ?? null}
+        toolResult={selectedTool?.toolResult}
+        onClose={() => setSelectedTool(null)}
+      />
     </>
   );
 }
