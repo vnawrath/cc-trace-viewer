@@ -59,45 +59,53 @@ export interface TokenUsage {
 
 ### Implementation Steps
 
-- [ ] Create `/src/services/costCalculator.ts`
-- [ ] Define `ModelPricing` interface with fields: `input`, `output`, `cacheWrite5m`, `cacheWrite1h`, `cacheRead`, optional `inputLongContext`, `outputLongContext`, `longContextThreshold`
-- [ ] Create `CLAUDE_PRICING` constant with complete pricing map for all models:
+- [x] Create `/src/services/costCalculator.ts`
+- [x] Define `ModelPricing` interface with fields: `input`, `output`, `cacheWrite5m`, `cacheWrite1h`, `cacheRead`, optional `inputLongContext`, `outputLongContext`, `longContextThreshold`
+- [x] Create `CLAUDE_PRICING` constant with complete pricing map for all models:
   - Claude 4.5: `claude-opus-4-5`, `claude-sonnet-4-5`, `claude-haiku-4-5` (with dated versions)
   - Claude 4: `claude-opus-4`, `claude-sonnet-4`
   - Claude 3: `claude-3-opus-20240229`, `claude-3-5-sonnet-20241022`, `claude-3-5-sonnet-20240620`, `claude-3-5-haiku-20241022`, `claude-3-haiku-20240307`, `claude-3-sonnet-20240229`
-- [ ] Implement `formatCost(cost: number): string` utility function
+- [x] Implement `formatCost(cost: number): string` utility function
   - Return 4 decimal places for costs < $0.01
   - Return 2 decimal places for costs >= $0.01
   - Include "$" prefix
-- [ ] Implement `calculateRequestCost(model: string, tokens: TokenUsage, totalInputTokens?: number): number | null` function
+- [x] Implement `calculateRequestCost(model: string, tokens: TokenUsage, totalInputTokens?: number): number | null` function
   - Look up pricing for the model
   - Return `null` for unknown models
   - Detect long-context for Sonnet 4.5 (>200K total input tokens)
   - Calculate: (input × inputPrice) + (output × outputPrice) + (cache5m × cache5mPrice) + (cache1h × cache1hPrice) + (cacheRead × cacheReadPrice)
   - Return total cost in dollars
-- [ ] Implement `getModelDisplayName(model: string): string` helper to extract readable model names
-- [ ] Add JSDoc comments documenting pricing sources and calculation formulas
+- [x] Implement `getModelDisplayName(model: string): string` helper to extract readable model names
+- [x] Add JSDoc comments documenting pricing sources and calculation formulas
 
 ### Files to Create
 - `/src/services/costCalculator.ts` - New file (~200 lines)
 
 ### Verification Steps
 
-1. **Unit Test Pricing Calculations**:
+✅ **Completed**: All verification tests passed (36/36 tests)
+
+1. **Unit Test Pricing Calculations**: ✅
    - Test known model with sample token usage (e.g., Sonnet 4.5 with 1000 input, 500 output)
    - Verify calculation: (1000/1M × $3) + (500/1M × $15) = $0.0105
    - Test unknown model returns `null`
    - Test Sonnet 4.5 long-context pricing (>200K tokens)
    - Test cache token pricing (5m, 1h, read)
 
-2. **Format Testing**:
+2. **Format Testing**: ✅
    - Verify `formatCost(0.0012)` returns `"$0.0012"` (4 decimals)
    - Verify `formatCost(1.5678)` returns `"$1.57"` (2 decimals)
    - Verify `formatCost(0.01)` returns `"$0.01"` (2 decimals)
 
-3. **Coverage Check**:
+3. **Coverage Check**: ✅
    - Verify all models found in codebase research are in `CLAUDE_PRICING`
    - Test with model aliases (e.g., `claude-sonnet-4-5` vs `claude-sonnet-4-5-20250929`)
+
+**Implementation Notes**:
+- Created comprehensive test suite in `test-cost-calculator.ts` with 36 automated tests covering all pricing scenarios
+- Fixed TypeScript import to use `import type` for compatibility with `verbatimModuleSyntax`
+- Build completes successfully with no errors
+- Service file is 339 lines with extensive JSDoc documentation
 
 ---
 
