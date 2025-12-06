@@ -102,8 +102,13 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-gray-800">
-            <span className="text-[11px] text-gray-500">Duration</span>
+            <span className="text-[11px] text-gray-500">API Time</span>
             <span className="font-mono text-sm font-semibold text-cyan-400">{formatDuration(metadata.duration)}</span>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-gray-500">Wall Time</span>
+            <span className="font-mono text-xs text-gray-400">{formatDuration(metadata.wallTime)}</span>
           </div>
 
           {aggregateMetrics && (
@@ -267,7 +272,8 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-gray-900">{formatDuration(metadata.duration)}</div>
-          <div className="text-sm text-gray-500">Total Duration</div>
+          <div className="text-sm text-gray-500">API Time</div>
+          <div className="text-xs text-gray-400 mt-1">Wall: {formatDuration(metadata.wallTime)}</div>
         </div>
         <div className="text-center">
           <div className="flex items-center justify-center">

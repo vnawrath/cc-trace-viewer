@@ -179,6 +179,7 @@ export class TraceParserService {
         totalCacheCreation5mTokens: 0,
         totalCacheCreation1hTokens: 0,
         duration: 0,
+        wallTime: 0,
         startTime: 0,
         endTime: 0,
         modelsUsed: new Set(),
@@ -205,8 +206,11 @@ export class TraceParserService {
     const toolsAvailable = new Set<string>();
     const toolsUsed = new Set<string>();
     let hasErrors = false;
+    let totalDuration = 0; // Sum of all request durations (API time)
 
     for (const entry of entries) {
+      // Accumulate duration for this request
+      totalDuration += this.getRequestDuration(entry);
       modelsUsed.add(entry.request.body.model);
 
       const availableTools = this.extractToolsAvailableFromRequest(
@@ -301,6 +305,10 @@ export class TraceParserService {
     const userId =
       firstEntry.request.body?.metadata?.user_id || "unknown-user";
 
+    // Calculate wall time (difference between first request and last response)
+    const wallTime =
+      (lastEntry.response.timestamp - firstEntry.request.timestamp) * 1000;
+
     return {
       userId,
       requestCount: entries.length,
@@ -311,9 +319,9 @@ export class TraceParserService {
       totalCacheReadTokens,
       totalCacheCreation5mTokens,
       totalCacheCreation1hTokens,
-      // Convert duration from seconds to milliseconds for consistent formatting
-      duration:
-        (lastEntry.response.timestamp - firstEntry.request.timestamp) * 1000,
+      // Duration is now the sum of all request durations (API time)
+      duration: totalDuration,
+      wallTime, // Wall time (first to last)
       // Keep timestamps in seconds for metadata (will be converted when creating SessionData)
       startTime: firstEntry.request.timestamp,
       endTime: lastEntry.response.timestamp,
@@ -351,7 +359,8 @@ export class TraceParserService {
       totalCacheCreation5mTokens: metadata.totalCacheCreation5mTokens,
       totalCacheCreation1hTokens: metadata.totalCacheCreation1hTokens,
       totalRequests: metadata.requestCount,
-      duration: metadata.duration, // Already converted to milliseconds in calculateSessionMetadata
+      duration: metadata.duration, // Sum of all request durations (API time)
+      wallTime: metadata.wallTime, // Wall time (first to last)
       // Convert timestamps to milliseconds for consistent usage
       startTime: metadata.startTime * 1000,
       endTime: metadata.endTime * 1000,

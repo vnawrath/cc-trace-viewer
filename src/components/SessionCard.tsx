@@ -115,7 +115,7 @@ export function SessionCard({ session }: SessionCardProps) {
             </dd>
           </div>
           <div>
-            <dt className="text-sm font-medium text-gray-500">Duration</dt>
+            <dt className="text-sm font-medium text-gray-500">API Time</dt>
             <dd className="text-2xl font-semibold text-gray-900">
               {formatDuration(metadata.duration)}
             </dd>

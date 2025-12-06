@@ -73,7 +73,8 @@ export interface SessionData {
   totalCacheCreation5mTokens: number;
   totalCacheCreation1hTokens: number;
   totalRequests: number;
-  duration: number;
+  duration: number; // Sum of all request durations (API time)
+  wallTime: number; // Wall time (first to last)
   startTime: number;
   endTime: number;
   modelsUsed: string[];
@@ -110,7 +111,8 @@ export interface SessionMetadata {
   totalCacheReadTokens: number;
   totalCacheCreation5mTokens: number;
   totalCacheCreation1hTokens: number;
-  duration: number;
+  duration: number; // Sum of all request durations (API time)
+  wallTime: number; // Wall time (first to last)
   startTime: number;
   endTime: number;
   modelsUsed: Set<string>;
