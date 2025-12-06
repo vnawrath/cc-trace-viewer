@@ -233,74 +233,113 @@ Key decisions:
 
 ---
 
-## Phase 4: Token Count API Response & Final Verification
+## Phase 4: Token Count Endpoint Handling & Final Verification
 
-**Goal**: Verify token count API response parsing is correct and perform end-to-end testing
+**Goal**: Implement proper handling and display of `/messages/count_tokens` endpoint requests and perform end-to-end testing
 
 ### Context
 
-**Token Count API:**
-- Example response: `/Users/viktornawrath/repos/cc-trace-viewer/example-token-count.json`
-- Response structure: `{ input_tokens: 8913 }`
-- API endpoint: `https://api.anthropic.com/v1/messages/count_tokens`
+**Important Distinction:**
+- **Regular `/messages` endpoint**: Returns full message responses with token usage data (input, output, cache read/write tokens) - THIS IS ALREADY PARSED CORRECTLY
+- **Token Count endpoint `/messages/count_tokens`**: Pre-flight endpoint that only counts tokens without generating a response - THIS IS WHAT PHASE 4 ADDRESSES
+
+**Token Count Endpoint Specifics:**
+- Example trace: `/Users/viktornawrath/repos/cc-trace-viewer/example-token-count.json`
+- Endpoint: `https://api.anthropic.com/v1/messages/count_tokens`
+- Request body: Same as `/messages` (model, messages, tools, etc.)
+- Response structure: `{ input_tokens: 8913 }` (ONLY input tokens, no output/cache tokens)
+- Purpose: Count tokens before sending actual request (used for cost estimation, validation, etc.)
+
+**Current State:**
+- Token counts from regular `/messages` responses are parsed and displayed correctly
+- Token count endpoint requests may not be:
+  - Properly identified as separate request type
+  - Correctly parsed (response has different structure)
+  - Appropriately displayed in the UI (no output tokens, no assistant response)
 
 **Parsing Locations to Check:**
 - Trace parser: `/Users/viktornawrath/repos/cc-trace-viewer/src/services/traceParser.ts`
 - Request analyzer: `/Users/viktornawrath/repos/cc-trace-viewer/src/services/requestAnalyzer.ts`
+- Request/response type definitions: `/Users/viktornawrath/repos/cc-trace-viewer/src/types/trace.ts`
 - Any interceptor/data collection code in `/Users/viktornawrath/repos/cc-trace-viewer/docs/claude-trace/src/`
 
 ### Implementation Tasks
 
-- [ ] **Task 4.1**: Audit token count response parsing
-  - Search codebase for token count API handling
-  - Check if `response.body.input_tokens` is correctly extracted
-  - Verify field name matches example: `input_tokens` (not `inputTokens`)
-  - Check if response is properly typed in TypeScript
+- [ ] **Task 4.1**: Audit token count endpoint detection
+  - Search codebase for URL-based request type detection
+  - Check if `/messages/count_tokens` requests are distinguished from `/messages` requests
+  - Verify if there's a separate request type or flag for count_tokens requests
+  - Determine how these requests should be displayed (e.g., separate section, special indicator, etc.)
 
-- [ ] **Task 4.2**: Fix token count parsing if issues found
-  - Update field name access if camelCase was incorrectly used
-  - Add proper TypeScript type for count_tokens response
-  - Ensure parsed values are stored in correct TraceEntry fields
-  - Add fallback/error handling for missing token counts
+- [ ] **Task 4.2**: Implement token count endpoint parsing
+  - Check if `response.body.input_tokens` field is correctly extracted
+  - Verify field name matches API spec: `input_tokens` (snake_case, not camelCase)
+  - Add proper TypeScript type for count_tokens response if missing
+  - Ensure response parsing handles count_tokens' minimal response structure
+  - Add fallback/error handling for missing or malformed responses
 
-- [ ] **Task 4.3**: End-to-end data flow verification
-  - Trace a request from API response → parsing → display
-  - Verify token counts flow through: API → TraceEntry → SessionData → UI
-  - Check that all token fields (input, cache read, cache write, output) are captured
-  - Confirm calculations (totals, aggregates) are correct
+- [ ] **Task 4.3**: Update UI to display token count requests appropriately
+  - Decide on display strategy (options: show in request list, add badge, show in separate section, etc.)
+  - Update request cards to indicate token count requests (vs regular message requests)
+  - Show only input token count (no output tokens, as they don't exist for this endpoint)
+  - Ensure token count requests don't break existing display logic
+  - Consider showing the counted token value prominently
 
-- [ ] **Task 4.4**: Comprehensive testing and bug fixes
-  - Load real trace data with various token counts
-  - Test with sessions that have no cache usage
-  - Test with sessions that have heavy cache usage
-  - Test with token count API responses vs regular message responses
-  - Fix any edge cases or display issues discovered
+- [ ] **Task 4.4**: End-to-end data flow verification
+  - Trace a token count request: API response → parsing → storage → display
+  - Verify token count requests are tracked separately from message requests
+  - Confirm token count requests appear in appropriate UI sections
+  - Verify no confusion between token counts from count_tokens vs messages endpoints
+  - Test that session-level aggregations handle both request types correctly
+
+- [ ] **Task 4.5**: Comprehensive testing and bug fixes
+  - Load real trace data containing both `/messages` and `/messages/count_tokens` requests
+  - Verify both request types display correctly side by side
+  - Test edge cases: count_tokens request with zero tokens, missing response, etc.
+  - Verify Phase 1-3 changes work with both request types
+  - Check for any console errors or type mismatches
+  - Fix any display issues or data flow problems discovered
 
 ### Verification Steps
 
-1. **Token Count API Response**:
-   - [ ] Identify where token count responses are parsed
-   - [ ] Verify `input_tokens` field is correctly accessed
-   - [ ] Check TypeScript types match actual API response
-   - [ ] Confirm no parsing errors in console
+1. **Token Count Endpoint Detection**:
+   - [ ] Load trace data with count_tokens requests
+   - [ ] Verify requests to `/messages/count_tokens` are identified correctly
+   - [ ] Check that these requests are visually distinct from regular message requests
+   - [ ] Confirm URL parsing correctly identifies the endpoint type
 
-2. **Data Flow**:
-   - [ ] Token count data flows from API → display without loss
-   - [ ] All token types (input, cache read/write, output) are preserved
-   - [ ] Aggregations (session totals, request totals) are correct
-   - [ ] No undefined/NaN values in token displays
+2. **Token Count Response Parsing**:
+   - [ ] Verify `input_tokens` field is correctly extracted (snake_case)
+   - [ ] Check TypeScript types match actual API response structure
+   - [ ] Confirm no parsing errors in console for count_tokens responses
+   - [ ] Verify response body with only `input_tokens` doesn't break existing code
 
-3. **Full Application Testing**:
+3. **UI Display**:
+   - [ ] Token count requests show appropriate indicator/badge/label
+   - [ ] Only input token count is displayed (no output tokens)
+   - [ ] Token count requests don't have assistant response preview (none exists)
+   - [ ] Layout remains clean and doesn't break with mixed request types
+   - [ ] Request list clearly distinguishes token count from message requests
+
+4. **Data Flow & Aggregation**:
+   - [ ] Token count requests are included in session totals appropriately
+   - [ ] Or: Token count requests are tracked separately if that's the design decision
+   - [ ] No data mixing between count_tokens and messages endpoint responses
+   - [ ] Session-level metrics accurately reflect both request types
+
+5. **Full Application Testing**:
    - [ ] Test all screens: home page, session list, request list, request detail
-   - [ ] Verify all Phase 1-3 changes work together
+   - [ ] Verify all Phase 1-3 changes work with both request types
    - [ ] Check for layout breaks, alignment issues, or overflow
-   - [ ] Test with various dataset sizes (small, medium, large sessions)
+   - [ ] Test with various dataset sizes and request type mixes
+   - [ ] Verify clicking on token count request shows appropriate detail view
 
-4. **Edge Cases**:
-   - [ ] Session with zero tokens in some fields
-   - [ ] Session with missing token data
-   - [ ] Very large token counts (millions)
-   - [ ] Mixed data: some requests with full token data, some without
+6. **Edge Cases**:
+   - [ ] Session with only token count requests (no actual messages)
+   - [ ] Session with only message requests (no token counts)
+   - [ ] Mixed sessions with both request types
+   - [ ] Token count request with error response
+   - [ ] Token count request with very large input_tokens value
 
 ---
 
