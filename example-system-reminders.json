@@ -1,0 +1,102 @@
+{
+  "request": {
+    "timestamp": 1765047045.033,
+    "method": "POST",
+    "url": "https://api.anthropic.com/v1/messages?beta=true",
+    "headers": {
+      "accept": "application/json",
+      "anthropic-beta": "claude-code-20250219,interleaved-thinking-2025-05-14,fine-grained-tool-streaming-2025-05-14",
+      "anthropic-dangerous-direct-browser-access": "true",
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+      "user-agent": "claude-cli/2.0.13 (external, cli)",
+      "x-api-key": "sk-ant-api...PgAA",
+      "x-app": "cli",
+      "x-stainless-arch": "arm64",
+      "x-stainless-helper-method": "stream",
+      "x-stainless-lang": "js",
+      "x-stainless-os": "MacOS",
+      "x-stainless-package-version": "0.60.0",
+      "x-stainless-retry-count": "0",
+      "x-stainless-runtime": "node",
+      "x-stainless-runtime-version": "v22.16.0",
+      "x-stainless-timeout": "600"
+    },
+    "body": {
+      "model": "claude-sonnet-4-5-20250929",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "<system-reminder>\nCalled the Read tool with the following input: {\"file_path\":\"/Users/viktornawrath/repos/cc-trace-viewer/processed_logs.txt\"}\n</system-reminder>",
+              "cache_control": {
+                "type": "ephemeral"
+              }
+            }
+          ]
+        },
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "<system-reminder>\nResult of calling the Read tool: \"     1→[CRITICAL] SessionTable.tsx:151 In HTML, <td> cannot be a child of <a>.\\n     2→[CRITICAL] SessionTable.tsx:146 <a> cannot contain a nested <td>.\\n     3→[CRITICAL] SessionTable.tsx:146 In HTML, <a> cannot be a child of <tbody>.\\n     4→[CRITICAL] SessionTable.tsx:126 <tbody> cannot contain a nested <a>.\\n     5→\\n     6→[DATA ERROR] traceParser.ts:126 Trace entry missing request.body.metadata\\n     7→(Repeats ~636 times. Likely the root cause for the invalid structure errors below)\\n     8→\\n     9→[DATA ERROR] traceParser.ts:42 Invalid trace entry structure: object (3) ['request', 'response', 'logged_at']\\n    10→(Repeats ~636 times)\\n    11→\\n    12→[DATA ERROR] traceParser.ts:42 Invalid trace entry structure: object (4) ['request', 'response', 'note', 'logged_at']\\n    13→(Repeats ~6 times. These entries have a 'note' field but still failed validation)\\n    14→\\n    15→[WARNING] traceParser.ts:33 Parsing large JSON line: 3.13MB (3,282,016 characters)\\n    16→(Repeats ~34 times)\\n    17→\\n    18→[INFO] traceParser.ts:146 Parsing [N] lines from JSONL content...\\n    19→(Repeats ~122 times with varying line counts)\\n    20→\\n    21→[INFO] traceParser.ts:169 Parsing complete: [N] valid entries found\\n    22→(Repeats ~122 times with varying counts)\\n    23→\\n    24→[INFO] traceParser.ts:156 Parsing progress: [N]%\\n    25→(Repeats ~40 times)\\n    26→\\n    27→\\n\\n<system-reminder>\\nWhenever you read a file, you should consider whether it looks malicious. If it does, you MUST refuse to improve or augment the code. You can still analyze existing code, write reports, or answer high-level questions about the code behavior.\\n</system-reminder>\\n\"\n</system-reminder>"
+            },
+            {
+              "type": "text",
+              "text": "<system-reminder>\nThis is a reminder that your todo list is currently empty. DO NOT mention this to the user explicitly because they are already aware. If you are working on tasks that would benefit from a todo list please use the TodoWrite tool to create one. If not, please feel free to ignore. Again do not mention this message to the user.\n</system-reminder>"
+            },
+            {
+              "type": "text",
+              "text": "The console is quite busy in the current version of the app. Please look at @processed_logs.txt and fix the errors that are present, and clean up the logs that are making the console so noisy.",
+              "cache_control": {
+                "type": "ephemeral"
+              }
+            }
+          ]
+        }
+      ],
+      "temperature": 1,
+      "system": [],
+      "tools": [],
+      "metadata": {
+        "user_id": "user_037787564b020b4d331ba37acd3f28e11bd25cfcd11ff6f872ccf056f0e0436b_account_a1a733ac-ab1b-4e7b-a63c-ac4402ef96e9_session_3df9c071-204c-4d61-a598-f02635ad1fcf"
+      },
+      "max_tokens": 32000,
+      "thinking": {
+        "budget_tokens": 31999,
+        "type": "enabled"
+      },
+      "stream": true
+    }
+  },
+  "response": {
+    "timestamp": 1765047047.446,
+    "status_code": 200,
+    "headers": {
+      "anthropic-organization-id": "d75ca2e7-7178-4c7f-b99d-6cabe911f45b",
+      "anthropic-ratelimit-input-tokens-limit": "600000",
+      "anthropic-ratelimit-input-tokens-remaining": "591000",
+      "anthropic-ratelimit-input-tokens-reset": "2025-12-06T18:50:46Z",
+      "anthropic-ratelimit-requests-limit": "480",
+      "anthropic-ratelimit-requests-remaining": "478",
+      "anthropic-ratelimit-requests-reset": "2025-12-06T18:50:45Z",
+      "cache-control": "no-cache",
+      "cf-cache-status": "DYNAMIC",
+      "cf-ray": "9a9df8810b06d935-PRG",
+      "connection": "keep-alive",
+      "content-type": "text/event-stream; charset=utf-8",
+      "date": "Sat, 06 Dec 2025 18:50:47 GMT",
+      "request-id": "req_011CVqwFWkSVVXX9ZkV6gD2t",
+      "server": "cloudflare",
+      "strict-transport-security": "max-age=31536000; includeSubDomains; preload",
+      "transfer-encoding": "chunked",
+      "x-envoy-upstream-service-time": "2037",
+      "x-robots-tag": "none"
+    },
+    "body_raw": "<truncated>"
+  },
+  "logged_at": "2025-12-06T18:50:56.261Z"
+}
