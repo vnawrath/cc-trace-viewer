@@ -1,5 +1,6 @@
 import type { ClaudeTraceEntry, TokenUsage } from '../types/trace';
 import { traceParserService } from '../services/traceParser';
+import { formatCost, calculateRequestCost } from '../services/costCalculator';
 
 interface RequestMetricsProps {
   request: ClaudeTraceEntry;
@@ -53,6 +54,9 @@ export function RequestMetrics({ request }: RequestMetricsProps) {
 
   const formatTokens = (tokens: number) => traceParserService.formatTokenCount(tokens);
 
+  // Calculate cost
+  const cost = usage ? calculateRequestCost(request.request.body.model, usage, usage.input_tokens) : null;
+
   const clockIcon = (
     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -89,6 +93,12 @@ export function RequestMetrics({ request }: RequestMetricsProps) {
     </svg>
   );
 
+  const dollarIcon = (
+    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+
   const getStatusColor = (statusCode: number) => {
     if (statusCode >= 200 && statusCode < 300) return 'green';
     if (statusCode >= 300 && statusCode < 400) return 'blue';
@@ -121,6 +131,24 @@ export function RequestMetrics({ request }: RequestMetricsProps) {
           icon={tokenIcon}
           color="purple"
         />
+
+        {cost !== null && (
+          <MetricCard
+            label="Cost"
+            value={formatCost(cost)}
+            icon={dollarIcon}
+            color="green"
+          />
+        )}
+
+        {cost === null && usage && (
+          <MetricCard
+            label="Cost"
+            value="Unknown model"
+            icon={dollarIcon}
+            color="gray"
+          />
+        )}
 
         {usage && (
           <>

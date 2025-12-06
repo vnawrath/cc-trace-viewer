@@ -4,6 +4,7 @@ import { UserMessagePreview, AssistantMessagePreview } from './MessagePreview';
 import type { Message } from '../utils/messageFormatting';
 import { traceParserService } from '../services/traceParser';
 import { TokenBreakdownDisplay } from './TokenBreakdownDisplay';
+import { formatCost } from '../services/costCalculator';
 
 interface RequestCardProps {
   request: RequestMetrics;
@@ -245,6 +246,17 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
             />
           </span>
         </td>
+
+        {/* Cost */}
+        <td className="px-3 py-2 whitespace-nowrap text-[11px] text-green-400 font-mono hidden md:table-cell">
+          {request.cost !== null ? (
+            formatCost(request.cost)
+          ) : (
+            <span className="text-gray-500" title="Unknown model pricing">
+              —
+            </span>
+          )}
+        </td>
       </tr>
 
       {/* Second row: Assistant Response Preview */}
@@ -274,6 +286,7 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
         <td className="px-3 py-2"></td>
         <td className="px-3 py-2"></td>
         <td className="px-3 py-2"></td>
+        <td className="px-3 py-2 hidden md:table-cell"></td>
       </tr>
     </>
   );

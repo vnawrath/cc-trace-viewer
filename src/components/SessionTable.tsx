@@ -3,12 +3,13 @@ import { useState } from "react";
 import type { SessionSummary } from "../services/sessionManager";
 import { traceParserService } from "../services/traceParser";
 import { TokenBreakdownDisplay } from "./TokenBreakdownDisplay";
+import { formatCost } from "../services/costCalculator";
 
 interface SessionTableProps {
   sessions: SessionSummary[];
 }
 
-type SortColumn = "sessionId" | "totalTokens" | "duration";
+type SortColumn = "sessionId" | "totalTokens" | "duration" | "cost";
 type SortDirection = "asc" | "desc";
 
 export function SessionTable({ sessions }: SessionTableProps) {
@@ -36,6 +37,18 @@ export function SessionTable({ sessions }: SessionTableProps) {
         break;
       case "duration":
         comparison = a.metadata.duration - b.metadata.duration;
+        break;
+      case "cost":
+        // Handle null costs: put nulls at the end
+        if (a.metadata.totalCost === null && b.metadata.totalCost === null) {
+          comparison = 0;
+        } else if (a.metadata.totalCost === null) {
+          comparison = 1;
+        } else if (b.metadata.totalCost === null) {
+          comparison = -1;
+        } else {
+          comparison = a.metadata.totalCost - b.metadata.totalCost;
+        }
         break;
     }
 
@@ -125,6 +138,15 @@ export function SessionTable({ sessions }: SessionTableProps) {
                 <SortIcon column="duration" />
               </div>
             </th>
+            <th
+              className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group w-24 hidden md:table-cell"
+              onClick={() => handleSort("cost")}
+            >
+              <div className="flex items-center justify-end gap-1.5">
+                <span>Cost</span>
+                <SortIcon column="cost" />
+              </div>
+            </th>
           </tr>
         </thead>
         <tbody className="bg-base-950 divide-y divide-base-900">
@@ -205,6 +227,17 @@ function SessionRow({ session }: SessionRowProps) {
       <td className="px-2 py-2 font-mono text-xs text-right text-warning-400 tabular-nums w-20">
         {formatDuration(metadata.duration)}
       </td>
+
+      {/* Cost */}
+      <td className="px-2 py-2 font-mono text-xs text-right text-success-400 tabular-nums w-24 hidden md:table-cell">
+        {metadata.totalCost !== null ? (
+          formatCost(metadata.totalCost)
+        ) : (
+          <span className="text-text-muted" title="Unknown model pricing">
+            —
+          </span>
+        )}
+      </td>
     </tr>
   );
 }
@@ -231,6 +264,9 @@ export function SessionTableSkeleton({
             <th className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider w-20">
               Duration
             </th>
+            <th className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider w-24 hidden md:table-cell">
+              Cost
+            </th>
           </tr>
         </thead>
         <tbody className="bg-base-950 divide-y divide-base-900">
@@ -247,6 +283,9 @@ export function SessionTableSkeleton({
               </td>
               <td className="px-2 py-2 w-20">
                 <div className="h-3 bg-base-800 rounded w-12 ml-auto" />
+              </td>
+              <td className="px-2 py-2 w-24 hidden md:table-cell">
+                <div className="h-3 bg-base-800 rounded w-16 ml-auto" />
               </td>
             </tr>
           ))}

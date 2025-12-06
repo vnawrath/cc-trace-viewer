@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { useState } from 'react';
 import type { SessionData } from '../types/trace';
 import { traceParserService } from '../services/traceParser';
+import { formatCost } from '../services/costCalculator';
 
 interface SessionSummaryProps {
   sessionId: string;
@@ -17,6 +18,7 @@ interface SessionSummaryProps {
     errorRate: number;
     streamingCount: number;
     streamingRate: number;
+    totalCost: number | null;
   };
   variant?: 'full' | 'sidebar';
 }
@@ -118,6 +120,18 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
             <span className="text-[11px] text-gray-500">Requests</span>
             <span className="font-mono text-sm font-semibold text-cyan-400">{metadata.totalRequests}</span>
           </div>
+
+          {metadata.totalCost !== null ? (
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-gray-500">Total Cost</span>
+              <span className="font-mono text-sm font-semibold text-green-400">{formatCost(metadata.totalCost)}</span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] text-gray-500">Total Cost</span>
+              <span className="font-mono text-xs text-gray-500">Unknown</span>
+            </div>
+          )}
 
           <div className="pt-2 border-t border-gray-800">
             <div className="text-[11px] text-gray-500 mb-2">Token Breakdown</div>
@@ -286,7 +300,7 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-6 mb-6">
         <div className="text-center">
           <div className="text-2xl font-bold text-gray-900">{metadata.totalRequests}</div>
           <div className="text-sm text-gray-500">Requests</div>
@@ -302,6 +316,19 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
         <div className="text-center">
           <div className="text-2xl font-bold text-gray-900">{formatTokens(metadata.totalOutputTokens)}</div>
           <div className="text-sm text-gray-500">Output Tokens</div>
+        </div>
+        <div className="text-center">
+          {metadata.totalCost !== null ? (
+            <>
+              <div className="text-2xl font-bold text-green-600">{formatCost(metadata.totalCost)}</div>
+              <div className="text-sm text-gray-500">Total Cost</div>
+            </>
+          ) : (
+            <>
+              <div className="text-lg text-gray-400">Unknown</div>
+              <div className="text-sm text-gray-500">Total Cost</div>
+            </>
+          )}
         </div>
         <div className="text-center">
           <div className="text-2xl font-bold text-gray-900">{formatDuration(metadata.duration)}</div>

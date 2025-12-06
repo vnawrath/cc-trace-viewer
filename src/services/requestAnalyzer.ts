@@ -1,7 +1,7 @@
 import type { ClaudeTraceEntry, TokenUsage } from '../types/trace';
 import { traceParserService } from './traceParser';
 import type { ContentBlock } from '../utils/messageFormatting';
-import { calculateRequestCost } from './costCalculator';
+import { calculateRequestCost, aggregateRequestCosts } from './costCalculator';
 
 export interface RequestMetrics {
   id: string;
@@ -160,7 +160,10 @@ export class RequestAnalyzerService {
 
     // Calculate cost
     let cost: number | null = null;
-    if (tokenUsage) {
+    if (isTokenCountRequest) {
+      // Token count requests don't perform inference, so they have no cost
+      cost = 0;
+    } else if (tokenUsage) {
       cost = calculateRequestCost(
         request.body.model,
         tokenUsage,
@@ -393,15 +396,7 @@ export class RequestAnalyzerService {
     const streamingRate = streamingCount / totalRequests;
 
     // Calculate total cost
-    let totalCost: number | null = 0;
-    for (const req of requests) {
-      if (req.cost === null) {
-        // If any request has unknown pricing, set total to null
-        totalCost = null;
-        break;
-      }
-      totalCost += req.cost;
-    }
+    const totalCost = aggregateRequestCosts(requests);
 
     return {
       totalRequests,

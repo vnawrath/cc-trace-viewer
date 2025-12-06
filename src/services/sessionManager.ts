@@ -1,6 +1,8 @@
 import type { SessionData, SessionMetadata } from '../types/trace';
 import { fileSystemService } from './fileSystem';
 import { traceParserService } from './traceParser';
+import { requestAnalyzerService } from './requestAnalyzer';
+import { aggregateRequestCosts } from './costCalculator';
 
 export interface SessionSummary {
   sessionId: string;
@@ -152,11 +154,23 @@ export class SessionManagerService {
           modelsUsed: new Set(),
           toolsAvailable: new Set(),
           toolsUsed: new Set(),
-          hasErrors: false
+          hasErrors: false,
+          totalCost: null
         };
       }
 
-      return traceParserService.calculateSessionMetadata(fullEntries);
+      // Get base metadata (without cost)
+      const metadata = traceParserService.calculateSessionMetadata(fullEntries);
+
+      // Calculate total cost by analyzing all requests
+      const requestMetrics = requestAnalyzerService.analyzeRequests(fullEntries);
+      const totalCost = aggregateRequestCosts(requestMetrics);
+
+      // Return metadata with calculated cost
+      return {
+        ...metadata,
+        totalCost
+      };
     } catch (error) {
       console.error(`Error extracting metadata from ${fileHandle.name}:`, error);
       // Return empty metadata as fallback
@@ -177,7 +191,8 @@ export class SessionManagerService {
         modelsUsed: new Set(),
         toolsAvailable: new Set(),
         toolsUsed: new Set(),
-        hasErrors: true
+        hasErrors: true,
+        totalCost: null
       };
     }
   }

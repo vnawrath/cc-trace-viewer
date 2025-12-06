@@ -274,59 +274,72 @@ Display cost information throughout the application UI - in session tables, requ
 
 #### 4.1: SessionTable Component
 
-- [ ] Open `/src/components/SessionTable.tsx`
-- [ ] Add `'cost'` to `SortField` type (line 11)
-- [ ] Add cost sorting logic in `sortData()` function (around line 35)
-- [ ] Add new table header `<th>` for "Cost" column (around line 125, after Duration column)
+- [x] Open `/src/components/SessionTable.tsx`
+- [x] Add `'cost'` to `SortColumn` type (line 12)
+- [x] Add cost sorting logic in sort function (lines 41-52)
+- [x] Add new table header `<th>` for "Cost" column (lines 141-149, after Duration column)
   - Make it sortable with onClick handler
   - Add sort indicator icon when active
-- [ ] Add new table cell `<td>` for cost display (around line 202, after token breakdown cell)
+- [x] Add new table cell `<td>` for cost display (lines 231-240, after token breakdown cell)
   - If `session.totalCost !== null`: display `formatCost(session.totalCost)`
   - If `session.totalCost === null`: display `<span title="Unknown model pricing">—</span>`
   - Apply responsive classes: `hidden md:table-cell`
+- [x] Updated SessionTableSkeleton to include cost column header and cell
 
 #### 4.2: RequestCard Component
 
-- [ ] Open `/src/components/RequestCard.tsx`
-- [ ] Import `formatCost` from `costCalculator`
-- [ ] Add cost display after token breakdown (around line 248)
-  - Create new element with cost value
+- [x] Open `/src/components/RequestCard.tsx`
+- [x] Import `formatCost` from `costCalculator`
+- [x] Add cost display as new table cell (lines 250-259, after token breakdown)
+  - Create new `<td>` element with cost value
   - If `request.cost !== null`: show formatted cost
-  - If `request.cost === null`: show "—" with tooltip "Unknown model"
-  - Match styling of existing metrics (duration, timestamp)
-  - Use pipe separator `|` to separate from other metrics
+  - If `request.cost === null`: show "—" with tooltip "Unknown model pricing"
+  - Match styling of existing metrics with responsive classes
 
 #### 4.3: RequestMetrics Component
 
-- [ ] Open `/src/components/RequestMetrics.tsx`
-- [ ] Import `formatCost` from `costCalculator`
-- [ ] Add new `MetricCard` for cost (around line 140, after Model metric)
+- [x] Open `/src/components/RequestMetrics.tsx`
+- [x] Import `formatCost` and `calculateRequestCost` from `costCalculator`
+- [x] Calculate cost from token usage (line 58)
+- [x] Add new `MetricCard` for cost (lines 135-151, after Model metric)
   - Label: "Cost"
-  - Value: `formatCost(metrics.cost)` or "Unknown model" if null
+  - Value: `formatCost(cost)` or "Unknown model" if null
   - Use conditional styling to match existing cards
 
 #### 4.4: SessionSummary Component
 
-- [ ] Open `/src/components/SessionSummary.tsx`
-- [ ] Import `formatCost` from `costCalculator`
-- [ ] In **overview variant** (lines 109-165):
-  - Add cost display after total tokens (around line 127)
-  - Show formatted cost or "—" if null
+- [x] Open `/src/components/SessionSummary.tsx`
+- [x] Import `formatCost` from `costCalculator`
+- [x] Add `totalCost` field to aggregateMetrics type (line 21)
+- [x] In **sidebar variant** (lines 124-134):
+  - Add cost display after request count
+  - Show formatted cost or "Unknown" if null
   - Use consistent styling with other metrics
-- [ ] In **detailed variant** (lines 167-281):
-  - Add cost as a prominent metric in the summary section (around line 195)
-  - Consider placing it near the top with request count and total tokens
-  - Use larger/emphasized text for cost
+- [x] In **full variant** (lines 320-332):
+  - Add cost as a new grid item in main metrics section
+  - Place it between Output Tokens and API Time
+  - Use larger/emphasized text for cost (green color for valid costs)
+- [x] Updated grid layout from `grid-cols-2 md:grid-cols-4 lg:grid-cols-6` to `grid-cols-2 md:grid-cols-3 lg:grid-cols-7` to accommodate 7 items
 
 #### 4.5: SessionCard Component
 
-- [ ] Open `/src/components/SessionCard.tsx`
-- [ ] Import `formatCost` from `costCalculator`
-- [ ] Add cost display in the metrics grid (around line 130)
-  - Add after request count or total tokens
+- [x] Open `/src/components/SessionCard.tsx`
+- [x] Import `formatCost` from `costCalculator`
+- [x] Add cost display in the metrics grid (lines 118-129)
+  - Add between Total Tokens and API Time
   - Label: "Cost"
   - Value: formatted cost or "Unknown" if null
   - Match styling of other metric items
+- [x] Updated grid layout from `grid-cols-3` to `grid-cols-2 md:grid-cols-4` to accommodate 4 items
+- [x] Updated SessionCardSkeleton to include 4 metric items
+
+#### 4.6: Additional Updates
+
+- [x] Add cost header to RequestListPage table (src/pages/RequestListPage.tsx:272-274)
+- [x] Add `totalCost` field to SessionMetadata interface (src/types/trace.ts:129-130)
+- [x] Add `totalCost` field to aggregateMetrics type in useRequestList hook (src/hooks/useRequestList.ts:37)
+- [x] Initialize `totalCost: null` in empty metadata fallbacks (src/services/sessionManager.ts:156,182)
+- [x] Initialize `totalCost: null` in traceParser empty/default returns (src/services/traceParser.ts:190,336)
 
 ### Files to Modify
 - `/src/components/SessionTable.tsx` - Add sortable cost column (~20 lines)
@@ -336,6 +349,18 @@ Display cost information throughout the application UI - in session tables, requ
 - `/src/components/SessionCard.tsx` - Add cost to metrics grid (~8 lines)
 
 ### Verification Steps
+
+✅ **Implementation Completed**: All UI components updated successfully
+
+**Implementation Summary**:
+- All 5 main components updated to display cost information
+- Added sortable cost column to SessionTable with proper null handling
+- Integrated cost display into RequestCard, RequestMetrics, SessionSummary, and SessionCard
+- Extended TypeScript types throughout the data flow (SessionMetadata, aggregateMetrics)
+- Build completed with no errors
+- Responsive design implemented (cost column hidden on mobile views)
+
+**Manual Testing Required** (see test-plan-4.md for detailed checklist):
 
 1. **Visual Inspection - Session Table**:
    - Open the home page with session list

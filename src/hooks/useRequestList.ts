@@ -34,6 +34,7 @@ export interface UseRequestListReturn {
     errorRate: number;
     streamingCount: number;
     streamingRate: number;
+    totalCost: number | null;
   };
 
   // Actions

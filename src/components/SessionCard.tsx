@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import type { SessionSummary } from '../services/sessionManager';
 import { traceParserService } from '../services/traceParser';
+import { formatCost } from '../services/costCalculator';
 
 interface SessionCardProps {
   session: SessionSummary;
@@ -101,7 +102,7 @@ export function SessionCard({ session }: SessionCardProps) {
         </div>
 
         {/* Key metrics */}
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           <div>
             <dt className="text-sm font-medium text-gray-500">Requests</dt>
             <dd className="text-2xl font-semibold text-gray-900">
@@ -113,6 +114,18 @@ export function SessionCard({ session }: SessionCardProps) {
             <dd className="text-2xl font-semibold text-gray-900">
               {formatTokenCount(metadata.totalTokens)}
             </dd>
+          </div>
+          <div>
+            <dt className="text-sm font-medium text-gray-500">Cost</dt>
+            {metadata.totalCost !== null ? (
+              <dd className="text-2xl font-semibold text-green-600">
+                {formatCost(metadata.totalCost)}
+              </dd>
+            ) : (
+              <dd className="text-lg text-gray-400">
+                Unknown
+              </dd>
+            )}
           </div>
           <div>
             <dt className="text-sm font-medium text-gray-500">API Time</dt>
@@ -201,8 +214,8 @@ export function SessionCardSkeleton({ count = 3 }: SessionCardSkeletonProps) {
             </div>
 
             {/* Metrics skeleton */}
-            <div className="grid grid-cols-3 gap-4 mb-4">
-              {Array.from({ length: 3 }).map((_, i) => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+              {Array.from({ length: 4 }).map((_, i) => (
                 <div key={i}>
                   <div className="h-4 bg-gray-200 rounded w-16 mb-1"></div>
                   <div className="h-8 bg-gray-300 rounded w-12"></div>

@@ -139,6 +139,13 @@ export const CLAUDE_PRICING: Record<string, ModelPricing> = {
     cacheWrite1h: 6,
     cacheRead: 0.3,
   },
+  'claude-sonnet-4-20250514': {
+    input: 3,
+    output: 15,
+    cacheWrite5m: 3.75,
+    cacheWrite1h: 6,
+    cacheRead: 0.3,
+  },
 
   // Claude 3 Models (Deprecated/Retiring)
   'claude-3-opus-20240229': {
@@ -284,6 +291,47 @@ export function calculateRequestCost(
 
   // Sum all costs
   const totalCost = inputCost + outputCost + cache5mCost + cache1hCost + cacheReadCost;
+
+  return totalCost;
+}
+
+/**
+ * Aggregates costs from multiple requests or metrics
+ * Returns null if any request has unknown pricing (null cost)
+ *
+ * This implements an "all-or-nothing" approach: if any single request
+ * has unknown model pricing, the total is set to null to indicate
+ * incomplete cost information.
+ *
+ * @param items - Array of objects with cost information
+ * @returns Total cost in USD, or null if any item has unknown pricing
+ *
+ * @example
+ * const requests = [
+ *   { cost: 0.001 },
+ *   { cost: 0.002 },
+ *   { cost: 0.003 }
+ * ];
+ * aggregateRequestCosts(requests); // Returns: 0.006
+ *
+ * @example
+ * const requestsWithUnknown = [
+ *   { cost: 0.001 },
+ *   { cost: null },
+ *   { cost: 0.003 }
+ * ];
+ * aggregateRequestCosts(requestsWithUnknown); // Returns: null
+ */
+export function aggregateRequestCosts(items: { cost: number | null }[]): number | null {
+  let totalCost: number | null = 0;
+
+  for (const item of items) {
+    if (item.cost === null) {
+      // If any request has unknown pricing, set total to null
+      return null;
+    }
+    totalCost += item.cost;
+  }
 
   return totalCost;
 }

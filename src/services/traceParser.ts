@@ -10,6 +10,7 @@ import type {
 } from "../types/trace";
 import { extractCleanTextFromMessage } from "../utils/messageFormatting";
 import { requestAnalyzerService } from "./requestAnalyzer";
+import { aggregateRequestCosts } from './costCalculator';
 
 export class TraceParserService {
   parseJsonLine(line: string): ClaudeTraceEntry | null {
@@ -187,6 +188,7 @@ export class TraceParserService {
         toolsAvailable: new Set(),
         toolsUsed: new Set(),
         hasErrors: false,
+        totalCost: null,
       };
     }
 
@@ -332,6 +334,7 @@ export class TraceParserService {
       hasErrors,
       conversationCount: conversationMetadata.conversationCount,
       conversationPreview: conversationMetadata.longestConversation?.firstUserMessage,
+      totalCost: null, // Cost not calculated at metadata level, calculated in createSessionData
     };
   }
 
@@ -348,17 +351,8 @@ export class TraceParserService {
     const sessionId = this.extractSessionId(metadata.userId) || filename;
 
     // Calculate total cost by analyzing all requests
-    let totalCost: number | null = 0;
     const requestMetrics = requestAnalyzerService.analyzeRequests(entries);
-
-    for (const metrics of requestMetrics) {
-      if (metrics.cost === null) {
-        // If any request has unknown pricing, set total to null
-        totalCost = null;
-        break;
-      }
-      totalCost += metrics.cost;
-    }
+    const totalCost = aggregateRequestCosts(requestMetrics);
 
     return {
       sessionId,

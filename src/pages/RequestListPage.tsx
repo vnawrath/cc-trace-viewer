@@ -269,6 +269,9 @@ export function RequestListPage() {
                       <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider w-24">
                         Tokens
                       </th>
+                      <th className="px-3 py-2 text-left text-[10px] font-medium text-gray-400 uppercase tracking-wider w-24 hidden md:table-cell">
+                        Cost
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-800">
