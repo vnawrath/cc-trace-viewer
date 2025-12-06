@@ -3,6 +3,7 @@ import type { RequestMetrics } from '../services/requestAnalyzer';
 import { UserMessagePreview, AssistantMessagePreview } from './MessagePreview';
 import type { Message } from '../utils/messageFormatting';
 import { traceParserService } from '../services/traceParser';
+import { TokenBreakdownDisplay } from './TokenBreakdownDisplay';
 
 interface RequestCardProps {
   request: RequestMetrics;
@@ -17,7 +18,6 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
     return `${(seconds / 60).toFixed(1)}m`;
   };
 
-  const formatTokenBreakdown = traceParserService.formatTokenBreakdown;
   const formatTokens = traceParserService.formatTokenCount;
 
   const getStatusColor = (status: number) => {
@@ -226,13 +226,13 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
 
         {/* Tokens */}
         <td className="px-3 py-2 whitespace-nowrap">
-          <span className="text-[11px] font-mono font-medium text-cyan-400">
-            {formatTokenBreakdown(
-              request.cacheTokens.read,
-              request.cacheTokens.creation,
-              request.inputTokens,
-              request.outputTokens
-            )}
+          <span className="text-[11px] font-mono font-medium">
+            <TokenBreakdownDisplay
+              cacheRead={request.cacheTokens.read}
+              cacheWrite={request.cacheTokens.creation}
+              input={request.inputTokens}
+              output={request.outputTokens}
+            />
           </span>
         </td>
       </tr>

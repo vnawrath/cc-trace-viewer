@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import type { SessionData } from '../types/trace';
 import { traceParserService } from '../services/traceParser';
+import { TokenBreakdownDisplay } from './TokenBreakdownDisplay';
 
 interface SessionSummaryProps {
   sessionId: string;
@@ -29,7 +30,6 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
   };
 
   const formatTokens = traceParserService.formatTokenCount;
-  const formatTokenBreakdown = traceParserService.formatTokenBreakdown;
 
   const formatPercentage = (value: number) => {
     return `${(value * 100).toFixed(1)}%`;
@@ -91,13 +91,13 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
 
           <div className="flex items-center justify-between">
             <span className="text-[11px] text-gray-500">Tokens</span>
-            <span className="font-mono text-[11px] font-semibold text-cyan-400">
-              {formatTokenBreakdown(
-                metadata.totalCacheReadTokens,
-                metadata.totalCacheCreationTokens,
-                metadata.totalInputTokens,
-                metadata.totalOutputTokens
-              )}
+            <span className="font-mono text-[11px] font-semibold">
+              <TokenBreakdownDisplay
+                cacheRead={metadata.totalCacheReadTokens}
+                cacheWrite={metadata.totalCacheCreationTokens}
+                input={metadata.totalInputTokens}
+                output={metadata.totalOutputTokens}
+              />
             </span>
           </div>
 

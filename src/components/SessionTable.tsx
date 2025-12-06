@@ -2,6 +2,7 @@ import { useNavigate } from "react-router";
 import { useState } from "react";
 import type { SessionSummary } from "../services/sessionManager";
 import { traceParserService } from "../services/traceParser";
+import { TokenBreakdownDisplay } from "./TokenBreakdownDisplay";
 
 interface SessionTableProps {
   sessions: SessionSummary[];
@@ -110,7 +111,7 @@ export function SessionTable({ sessions }: SessionTableProps) {
               className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group w-48"
               onClick={() => handleSort("totalTokens")}
             >
-              <div className="flex items-center justify-end gap-1.5">
+              <div className="flex items-center justify-start gap-1.5">
                 <span>Tokens</span>
                 <SortIcon column="totalTokens" />
               </div>
@@ -143,7 +144,6 @@ interface SessionRowProps {
 function SessionRow({ session }: SessionRowProps) {
   const { sessionId, metadata } = session;
   const formatDuration = traceParserService.formatDuration;
-  const formatTokenBreakdown = traceParserService.formatTokenBreakdown;
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -191,18 +191,18 @@ function SessionRow({ session }: SessionRowProps) {
 
       {/* Total Tokens with breakdown */}
       <td className="px-2 py-2 text-right w-48">
-        <div className="font-mono text-[10px] text-data-400 tabular-nums">
-          {formatTokenBreakdown(
-            metadata.totalCacheReadTokens,
-            metadata.totalCacheCreationTokens,
-            metadata.totalInputTokens,
-            metadata.totalOutputTokens
-          )}
+        <div className="font-mono text-xs text-left tabular-nums">
+          <TokenBreakdownDisplay
+            cacheRead={metadata.totalCacheReadTokens}
+            cacheWrite={metadata.totalCacheCreationTokens}
+            input={metadata.totalInputTokens}
+            output={metadata.totalOutputTokens}
+          />
         </div>
       </td>
 
       {/* Duration */}
-      <td className="px-2 py-2 font-mono text-[10px] text-right text-warning-400 tabular-nums w-20">
+      <td className="px-2 py-2 font-mono text-xs text-right text-warning-400 tabular-nums w-20">
         {formatDuration(metadata.duration)}
       </td>
     </tr>
