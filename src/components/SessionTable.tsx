@@ -1,25 +1,25 @@
-import { useNavigate } from 'react-router';
-import { useState } from 'react';
-import type { SessionSummary } from '../services/sessionManager';
-import { traceParserService } from '../services/traceParser';
+import { useNavigate } from "react-router";
+import { useState } from "react";
+import type { SessionSummary } from "../services/sessionManager";
+import { traceParserService } from "../services/traceParser";
 
 interface SessionTableProps {
   sessions: SessionSummary[];
 }
 
-type SortColumn = 'sessionId' | 'totalTokens' | 'duration';
-type SortDirection = 'asc' | 'desc';
+type SortColumn = "sessionId" | "totalTokens" | "duration";
+type SortDirection = "asc" | "desc";
 
 export function SessionTable({ sessions }: SessionTableProps) {
-  const [sortColumn, setSortColumn] = useState<SortColumn>('sessionId');
-  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [sortColumn, setSortColumn] = useState<SortColumn>("sessionId");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
 
   const handleSort = (column: SortColumn) => {
     if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
       setSortColumn(column);
-      setSortDirection('desc');
+      setSortDirection("desc");
     }
   };
 
@@ -27,36 +27,66 @@ export function SessionTable({ sessions }: SessionTableProps) {
     let comparison = 0;
 
     switch (sortColumn) {
-      case 'sessionId':
+      case "sessionId":
         comparison = a.sessionId.localeCompare(b.sessionId);
         break;
-      case 'totalTokens':
+      case "totalTokens":
         comparison = a.metadata.totalTokens - b.metadata.totalTokens;
         break;
-      case 'duration':
+      case "duration":
         comparison = a.metadata.duration - b.metadata.duration;
         break;
     }
 
-    return sortDirection === 'asc' ? comparison : -comparison;
+    return sortDirection === "asc" ? comparison : -comparison;
   });
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) {
       return (
-        <svg className="w-3 h-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+        <svg
+          className="w-3 h-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+          />
         </svg>
       );
     }
 
-    return sortDirection === 'asc' ? (
-      <svg className="w-3 h-3 text-data-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+    return sortDirection === "asc" ? (
+      <svg
+        className="w-3 h-3 text-data-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M5 15l7-7 7 7"
+        />
       </svg>
     ) : (
-      <svg className="w-3 h-3 text-data-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      <svg
+        className="w-3 h-3 text-data-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
       </svg>
     );
   };
@@ -66,11 +96,10 @@ export function SessionTable({ sessions }: SessionTableProps) {
       <table className="w-full text-xs">
         <thead className="sticky top-0 bg-base-900 border-b border-base-800 z-10">
           <tr>
-            <th className="w-8 px-2 py-2">
-            </th>
+            <th className="w-8 px-2 py-2"></th>
             <th
               className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group"
-              onClick={() => handleSort('sessionId')}
+              onClick={() => handleSort("sessionId")}
             >
               <div className="flex items-center gap-1.5">
                 <span>Session ID</span>
@@ -79,7 +108,7 @@ export function SessionTable({ sessions }: SessionTableProps) {
             </th>
             <th
               className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group w-48"
-              onClick={() => handleSort('totalTokens')}
+              onClick={() => handleSort("totalTokens")}
             >
               <div className="flex items-center justify-end gap-1.5">
                 <span>Tokens</span>
@@ -88,7 +117,7 @@ export function SessionTable({ sessions }: SessionTableProps) {
             </th>
             <th
               className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group w-20"
-              onClick={() => handleSort('duration')}
+              onClick={() => handleSort("duration")}
             >
               <div className="flex items-center justify-end gap-1.5">
                 <span>Duration</span>
@@ -151,7 +180,7 @@ function SessionRow({ session }: SessionRowProps) {
           </div>
           {metadata.conversationPreview && (
             <div
-              className="text-[10px] text-text-muted italic truncate"
+              className="text-xs text-text-muted italic whitespace-pre-wrap"
               title={metadata.conversationPreview}
             >
               {metadata.conversationPreview}
@@ -184,16 +213,24 @@ interface SessionTableSkeletonProps {
   count?: number;
 }
 
-export function SessionTableSkeleton({ count = 10 }: SessionTableSkeletonProps) {
+export function SessionTableSkeleton({
+  count = 10,
+}: SessionTableSkeletonProps) {
   return (
     <div className="border border-base-800 rounded-lg">
       <table className="w-full text-xs">
         <thead className="bg-base-900 border-b border-base-800">
           <tr>
             <th className="w-8 px-2 py-2"></th>
-            <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Session ID</th>
-            <th className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider w-48">Tokens</th>
-            <th className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider w-20">Duration</th>
+            <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">
+              Session ID
+            </th>
+            <th className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider w-48">
+              Tokens
+            </th>
+            <th className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider w-20">
+              Duration
+            </th>
           </tr>
         </thead>
         <tbody className="bg-base-950 divide-y divide-base-900">

@@ -5,6 +5,7 @@
 
 import {
   extractTextFromMessage,
+  extractCleanTextFromMessage,
   hasThinkingContent,
   getToolsUsed,
   truncate,
@@ -96,8 +97,8 @@ export function UserMessagePreview({
     return <span className="text-[10px] text-gray-600">—</span>;
   }
 
-  // Try to extract text content first
-  const textContent = extractTextFromMessage(lastUserMsg.content);
+  // Try to extract text content first, with system reminders filtered out
+  const textContent = extractCleanTextFromMessage(lastUserMsg.content);
 
   // If no text content, check for tool results
   if (!textContent && hasToolResults(lastUserMsg.content)) {

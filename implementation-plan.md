@@ -106,30 +106,31 @@ Key decisions:
 
 ### Implementation Tasks
 
-- [ ] **Task 2.1**: Create `stripSystemReminders()` utility in `/Users/viktornawrath/repos/cc-trace-viewer/src/utils/messageFormatting.ts`
-  - Add function after `extractTextFromMessage()` (around line 57)
-  - Use regex: `/<system-reminder>.*?<\/system-reminder>/gs`
-  - Remove all system reminder tags and their content
-  - Trim extra whitespace left behind
-  - Return cleaned text string
+- [x] **Task 2.1**: Create `stripSystemReminders()` utility in `/Users/viktornawrath/repos/cc-trace-viewer/src/utils/messageFormatting.ts`
+  - ✅ Add function after `extractTextFromMessage()` (at line 58-70)
+  - ✅ Use regex: `/<system-reminder>.*?<\/system-reminder>/gs`
+  - ✅ Remove all system reminder tags and their content
+  - ✅ Trim extra whitespace left behind (replace 3+ newlines with 2)
+  - ✅ Return cleaned text string
 
-- [ ] **Task 2.2**: Create `extractCleanTextFromMessage()` helper function
-  - Wrap `extractTextFromMessage()`
-  - Apply `stripSystemReminders()` to result
-  - Return cleaned text
+- [x] **Task 2.2**: Create `extractCleanTextFromMessage()` helper function
+  - ✅ Wrap `extractTextFromMessage()`
+  - ✅ Apply `stripSystemReminders()` to result
+  - ✅ Return cleaned text
 
-- [ ] **Task 2.3**: Update session preview generation in `/Users/viktornawrath/repos/cc-trace-viewer/src/services/traceParser.ts:909-932`
-  - Import `extractCleanTextFromMessage()` from messageFormatting
-  - Replace direct text extraction with cleaned version (around line 920)
-  - Update preview to capture up to 5 lines instead of current limit
-  - Change from 200 characters to counting newlines (max 5 lines)
-  - Trim to reasonable character limit per line (e.g., 80 chars per line)
+- [x] **Task 2.3**: Update session preview generation in `/Users/viktornawrath/repos/cc-trace-viewer/src/services/traceParser.ts`
+  - ✅ Import `extractCleanTextFromMessage()` from messageFormatting (line 11)
+  - ✅ Replace direct text extraction with cleaned version in `detectConversations()` (line 727)
+  - ✅ Update `extractConversationMetadata()` to capture up to 5 lines (lines 944-951)
+  - ✅ Split on newlines, take first 5 lines
+  - ✅ Truncate each line to 80 chars max with ellipsis
+  - ✅ Update SessionTable display to use `whitespace-pre-wrap` for multi-line rendering (line 154)
 
-- [ ] **Task 2.4**: Update `UserMessagePreview` in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/MessagePreview.tsx:100-126`
-  - Import `extractCleanTextFromMessage()` from messageFormatting
-  - Replace `extractTextFromMessage()` call (around line 106)
-  - Keep display as single line (do NOT make multi-line)
-  - Maintain current truncation behavior for single line display
+- [x] **Task 2.4**: Update `UserMessagePreview` in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/MessagePreview.tsx`
+  - ✅ Import `extractCleanTextFromMessage()` from messageFormatting (line 8)
+  - ✅ Replace `extractTextFromMessage()` call with `extractCleanTextFromMessage()` (line 101)
+  - ✅ Keep display as single line (unchanged truncate behavior)
+  - ✅ Maintain current truncation behavior for single line display
 
 ### Verification Steps
 

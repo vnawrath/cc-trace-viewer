@@ -8,6 +8,7 @@ import type {
   ConversationGroup,
   ConversationMetadata,
 } from "../types/trace";
+import { extractCleanTextFromMessage } from "../utils/messageFormatting";
 
 export class TraceParserService {
   parseJsonLine(line: string): ClaudeTraceEntry | null {
@@ -45,11 +46,6 @@ export class TraceParserService {
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      const previewLength = 200;
-      const linePreview =
-        line.length > previewLength
-          ? line.substring(0, previewLength) + "..."
-          : line;
 
       // Only log critical parsing errors (out-of-memory)
       // Skip logging for common parse errors to reduce console noise
@@ -722,7 +718,8 @@ export class TraceParserService {
         continue;
       }
 
-      // Normalize the first user message for grouping
+      // Extract clean text (without system reminders) and normalize for grouping
+      const cleanMessage = extractCleanTextFromMessage(firstUserMessage.content);
       const normalizedMessage = this.normalizeMessageForGrouping(firstUserMessage.content);
 
       // Extract system prompt (join all text blocks if array)
@@ -745,7 +742,7 @@ export class TraceParserService {
         conversationMap.set(conversationId, {
           id: conversationId,
           requests: [],
-          firstUserMessage: normalizedMessage,
+          firstUserMessage: cleanMessage,  // Use cleaned message without system reminders
           longestRequestIndex: 0,
           models: new Set(),
           totalMessages: 0,
@@ -939,10 +936,19 @@ export class TraceParserService {
       }
     }
 
+    // Extract up to 5 lines from the first user message
+    const lines = longestConversation.firstUserMessage.split('\n');
+    const previewLines = lines.slice(0, 5);
+
+    // Truncate each line to reasonable length (80 chars) and join
+    const preview = previewLines
+      .map(line => line.length > 80 ? line.substring(0, 77) + '...' : line)
+      .join('\n');
+
     return {
       conversationCount: conversations.length,
       longestConversation: {
-        firstUserMessage: longestConversation.firstUserMessage.substring(0, 200),
+        firstUserMessage: preview,
         messageCount: longestConversation.totalMessages,
       },
     };

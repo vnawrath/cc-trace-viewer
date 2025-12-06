@@ -56,6 +56,29 @@ export function extractTextFromMessage(content: MessageContent): string {
 }
 
 /**
+ * Strip system reminder tags from text content
+ * Removes all <system-reminder>...</system-reminder> tags and their content
+ */
+export function stripSystemReminders(text: string): string {
+  // Remove system reminder tags and their content using regex with dotall flag
+  const cleaned = text.replace(/<system-reminder>.*?<\/system-reminder>/gs, '');
+
+  // Clean up extra whitespace left behind
+  return cleaned
+    .replace(/\n\s*\n\s*\n/g, '\n\n') // Replace 3+ newlines with 2
+    .trim();
+}
+
+/**
+ * Extract text content from a message and strip system reminders
+ * Combines extractTextFromMessage with stripSystemReminders
+ */
+export function extractCleanTextFromMessage(content: MessageContent): string {
+  const text = extractTextFromMessage(content);
+  return stripSystemReminders(text);
+}
+
+/**
  * Extract text content from a message parameter (used in requests)
  * MessageParam can be simpler than full Message type
  */
