@@ -39,30 +39,31 @@ Key decisions:
 
 ### Implementation Tasks
 
-- [ ] **Task 1.1**: Create new `formatTokenBreakdown()` function in `/Users/viktornawrath/repos/cc-trace-viewer/src/services/traceParser.ts`
-  - Accept parameters: `cacheRead`, `cacheWrite`, `input`, `output`
-  - Calculate `totalInput = cacheRead + cacheWrite + input`
-  - Return formatted string: `{totalInput}({cacheRead}, {cacheWrite}, {input})/{output}`
-  - Apply K/M suffix formatting to all numbers using existing `formatTokenCount()`
-  - Handle zero/undefined values gracefully (show 0 or omit)
+- [x] **Task 1.1**: Create new `formatTokenBreakdown()` function in `/Users/viktornawrath/repos/cc-trace-viewer/src/services/traceParser.ts:551-566`
+  - ✅ Accept parameters: `cacheRead`, `cacheWrite`, `input`, `output`
+  - ✅ Calculate `totalInput = cacheRead + cacheWrite + input`
+  - ✅ Return formatted string: `{totalInput}({cacheRead}, {cacheWrite}, {input})/{output}`
+  - ✅ Apply K/M suffix formatting to all numbers using existing `formatTokenCount()`
+  - ✅ Handle zero/undefined values gracefully (show 0 or omit)
 
-- [ ] **Task 1.2**: Update session list display in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/SessionTable.tsx:199-207`
-  - Replace current token display with call to `formatTokenBreakdown()`
-  - Pass `metadata.totalCacheReadTokens`, `metadata.totalCacheCreationTokens`, `metadata.totalInputTokens`, `metadata.totalOutputTokens`
-  - Keep two-row layout if needed for readability
-  - Maintain monospace font and current color scheme
+- [x] **Task 1.2**: Update session list display in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/SessionTable.tsx:199-209`
+  - ✅ Replace current token display with call to `formatTokenBreakdown()`
+  - ✅ Pass `metadata.totalCacheReadTokens`, `metadata.totalCacheCreationTokens`, `metadata.totalInputTokens`, `metadata.totalOutputTokens`
+  - ✅ Simplified to single-row layout with breakdown format
+  - ✅ Maintain monospace font and current color scheme
 
-- [ ] **Task 1.3**: Update request list token display in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/RequestCard.tsx`
-  - Remove local `formatTokens()` function (lines 19-23)
-  - Import `formatTokenBreakdown()` from traceParser
-  - Update lines 230-235 to use new format
-  - Pass `request.cacheReadTokens`, `request.cacheCreationTokens`, `request.inputTokens`, `request.outputTokens`
-  - Adjust layout if text is too long for table cell
+- [x] **Task 1.3**: Update request list token display in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/RequestCard.tsx:228-237`
+  - ✅ Replace local `formatTokens()` with `traceParserService.formatTokenCount`
+  - ✅ Import `formatTokenBreakdown()` from traceParser
+  - ✅ Update token display to use new format
+  - ✅ Pass `request.cacheTokens.read`, `request.cacheTokens.creation`, `request.inputTokens`, `request.outputTokens`
+  - ✅ Simplified layout to single line
 
-- [ ] **Task 1.4**: Update sidebar token display in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/SessionSummary.tsx`
-  - Locate token display sections (sidebar and full variants)
-  - Update to use `formatTokenBreakdown()` with aggregate totals
-  - Ensure proper wrapping for longer format string
+- [x] **Task 1.4**: Update sidebar token display in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/SessionSummary.tsx:92-102`
+  - ✅ Import `formatTokenBreakdown()` from traceParser
+  - ✅ Update to use `formatTokenBreakdown()` with aggregate totals
+  - ✅ Simplified to single line with breakdown format
+  - ✅ Proper wrapping handled by monospace font
 
 ### Verification Steps
 

@@ -548,6 +548,23 @@ export class TraceParserService {
     return `${(tokens / 1000000).toFixed(1)}M`;
   }
 
+  formatTokenBreakdown = (
+    cacheRead: number,
+    cacheWrite: number,
+    input: number,
+    output: number
+  ): string => {
+    const totalInput = cacheRead + cacheWrite + input;
+
+    const formattedTotalInput = this.formatTokenCount(totalInput);
+    const formattedCacheRead = this.formatTokenCount(cacheRead);
+    const formattedCacheWrite = this.formatTokenCount(cacheWrite);
+    const formattedInput = this.formatTokenCount(input);
+    const formattedOutput = this.formatTokenCount(output);
+
+    return `${formattedTotalInput}(${formattedCacheRead}, ${formattedCacheWrite}, ${formattedInput})/${formattedOutput}`;
+  }
+
   extractToolsUsedFromResponse(response: TraceResponse): string[] {
     const toolsUsed = new Set<string>();
 

@@ -1,5 +1,6 @@
 import { Link } from 'react-router';
 import type { SessionData } from '../types/trace';
+import { traceParserService } from '../services/traceParser';
 
 interface SessionSummaryProps {
   sessionId: string;
@@ -27,11 +28,8 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
     return `${(ms / 3600000).toFixed(1)}h`;
   };
 
-  const formatTokens = (count: number) => {
-    if (count < 1000) return count.toString();
-    if (count < 1000000) return `${(count / 1000).toFixed(1)}K`;
-    return `${(count / 1000000).toFixed(1)}M`;
-  };
+  const formatTokens = traceParserService.formatTokenCount;
+  const formatTokenBreakdown = traceParserService.formatTokenBreakdown;
 
   const formatPercentage = (value: number) => {
     return `${(value * 100).toFixed(1)}%`;
@@ -92,19 +90,15 @@ export function SessionSummary({ sessionId, metadata, aggregateMetrics, variant 
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-[11px] text-gray-500">Total Tokens</span>
-            <span className="font-mono text-sm font-semibold text-cyan-400">{formatTokens(metadata.totalTokensUsed)}</span>
-          </div>
-
-          <div className="pl-3 space-y-2 border-l-2 border-gray-800">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-gray-600">Input</span>
-              <span className="font-mono text-xs text-gray-400">{formatTokens(metadata.totalInputTokens)}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] text-gray-600">Output</span>
-              <span className="font-mono text-xs text-gray-400">{formatTokens(metadata.totalOutputTokens)}</span>
-            </div>
+            <span className="text-[11px] text-gray-500">Tokens</span>
+            <span className="font-mono text-[11px] font-semibold text-cyan-400">
+              {formatTokenBreakdown(
+                metadata.totalCacheReadTokens,
+                metadata.totalCacheCreationTokens,
+                metadata.totalInputTokens,
+                metadata.totalOutputTokens
+              )}
+            </span>
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-gray-800">

@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import type { RequestMetrics } from '../services/requestAnalyzer';
 import { UserMessagePreview, AssistantMessagePreview } from './MessagePreview';
 import type { Message } from '../utils/messageFormatting';
+import { traceParserService } from '../services/traceParser';
 
 interface RequestCardProps {
   request: RequestMetrics;
@@ -16,11 +17,8 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
     return `${(seconds / 60).toFixed(1)}m`;
   };
 
-  const formatTokens = (count: number) => {
-    if (count < 1000) return count.toString();
-    if (count < 1000000) return `${(count / 1000).toFixed(1)}K`;
-    return `${(count / 1000000).toFixed(1)}M`;
-  };
+  const formatTokenBreakdown = traceParserService.formatTokenBreakdown;
+  const formatTokens = traceParserService.formatTokenCount;
 
   const getStatusColor = (status: number) => {
     if (status >= 200 && status < 300) return 'text-green-600 bg-green-100';
@@ -228,10 +226,14 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
 
         {/* Tokens */}
         <td className="px-3 py-2 whitespace-nowrap">
-          <div className="flex flex-col">
-            <span className="text-[11px] font-mono font-medium text-cyan-400">{formatTokens(request.totalTokens)}</span>
-            <span className="text-[10px] text-gray-500 font-mono">{formatTokens(request.inputTokens)} / {formatTokens(request.outputTokens)}</span>
-          </div>
+          <span className="text-[11px] font-mono font-medium text-cyan-400">
+            {formatTokenBreakdown(
+              request.cacheTokens.read,
+              request.cacheTokens.creation,
+              request.inputTokens,
+              request.outputTokens
+            )}
+          </span>
         </td>
       </tr>
 

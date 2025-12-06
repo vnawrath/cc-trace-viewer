@@ -7,7 +7,7 @@ interface SessionTableProps {
   sessions: SessionSummary[];
 }
 
-type SortColumn = 'sessionId' | 'requestCount' | 'conversationCount' | 'totalTokens' | 'duration';
+type SortColumn = 'sessionId' | 'totalTokens' | 'duration';
 type SortDirection = 'asc' | 'desc';
 
 export function SessionTable({ sessions }: SessionTableProps) {
@@ -29,14 +29,6 @@ export function SessionTable({ sessions }: SessionTableProps) {
     switch (sortColumn) {
       case 'sessionId':
         comparison = a.sessionId.localeCompare(b.sessionId);
-        break;
-      case 'requestCount':
-        comparison = a.metadata.requestCount - b.metadata.requestCount;
-        break;
-      case 'conversationCount':
-        const aConvs = a.metadata.conversationCount ?? 0;
-        const bConvs = b.metadata.conversationCount ?? 0;
-        comparison = aConvs - bConvs;
         break;
       case 'totalTokens':
         comparison = a.metadata.totalTokens - b.metadata.totalTokens;
@@ -70,7 +62,7 @@ export function SessionTable({ sessions }: SessionTableProps) {
   };
 
   return (
-    <div className="overflow-x-auto border border-base-800 rounded-lg shadow-md">
+    <div className="border border-base-800 rounded-lg shadow-md">
       <table className="w-full text-xs">
         <thead className="sticky top-0 bg-base-900 border-b border-base-800 z-10">
           <tr>
@@ -86,34 +78,16 @@ export function SessionTable({ sessions }: SessionTableProps) {
               </div>
             </th>
             <th
-              className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group"
-              onClick={() => handleSort('requestCount')}
-            >
-              <div className="flex items-center justify-end gap-1.5">
-                <span>Requests</span>
-                <SortIcon column="requestCount" />
-              </div>
-            </th>
-            <th
-              className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group"
-              onClick={() => handleSort('conversationCount')}
-            >
-              <div className="flex items-center justify-end gap-1.5">
-                <span>Convs</span>
-                <SortIcon column="conversationCount" />
-              </div>
-            </th>
-            <th
-              className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group"
+              className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group w-48"
               onClick={() => handleSort('totalTokens')}
             >
               <div className="flex items-center justify-end gap-1.5">
-                <span>Total Tokens</span>
+                <span>Tokens</span>
                 <SortIcon column="totalTokens" />
               </div>
             </th>
             <th
-              className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group"
+              className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider cursor-pointer hover:text-text-secondary transition-colors group w-20"
               onClick={() => handleSort('duration')}
             >
               <div className="flex items-center justify-end gap-1.5">
@@ -140,7 +114,7 @@ interface SessionRowProps {
 function SessionRow({ session }: SessionRowProps) {
   const { sessionId, metadata } = session;
   const formatDuration = traceParserService.formatDuration;
-  const formatTokenCount = traceParserService.formatTokenCount;
+  const formatTokenBreakdown = traceParserService.formatTokenBreakdown;
   const navigate = useNavigate();
 
   const handleClick = () => {
@@ -170,9 +144,9 @@ function SessionRow({ session }: SessionRowProps) {
       </td>
 
       {/* Session ID with conversation preview */}
-      <td className="px-3 py-2">
-        <div className="flex flex-col gap-0.5">
-          <div className="font-mono text-xs text-text-secondary group-hover:text-data-400 transition-colors">
+      <td className="px-3 py-2 max-w-0">
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <div className="font-mono text-xs text-text-secondary group-hover:text-data-400 transition-colors truncate">
             {sessionId}
           </div>
           {metadata.conversationPreview && (
@@ -186,28 +160,20 @@ function SessionRow({ session }: SessionRowProps) {
         </div>
       </td>
 
-      {/* Request Count */}
-      <td className="px-3 py-2 font-mono text-sm text-right text-data-400 tabular-nums">
-        {metadata.requestCount}
-      </td>
-
-      {/* Conversation Count */}
-      <td className="px-3 py-2 font-mono text-sm text-right text-data-400 tabular-nums">
-        {metadata.conversationCount ?? '—'}
-      </td>
-
-      {/* Total Tokens with input/output breakdown */}
-      <td className="px-3 py-2 text-right">
-        <div className="font-mono text-sm text-data-400 tabular-nums">
-          {formatTokenCount(metadata.totalTokens)}
-        </div>
-        <div className="font-mono text-[10px] text-text-muted tabular-nums">
-          {formatTokenCount(metadata.totalInputTokens)}↑ {formatTokenCount(metadata.totalOutputTokens)}↓
+      {/* Total Tokens with breakdown */}
+      <td className="px-2 py-2 text-right w-48">
+        <div className="font-mono text-[10px] text-data-400 tabular-nums">
+          {formatTokenBreakdown(
+            metadata.totalCacheReadTokens,
+            metadata.totalCacheCreationTokens,
+            metadata.totalInputTokens,
+            metadata.totalOutputTokens
+          )}
         </div>
       </td>
 
       {/* Duration */}
-      <td className="px-3 py-2 font-mono text-sm text-right text-warning-400 tabular-nums">
+      <td className="px-2 py-2 font-mono text-[10px] text-right text-warning-400 tabular-nums w-20">
         {formatDuration(metadata.duration)}
       </td>
     </tr>
@@ -220,16 +186,14 @@ interface SessionTableSkeletonProps {
 
 export function SessionTableSkeleton({ count = 10 }: SessionTableSkeletonProps) {
   return (
-    <div className="overflow-x-auto border border-base-800 rounded-lg">
+    <div className="border border-base-800 rounded-lg">
       <table className="w-full text-xs">
         <thead className="bg-base-900 border-b border-base-800">
           <tr>
             <th className="w-8 px-2 py-2"></th>
             <th className="text-left px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Session ID</th>
-            <th className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Requests</th>
-            <th className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Convs</th>
-            <th className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Total Tokens</th>
-            <th className="text-right px-3 py-2 font-medium text-text-tertiary uppercase tracking-wider">Duration</th>
+            <th className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider w-48">Tokens</th>
+            <th className="text-right px-2 py-2 font-medium text-text-tertiary uppercase tracking-wider w-20">Duration</th>
           </tr>
         </thead>
         <tbody className="bg-base-950 divide-y divide-base-900">
@@ -241,18 +205,11 @@ export function SessionTableSkeleton({ count = 10 }: SessionTableSkeletonProps) 
               <td className="px-3 py-2">
                 <div className="h-3 bg-base-800 rounded w-64" />
               </td>
-              <td className="px-3 py-2">
-                <div className="h-4 bg-base-800 rounded w-8 ml-auto" />
+              <td className="px-2 py-2 w-48">
+                <div className="h-3 bg-base-800 rounded w-32 ml-auto" />
               </td>
-              <td className="px-3 py-2">
-                <div className="h-4 bg-base-800 rounded w-8 ml-auto" />
-              </td>
-              <td className="px-3 py-2">
-                <div className="h-4 bg-base-800 rounded w-16 ml-auto mb-1" />
-                <div className="h-3 bg-base-800 rounded w-20 ml-auto" />
-              </td>
-              <td className="px-3 py-2">
-                <div className="h-4 bg-base-800 rounded w-12 ml-auto" />
+              <td className="px-2 py-2 w-20">
+                <div className="h-3 bg-base-800 rounded w-12 ml-auto" />
               </td>
             </tr>
           ))}
