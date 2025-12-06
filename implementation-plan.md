@@ -86,7 +86,7 @@ Key decisions:
 
 ## Phase 2: System Reminder Filtering
 
-**Goal**: Strip `<system-reminder>` tags from message previews and show up to 5 lines of actual user content
+**Goal**: Strip `<system-reminder>` tags from all message previews. Session list should show up to 5 lines of user content, while request list should remain single line.
 
 ### Context
 
@@ -128,8 +128,8 @@ Key decisions:
 - [ ] **Task 2.4**: Update `UserMessagePreview` in `/Users/viktornawrath/repos/cc-trace-viewer/src/components/MessagePreview.tsx:100-126`
   - Import `extractCleanTextFromMessage()` from messageFormatting
   - Replace `extractTextFromMessage()` call (around line 106)
-  - Update display to show up to 5 lines with proper line breaks
-  - Add CSS for multi-line truncation with `line-clamp-5` or similar
+  - Keep display as single line (do NOT make multi-line)
+  - Maintain current truncation behavior for single line display
 
 ### Verification Steps
 
@@ -138,16 +138,17 @@ Key decisions:
    - [ ] Load request list - no system reminder text in message previews
    - [ ] Verify actual user content is preserved and displayed correctly
 
-2. **Multi-line Display**:
-   - [ ] Verify previews show up to 5 lines of content
+2. **Multi-line Display** (Session List Only):
+   - [ ] Verify session list previews show up to 5 lines of content
+   - [ ] Verify request list previews remain single line
    - [ ] Check that long messages are properly truncated
-   - [ ] Confirm line breaks render correctly
+   - [ ] Confirm line breaks render correctly in session list
 
 3. **Edge Cases**:
-   - [ ] Message with only system reminders - shows fallback or empty
-   - [ ] Message with system reminders + short user text - shows user text
-   - [ ] Message with system reminders + long user text - shows 5 lines
-   - [ ] Message with no system reminders - shows normally
+   - [ ] Message with only system reminders - shows fallback or empty (both lists)
+   - [ ] Message with system reminders + short user text - shows user text (both lists)
+   - [ ] Message with system reminders + long user text - shows 5 lines in session list, single line in request list
+   - [ ] Message with no system reminders - shows normally (5 lines in session list, single line in request list)
 
 ---
 
@@ -309,7 +310,7 @@ The implementation is complete when:
 
 1. ✅ All token displays show new format: `<total_input>(<cache_read>, <cache_write>, <input>)/<output>` with K/M suffixes
 2. ✅ System reminders are filtered from all message previews
-3. ✅ Message previews show up to 5 lines of actual user content
+3. ✅ Session list message previews show up to 5 lines; request list previews remain single line
 4. ✅ User ID in request sidebar has working copy button
 5. ✅ Request sidebar shows detailed token breakdown
 6. ✅ Average duration displays correctly (not confusing seconds/milliseconds)
