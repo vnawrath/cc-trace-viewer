@@ -224,7 +224,7 @@ export function processConversation(entry: ClaudeTraceEntry): ConversationMessag
 
   try {
     // Handle non-streaming response
-    if (entry.response.body?.content && Array.isArray(entry.response.body.content)) {
+    if (entry.response.body && 'content' in entry.response.body && entry.response.body.content && Array.isArray(entry.response.body.content)) {
       for (const block of entry.response.body.content) {
         try {
           if (!block || typeof block !== 'object' || !block.type) {

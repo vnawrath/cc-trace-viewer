@@ -223,8 +223,8 @@ export class TraceParserService {
 
       let usage: TokenUsage | Record<string, unknown> | null = null;
 
-      if (entry.response.body?.usage) {
-        usage = entry.response.body.usage;
+      if (entry.response.body && 'usage' in entry.response.body) {
+        usage = entry.response.body.usage as TokenUsage;
       } else if (entry.response.body_raw) {
         const reconstructed = this.reconstructResponseFromStream(
           entry.response.body_raw
@@ -573,7 +573,7 @@ export class TraceParserService {
   extractToolsUsedFromResponse(response: TraceResponse): string[] {
     const toolsUsed = new Set<string>();
 
-    if (response.body?.content) {
+    if (response.body && 'content' in response.body) {
       for (const contentItem of response.body.content) {
         if (
           contentItem.type === "tool_use" &&

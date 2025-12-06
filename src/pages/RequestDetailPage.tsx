@@ -17,15 +17,26 @@ function getStatusColor(status: number) {
 
 function extractReconstructedResponse(response: TraceResponse): string {
   if (response.body) {
-    return JSON.stringify({
-      model: response.body.model,
-      id: response.body.id,
-      type: response.body.type,
-      role: response.body.role,
-      content: response.body.content,
-      stop_reason: response.body.stop_reason,
-      usage: response.body.usage
-    }, null, 2);
+    // Check if this is a token count response
+    if ('input_tokens' in response.body && !('usage' in response.body)) {
+      // Token count response - just has input_tokens
+      return JSON.stringify({
+        input_tokens: response.body.input_tokens
+      }, null, 2);
+    }
+
+    // Regular message response (need to check that it has the message response structure)
+    if ('content' in response.body) {
+      return JSON.stringify({
+        model: response.body.model,
+        id: response.body.id,
+        type: response.body.type,
+        role: response.body.role,
+        content: response.body.content,
+        stop_reason: response.body.stop_reason,
+        usage: response.body.usage
+      }, null, 2);
+    }
   }
 
   if (response.body_raw) {
@@ -53,7 +64,7 @@ function extractToolCallsFromResponse(response: TraceResponse): Array<{
   }> = [];
 
   // Handle non-streaming response
-  if (response.body?.content) {
+  if (response.body && 'content' in response.body && response.body.content) {
     for (const contentItem of response.body.content) {
       if (contentItem.type === 'tool_use' && 'name' in contentItem && 'input' in contentItem) {
         toolCalls.push({
@@ -66,7 +77,7 @@ function extractToolCallsFromResponse(response: TraceResponse): Array<{
   }
 
   // Handle streaming response
-  if (response.body_raw && !response.body?.content) {
+  if (response.body_raw && !(response.body && 'content' in response.body && response.body.content)) {
     const events = traceParserService.parseStreamingResponse(response.body_raw);
     const toolCallMap = new Map<string, {
       id?: string;
@@ -232,10 +243,18 @@ export function RequestDetailPage() {
   const toolsAvailable = traceParserService.extractToolsAvailableFromRequest(request.request);
   const toolsUsed = traceParserService.extractToolsUsedFromResponse(request.response);
 
+  // Detect if this is a token count request
+  const isTokenCountRequest = request.request.url.includes('/messages/count_tokens');
+
   // Get token usage
   let usage: TokenUsage | null = null;
-  if (request.response.body?.usage) {
-    usage = request.response.body.usage;
+  let tokenCountOnly: number | null = null;
+
+  if (isTokenCountRequest && request.response.body && 'input_tokens' in request.response.body && !('usage' in request.response.body)) {
+    // Token count endpoint response
+    tokenCountOnly = request.response.body.input_tokens;
+  } else if (request.response.body && 'usage' in request.response.body) {
+    usage = request.response.body.usage as TokenUsage;
   } else if (request.response.body_raw) {
     const reconstructed = traceParserService.reconstructResponseFromStream(request.response.body_raw);
     if (reconstructed?.usage) {
@@ -532,46 +551,60 @@ export function RequestDetailPage() {
             </div>
 
             {/* Performance Metrics Card */}
-            {usage && (
+            {(usage || tokenCountOnly !== null) && (
               <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-                <h3 className="text-xs font-mono text-gray-500 mb-3">PERFORMANCE METRICS</h3>
+                <h3 className="text-xs font-mono text-gray-500 mb-3">{isTokenCountRequest ? 'TOKEN COUNT' : 'PERFORMANCE METRICS'}</h3>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-xs text-gray-500">Input Tokens</span>
-                    <span className="text-sm font-mono text-terminal-cyan">{usage.input_tokens.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between items-baseline">
-                    <span className="text-xs text-gray-500">Output Tokens</span>
-                    <span className="text-sm font-mono text-terminal-green">{usage.output_tokens.toLocaleString()}</span>
-                  </div>
-                  {usage.cache_creation_input_tokens > 0 && (
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-xs text-gray-500">Cache Write</span>
-                      <span className="text-sm font-mono text-terminal-amber">{usage.cache_creation_input_tokens.toLocaleString()}</span>
-                    </div>
-                  )}
-                  {usage.cache_read_input_tokens > 0 && (
-                    <div className="flex justify-between items-baseline">
-                      <span className="text-xs text-gray-500">Cache Read</span>
-                      <span className="text-sm font-mono text-terminal-purple">{usage.cache_read_input_tokens.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="pt-2 border-t border-gray-800 flex justify-between items-baseline">
-                    <span className="text-xs text-gray-400 font-semibold">Total</span>
-                    <span className="text-base font-mono text-gray-200 font-semibold">
-                      {(usage.input_tokens + usage.output_tokens + usage.cache_creation_input_tokens + usage.cache_read_input_tokens).toLocaleString()}
-                    </span>
-                  </div>
-                  {request.response.body?.stop_reason && (
-                    <div className="pt-2 border-t border-gray-800">
-                      <div className="text-xs text-gray-500 mb-1">Stop Reason</div>
-                      <span className="text-xs font-mono text-gray-300">{request.response.body.stop_reason}</span>
-                    </div>
-                  )}
-                  <div className="pt-2 border-t border-gray-800">
-                    <div className="text-xs text-gray-500 mb-1">Service Tier</div>
-                    <span className="text-xs font-mono text-gray-300">{usage.service_tier}</span>
-                  </div>
+                  {isTokenCountRequest && tokenCountOnly !== null ? (
+                    <>
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs text-gray-500">Input Tokens</span>
+                        <span className="text-sm font-mono text-terminal-cyan">{tokenCountOnly.toLocaleString()}</span>
+                      </div>
+                      <div className="pt-2 border-t border-gray-800">
+                        <p className="text-xs text-gray-500 italic">Token count request - no output generated</p>
+                      </div>
+                    </>
+                  ) : usage ? (
+                    <>
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs text-gray-500">Input Tokens</span>
+                        <span className="text-sm font-mono text-terminal-cyan">{usage.input_tokens.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs text-gray-500">Output Tokens</span>
+                        <span className="text-sm font-mono text-terminal-green">{usage.output_tokens.toLocaleString()}</span>
+                      </div>
+                      {usage.cache_creation_input_tokens > 0 && (
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-xs text-gray-500">Cache Write</span>
+                          <span className="text-sm font-mono text-terminal-amber">{usage.cache_creation_input_tokens.toLocaleString()}</span>
+                        </div>
+                      )}
+                      {usage.cache_read_input_tokens > 0 && (
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-xs text-gray-500">Cache Read</span>
+                          <span className="text-sm font-mono text-terminal-purple">{usage.cache_read_input_tokens.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div className="pt-2 border-t border-gray-800 flex justify-between items-baseline">
+                        <span className="text-xs text-gray-400 font-semibold">Total</span>
+                        <span className="text-base font-mono text-gray-200 font-semibold">
+                          {(usage.input_tokens + usage.output_tokens + usage.cache_creation_input_tokens + usage.cache_read_input_tokens).toLocaleString()}
+                        </span>
+                      </div>
+                      {request.response.body && 'stop_reason' in request.response.body && request.response.body.stop_reason && (
+                        <div className="pt-2 border-t border-gray-800">
+                          <div className="text-xs text-gray-500 mb-1">Stop Reason</div>
+                          <span className="text-xs font-mono text-gray-300">{request.response.body.stop_reason}</span>
+                        </div>
+                      )}
+                      <div className="pt-2 border-t border-gray-800">
+                        <div className="text-xs text-gray-500 mb-1">Service Tier</div>
+                        <span className="text-xs font-mono text-gray-300">{usage.service_tier}</span>
+                      </div>
+                    </>
+                  ) : null}
                 </div>
               </div>
             )}

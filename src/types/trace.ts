@@ -44,6 +44,9 @@ export interface TraceResponse {
     content: Array<{type: string; text?: string; [key: string]: unknown}>;
     stop_reason: string | null;
     usage: TokenUsage;
+  } | {
+    // Token count endpoint response
+    input_tokens: number;
   };
   body_raw?: string;
 }

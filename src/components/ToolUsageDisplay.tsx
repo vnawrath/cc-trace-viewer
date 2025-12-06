@@ -77,7 +77,7 @@ function extractToolCallsFromResponse(response: TraceResponse): Array<{
   }> = [];
 
   // Handle non-streaming response
-  if (response.body?.content) {
+  if (response.body && 'content' in response.body && response.body.content) {
     for (const contentItem of response.body.content) {
       if (contentItem.type === 'tool_use' && 'name' in contentItem && 'input' in contentItem) {
         toolCalls.push({
@@ -90,7 +90,7 @@ function extractToolCallsFromResponse(response: TraceResponse): Array<{
   }
 
   // Handle streaming response
-  if (response.body_raw && !response.body?.content) {
+  if (response.body_raw && !(response.body && 'content' in response.body && response.body.content)) {
     const events = traceParserService.parseStreamingResponse(response.body_raw);
     const toolCallMap = new Map<string, {
       id?: string;

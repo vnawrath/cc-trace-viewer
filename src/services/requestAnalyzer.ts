@@ -22,6 +22,7 @@ export interface RequestMetrics {
     creation1h: number;
   };
   isStreaming: boolean;
+  isTokenCountRequest: boolean;
   hasError: boolean;
   toolsAvailable: string[];
   toolsUsed: string[];
@@ -57,6 +58,9 @@ export class RequestAnalyzerService {
   analyzeRequest(entry: ClaudeTraceEntry, index: number): RequestMetrics {
     const { request, response } = entry;
 
+    // Detect if this is a token count request
+    const isTokenCountRequest = request.url.includes('/messages/count_tokens');
+
     // Extract token usage from response or reconstructed streaming data
     let tokenUsage: TokenUsage | null = null;
     let totalTokens = 0;
@@ -69,8 +73,15 @@ export class RequestAnalyzerService {
       creation1h: 0
     };
 
-    if (response.body?.usage) {
-      tokenUsage = response.body.usage;
+    // Handle token count endpoint response (different structure)
+    if (isTokenCountRequest && response.body && 'input_tokens' in response.body && !('usage' in response.body)) {
+      // Token count response: { input_tokens: number }
+      inputTokens = response.body.input_tokens;
+      totalTokens = inputTokens;
+      // No output tokens, cache tokens, or full usage object for token count requests
+    } else if (response.body && 'usage' in response.body) {
+      // Regular message response
+      tokenUsage = response.body.usage as TokenUsage;
     } else if (response.body_raw) {
       // Try to extract from streaming response
       const reconstructed = traceParserService.reconstructResponseFromStream(response.body_raw);
@@ -130,15 +141,18 @@ export class RequestAnalyzerService {
     }, 0) || 0;
 
     // Extract response content from body or body_raw (for streaming)
+    // Token count requests don't have response content
     let responseContent: ContentBlock[] = [];
-    if (response.body?.content) {
-      // Non-streaming response: content is directly available
-      responseContent = response.body.content as ContentBlock[];
-    } else if (response.body_raw) {
-      // Streaming response: reconstruct content from body_raw
-      const reconstructed = traceParserService.reconstructResponseFromStream(response.body_raw);
-      if (reconstructed?.content && Array.isArray(reconstructed.content)) {
-        responseContent = reconstructed.content as ContentBlock[];
+    if (!isTokenCountRequest) {
+      if (response.body && 'content' in response.body) {
+        // Non-streaming response: content is directly available
+        responseContent = response.body.content as ContentBlock[];
+      } else if (response.body_raw) {
+        // Streaming response: reconstruct content from body_raw
+        const reconstructed = traceParserService.reconstructResponseFromStream(response.body_raw);
+        if (reconstructed?.content && Array.isArray(reconstructed.content)) {
+          responseContent = reconstructed.content as ContentBlock[];
+        }
       }
     }
 
@@ -160,13 +174,14 @@ export class RequestAnalyzerService {
       outputTokens,
       cacheTokens,
       isStreaming: Boolean(request.body.stream),
+      isTokenCountRequest,
       hasError: response.status_code >= 400,
       toolsAvailable,
       toolsUsed,
       messageCount: request.body.messages.length,
       systemPromptLength,
       contentPreview: contentPreview + (contentPreview.length >= 100 ? '...' : ''),
-      stopReason: response.body?.stop_reason || null,
+      stopReason: !isTokenCountRequest && response.body && 'stop_reason' in response.body ? response.body.stop_reason : null,
       responseContent,
       rawRequest: request,
       rawResponse: response

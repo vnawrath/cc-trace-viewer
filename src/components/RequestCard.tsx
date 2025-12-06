@@ -55,6 +55,11 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
                 Streaming
               </span>
             )}
+            {request.isTokenCountRequest && (
+              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full text-teal-600 bg-teal-100">
+                Token Count
+              </span>
+            )}
           </div>
           <div className="text-sm text-gray-500 font-mono">
             {new Date(request.timestamp).toLocaleString()}
@@ -211,6 +216,11 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
                 <path d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             )}
+            {request.isTokenCountRequest && (
+              <svg className="w-3 h-3 text-teal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+              </svg>
+            )}
           </div>
         </td>
 
@@ -245,13 +255,17 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
             to={`/sessions/${sessionId}/requests/${request.id}`}
             className="block pl-4"
           >
-            <AssistantMessagePreview
-              content={assistantContent}
-              maxLength={200}
-              className="text-xs text-gray-400"
-              isError={request.hasError}
-              errorMessage={errorMessage}
-            />
+            {request.isTokenCountRequest ? (
+              <div className="text-xs text-gray-500 italic">Token count request - no assistant response</div>
+            ) : (
+              <AssistantMessagePreview
+                content={assistantContent}
+                maxLength={200}
+                className="text-xs text-gray-400"
+                isError={request.hasError}
+                errorMessage={errorMessage}
+              />
+            )}
           </Link>
         </td>
 

@@ -42,8 +42,8 @@ export function RequestMetrics({ request }: RequestMetricsProps) {
 
   // Get token usage from response or reconstructed streaming response
   let usage: TokenUsage | null = null;
-  if (request.response.body?.usage) {
-    usage = request.response.body.usage;
+  if (request.response.body && 'usage' in request.response.body) {
+    usage = request.response.body.usage as TokenUsage;
   } else if (request.response.body_raw) {
     const reconstructed = traceParserService.reconstructResponseFromStream(request.response.body_raw);
     if (reconstructed?.usage) {
