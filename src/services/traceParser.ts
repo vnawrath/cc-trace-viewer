@@ -19,19 +19,16 @@ export class TraceParserService {
 
       // Skip lines that don't look like JSON (should start with '{' and end with '}')
       if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) {
-        console.warn(
-          "Skipping non-JSON line:",
-          trimmed.substring(0, 100) + (trimmed.length > 100 ? "..." : "")
-        );
+        // Silently skip non-JSON lines (empty lines, comments, etc.)
         return null;
       }
 
-      // Warn about very large lines but still attempt to parse them
+      // Only warn about extremely large lines (>10MB) that might cause issues
       // Large lines are common in trace files with big responses or tool outputs
-      if (trimmed.length > 1000000) {
+      if (trimmed.length > 10000000) {
         const sizeMB = (trimmed.length / 1024 / 1024).toFixed(2);
-        console.info(
-          `Parsing large JSON line: ${sizeMB}MB (${trimmed.length.toLocaleString()} characters)`
+        console.warn(
+          `Parsing very large JSON line: ${sizeMB}MB - this may take a moment`
         );
       }
 
@@ -39,11 +36,8 @@ export class TraceParserService {
       const parsed = JSON.parse(trimmed) as ClaudeTraceEntry;
 
       if (!this.isValidTraceEntry(parsed)) {
-        console.warn(
-          "Invalid trace entry structure:",
-          typeof parsed,
-          Object.keys(parsed || {})
-        );
+        // Silently skip invalid entries to reduce console noise
+        // Invalid entries are typically malformed or incomplete data
         return null;
       }
 
@@ -57,7 +51,8 @@ export class TraceParserService {
           ? line.substring(0, previewLength) + "..."
           : line;
 
-      // Check if it's an out-of-memory error
+      // Only log critical parsing errors (out-of-memory)
+      // Skip logging for common parse errors to reduce console noise
       if (errorMessage.includes("memory") || errorMessage.includes("heap")) {
         console.error(
           `Out of memory parsing JSON line (${(
@@ -66,12 +61,8 @@ export class TraceParserService {
             1024
           ).toFixed(2)}MB). This line is too large for the browser to handle.`
         );
-      } else {
-        console.warn(
-          `Failed to parse JSON line (${errorMessage}):`,
-          linePreview
-        );
       }
+      // Silently skip other parsing errors (malformed JSON, incomplete lines, etc.)
       return null;
     }
   }
@@ -83,7 +74,7 @@ export class TraceParserService {
 
     const obj = entry as Record<string, unknown>;
 
-    // Basic structure check
+    // Basic structure check - only require the essential fields
     if (
       !obj.request ||
       typeof obj.request !== "object" ||
@@ -102,71 +93,39 @@ export class TraceParserService {
       typeof request.timestamp !== "number" ||
       typeof response.timestamp !== "number"
     ) {
-      console.warn(
-        "Trace entry missing timestamps:",
-        "request.timestamp=" +
-          typeof request.timestamp +
-          ", response.timestamp=" +
-          typeof response.timestamp
-      );
       return false;
     }
 
-    // Check for required body and metadata
+    // Check for required body (but make metadata optional)
     if (
       !request.body ||
       typeof request.body !== "object"
     ) {
-      console.warn("Trace entry missing request.body");
       return false;
     }
 
-    const body = request.body as Record<string, unknown>;
-    if (!body.metadata || typeof body.metadata !== "object") {
-      console.warn("Trace entry missing request.body.metadata");
-      return false;
-    }
-
-    const metadata = body.metadata as Record<string, unknown>;
-    if (typeof metadata.user_id !== "string") {
-      console.warn("Trace entry missing request.body.metadata.user_id");
-      return false;
-    }
-
+    // Metadata is now optional - entries without metadata are still valid
+    // This allows parsing of trace entries from different sources or versions
     return true;
   }
 
   parseJsonlContent(content: string): ClaudeTraceEntry[] {
     const lines = content.split("\n");
     const entries: ClaudeTraceEntry[] = [];
-    let lineNumber = 0;
-    const totalLines = lines.length;
-    const logInterval = Math.max(1, Math.floor(totalLines / 10)); // Log every 10%
 
-    console.log(
-      `Parsing ${totalLines.toLocaleString()} lines from JSONL content...`
-    );
-
+    // Parse all lines without progress logging to reduce console noise
     for (const line of lines) {
-      lineNumber++;
-
-      // Progress logging for large files
-      if (totalLines > 100 && lineNumber % logInterval === 0) {
-        const progress = Math.round((lineNumber / totalLines) * 100);
-        console.log(
-          `Parsing progress: ${progress}% (${lineNumber.toLocaleString()}/${totalLines.toLocaleString()} lines, ${
-            entries.length
-          } valid entries)`
-        );
-      }
-
       const entry = this.parseJsonLine(line);
       if (entry) {
         entries.push(entry);
       }
     }
 
-    console.log(`Parsing complete: ${entries.length} valid entries found`);
+    // Only log summary for very large files (>1000 lines)
+    if (lines.length > 1000) {
+      console.log(`Parsed ${entries.length} trace entries from ${lines.length.toLocaleString()} lines`);
+    }
+
     return entries;
   }
 
@@ -443,7 +402,7 @@ export class TraceParserService {
           const parsed = JSON.parse(data);
           events.push(parsed);
         } catch (error) {
-          console.warn("Failed to parse SSE data:", data, error);
+          // Silently skip malformed SSE data to reduce console noise
         }
       }
     }
@@ -514,8 +473,7 @@ export class TraceParserService {
             try {
               block.input = JSON.parse(block.input as string);
             } catch (e) {
-              console.warn("Failed to parse tool input JSON:", block.input, e);
-              // Keep as string if parsing fails
+              // Keep as string if parsing fails - silently handle partial JSON
             }
           }
         }
@@ -659,8 +617,7 @@ export class TraceParserService {
             toolsUsed.add(parsed.content_block.name);
           }
         } catch (error) {
-          console.warn("Failed to parse SSE data:", data, error);
-          // Ignore parsing errors for individual SSE events
+          // Silently skip malformed SSE data to reduce console noise
         }
       }
     }

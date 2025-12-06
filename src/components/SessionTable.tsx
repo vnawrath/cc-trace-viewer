@@ -1,4 +1,4 @@
-import { Link } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useState } from 'react';
 import type { SessionSummary } from '../services/sessionManager';
 import { traceParserService } from '../services/traceParser';
@@ -141,11 +141,16 @@ function SessionRow({ session }: SessionRowProps) {
   const { sessionId, metadata } = session;
   const formatDuration = traceParserService.formatDuration;
   const formatTokenCount = traceParserService.formatTokenCount;
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate(`/sessions/${sessionId}/requests`);
+  };
 
   return (
-    <Link
-      to={`/sessions/${sessionId}/requests`}
-      className="table-row group hover:bg-base-900/50 transition-colors relative"
+    <tr
+      onClick={handleClick}
+      className="group hover:bg-base-900/50 transition-colors cursor-pointer relative"
     >
       {/* Status dot */}
       <td className="w-8 px-2 py-2">
@@ -205,10 +210,7 @@ function SessionRow({ session }: SessionRowProps) {
       <td className="px-3 py-2 font-mono text-sm text-right text-warning-400 tabular-nums">
         {formatDuration(metadata.duration)}
       </td>
-
-      {/* Hover effect overlay */}
-      <td className="absolute inset-0 pointer-events-none border-l-2 border-transparent group-hover:border-data-500/50 group-hover:shadow-[inset_0_1px_0_0_rgba(34,211,238,0.1),inset_0_-1px_0_0_rgba(34,211,238,0.1)] transition-all" />
-    </Link>
+    </tr>
   );
 }
 
