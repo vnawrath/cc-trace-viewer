@@ -35,29 +35,29 @@ Add two features to the sessions list page (HomePage) to provide better visibili
 
 ### Implementation Steps
 
-- [ ] Install Recharts library
+- [x] Install Recharts library
   ```bash
   npm install recharts
   ```
 
-- [ ] Create new component file: `/src/components/CostPlot.tsx`
-  - [ ] Accept `sessions: SessionSummary[]` as prop
-  - [ ] Implement date bucketing logic:
+- [x] Create new component file: `/src/components/CostPlot.tsx`
+  - [x] Accept `sessions: SessionSummary[]` as prop
+  - [x] Implement date bucketing logic:
     - Convert `startTime` (unix seconds) to Date object
     - Group sessions by date (YYYY-MM-DD format)
     - Sum `totalCost` for each date bucket (skip sessions with null cost)
     - Sort buckets chronologically
-  - [ ] Render Recharts BarChart:
+  - [x] Render Recharts BarChart:
     - X-axis: Date buckets (formatted as "MMM DD" or "MM/DD")
     - Y-axis: Total cost in USD
     - Bar color: Match existing theme (blue/purple tones)
     - Tooltip: Show exact date and cost using `formatCost()`
-  - [ ] Handle edge cases:
+  - [x] Handle edge cases:
     - Empty sessions array: Show "No data" message
     - All sessions with null cost: Show "No cost data available" message
     - Single data point: Still render as bar chart
-  - [ ] Make responsive: Use ResponsiveContainer from recharts
-  - [ ] Style container: Dark theme matching existing cards (`bg-gray-900 border border-gray-800`)
+  - [x] Make responsive: Use ResponsiveContainer from recharts
+  - [x] Style container: Dark theme matching existing cards (`bg-gray-900 border border-gray-800`)
 
 ### Verification & Testing
 
@@ -75,11 +75,32 @@ Add two features to the sessions list page (HomePage) to provide better visibili
 4. Test responsive behavior: Resize window, chart should adapt
 
 ✅ **Acceptance Criteria**:
-- [ ] Component renders bar chart with daily cost buckets
-- [ ] Tooltip displays date and formatted cost
-- [ ] Handles empty/null data gracefully
-- [ ] Matches dark theme styling
-- [ ] Chart is responsive
+- [x] Component renders bar chart with daily cost buckets
+- [x] Tooltip displays date and formatted cost
+- [x] Handles empty/null data gracefully
+- [x] Matches dark theme styling
+- [x] Chart is responsive
+
+### Implementation Notes
+
+**Status**: ✅ **IMPLEMENTED** - Ready for manual testing
+
+**Component Location**: `/src/components/CostPlot.tsx`
+
+**Key Features Implemented**:
+- Date bucketing using `useMemo` for performance
+- Sessions grouped by day (YYYY-MM-DD format)
+- Cost aggregation per day (skips null costs)
+- Recharts BarChart with purple bars (`#8B5CF6`)
+- Custom tooltip showing date and formatted cost
+- Edge case handling for empty data and null costs
+- Responsive container with 200px height
+- Dark theme styling matching existing components
+
+**Programmatic Tests Passed**:
+- TypeScript compilation: ✅ No errors
+- Build process: ✅ Successful
+- Type safety: ✅ All types properly defined
 
 ---
 
