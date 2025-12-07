@@ -87,6 +87,7 @@ export interface SessionData {
   conversationCount?: number;
   conversationPreview?: string;
   totalCost: number | null; // Total cost in USD, null if any request has unknown pricing
+  costIncomplete?: boolean; // True if some requests have missing cost data
   costByModel?: Record<string, number>; // Optional: cost breakdown by model
 }
 
@@ -127,6 +128,7 @@ export interface SessionMetadata {
   conversationCount?: number;
   conversationPreview?: string;
   totalCost: number | null; // Total cost in USD, null if any request has unknown pricing
+  costIncomplete?: boolean; // True if some requests have missing cost data
   costByModel?: Record<string, number>; // Optional: cost breakdown by model
 }
 

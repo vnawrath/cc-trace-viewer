@@ -297,14 +297,14 @@ export function calculateRequestCost(
 
 /**
  * Aggregates costs from multiple requests or metrics
- * Returns null if any request has unknown pricing (null cost)
+ * Returns the sum of all available costs, skipping null values
  *
- * This implements an "all-or-nothing" approach: if any single request
- * has unknown model pricing, the total is set to null to indicate
- * incomplete cost information.
+ * This implements a "graceful degradation" approach: if some requests
+ * have missing cost data, we still return the sum of available costs.
+ * Only returns null if ALL requests have null costs.
  *
  * @param items - Array of objects with cost information
- * @returns Total cost in USD, or null if any item has unknown pricing
+ * @returns Object with total cost and hasIncompleteCost flag
  *
  * @example
  * const requests = [
@@ -312,7 +312,8 @@ export function calculateRequestCost(
  *   { cost: 0.002 },
  *   { cost: 0.003 }
  * ];
- * aggregateRequestCosts(requests); // Returns: 0.006
+ * aggregateRequestCosts(requests);
+ * // Returns: { totalCost: 0.006, hasIncompleteCost: false }
  *
  * @example
  * const requestsWithUnknown = [
@@ -320,20 +321,45 @@ export function calculateRequestCost(
  *   { cost: null },
  *   { cost: 0.003 }
  * ];
- * aggregateRequestCosts(requestsWithUnknown); // Returns: null
+ * aggregateRequestCosts(requestsWithUnknown);
+ * // Returns: { totalCost: 0.004, hasIncompleteCost: true }
+ *
+ * @example
+ * const allUnknown = [
+ *   { cost: null },
+ *   { cost: null }
+ * ];
+ * aggregateRequestCosts(allUnknown);
+ * // Returns: { totalCost: null, hasIncompleteCost: false }
  */
-export function aggregateRequestCosts(items: { cost: number | null }[]): number | null {
-  let totalCost: number | null = 0;
+export function aggregateRequestCosts(items: { cost: number | null }[]): {
+  totalCost: number | null;
+  hasIncompleteCost: boolean
+} {
+  let totalCost = 0;
+  let hasNullCost = false;
+  let hasValidCost = false;
 
   for (const item of items) {
     if (item.cost === null) {
-      // If any request has unknown pricing, set total to null
-      return null;
+      hasNullCost = true;
+      // Skip this request instead of failing entirely
+      continue;
     }
+    hasValidCost = true;
     totalCost += item.cost;
   }
 
-  return totalCost;
+  // If ALL costs are null, return null
+  if (!hasValidCost) {
+    return { totalCost: null, hasIncompleteCost: false };
+  }
+
+  // Return the sum (partial or complete) with incompleteness flag
+  return {
+    totalCost,
+    hasIncompleteCost: hasNullCost
+  };
 }
 
 /**

@@ -380,7 +380,8 @@ export class RequestAnalyzerService {
         errorRate: 0,
         streamingCount: 0,
         streamingRate: 0,
-        totalCost: null as number | null
+        totalCost: null as number | null,
+        costIncomplete: false
       };
     }
 
@@ -396,7 +397,7 @@ export class RequestAnalyzerService {
     const streamingRate = streamingCount / totalRequests;
 
     // Calculate total cost
-    const totalCost = aggregateRequestCosts(requests);
+    const costResult = aggregateRequestCosts(requests);
 
     return {
       totalRequests,
@@ -409,7 +410,8 @@ export class RequestAnalyzerService {
       errorRate,
       streamingCount,
       streamingRate,
-      totalCost
+      totalCost: costResult.totalCost,
+      costIncomplete: costResult.hasIncompleteCost
     };
   }
 }

@@ -352,7 +352,7 @@ export class TraceParserService {
 
     // Calculate total cost by analyzing all requests
     const requestMetrics = requestAnalyzerService.analyzeRequests(entries);
-    const totalCost = aggregateRequestCosts(requestMetrics);
+    const costResult = aggregateRequestCosts(requestMetrics);
 
     return {
       sessionId,
@@ -378,7 +378,8 @@ export class TraceParserService {
       hasErrors: metadata.hasErrors,
       conversationCount: metadata.conversationCount,
       conversationPreview: metadata.conversationPreview,
-      totalCost,
+      totalCost: costResult.totalCost,
+      costIncomplete: costResult.hasIncompleteCost
     };
   }
 

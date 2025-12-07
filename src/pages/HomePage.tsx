@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { DocumentHead } from '../components/DocumentHead';
 import { DirectoryPicker, BrowserUnsupportedMessage } from '../components/DirectoryPicker';
 import { SessionTable, SessionTableSkeleton } from '../components/SessionTable';
+import { CostPlot } from '../components/CostPlot';
+import { AggregationSidebar } from '../components/AggregationSidebar';
 import { useSessionData } from '../hooks/useSessionData';
 import { useDirectory } from '../contexts/DirectoryContext';
 import { fileSystemService } from '../services/fileSystem';
@@ -171,11 +173,21 @@ export function HomePage() {
                 </p>
               </div>
             ) : (
-              <div>
-                <h2 className="text-xl font-semibold text-text-primary mb-4">
-                  Sessions ({sessions.length})
-                </h2>
-                <SessionTable sessions={sessions} />
+              <div className="flex gap-6">
+                <div className="flex-1 min-w-0">
+                  <div className="mb-6">
+                    <CostPlot sessions={sessions} />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-text-primary mb-4">
+                      Sessions ({sessions.length})
+                    </h2>
+                    <SessionTable sessions={sessions} />
+                  </div>
+                </div>
+                <div className="w-[300px] flex-shrink-0">
+                  <AggregationSidebar sessions={sessions} />
+                </div>
               </div>
             )}
           </div>

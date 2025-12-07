@@ -231,7 +231,13 @@ function SessionRow({ session }: SessionRowProps) {
       {/* Cost */}
       <td className="px-2 py-2 font-mono text-xs text-right text-success-400 tabular-nums w-24 hidden md:table-cell">
         {metadata.totalCost !== null ? (
-          formatCost(metadata.totalCost)
+          metadata.costIncomplete ? (
+            <span title="Incomplete - some requests missing cost data">
+              {formatCost(metadata.totalCost)}*
+            </span>
+          ) : (
+            formatCost(metadata.totalCost)
+          )
         ) : (
           <span className="text-text-muted" title="Unknown model pricing">
             —

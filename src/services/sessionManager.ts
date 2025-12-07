@@ -164,12 +164,13 @@ export class SessionManagerService {
 
       // Calculate total cost by analyzing all requests
       const requestMetrics = requestAnalyzerService.analyzeRequests(fullEntries);
-      const totalCost = aggregateRequestCosts(requestMetrics);
+      const costResult = aggregateRequestCosts(requestMetrics);
 
       // Return metadata with calculated cost
       return {
         ...metadata,
-        totalCost
+        totalCost: costResult.totalCost,
+        costIncomplete: costResult.hasIncompleteCost
       };
     } catch (error) {
       console.error(`Error extracting metadata from ${fileHandle.name}:`, error);
