@@ -91,14 +91,32 @@ export class RequestAnalyzerService {
         // Cast the reconstructed usage to TokenUsage if it has the expected structure
         const usage = reconstructed.usage as Record<string, unknown>;
         if (typeof usage.input_tokens === 'number' && typeof usage.output_tokens === 'number') {
+          const cacheCreationTokens = typeof usage.cache_creation_input_tokens === 'number' ? usage.cache_creation_input_tokens : 0;
+
+          // Extract granular cache creation breakdown if available
+          let ephemeral5m = 0;
+          let ephemeral1h = 0;
+
+          if (typeof usage.cache_creation === 'object' && usage.cache_creation) {
+            const cacheCreation = usage.cache_creation as Record<string, unknown>;
+            ephemeral5m = typeof cacheCreation.ephemeral_5m_input_tokens === 'number' ? cacheCreation.ephemeral_5m_input_tokens : 0;
+            ephemeral1h = typeof cacheCreation.ephemeral_1h_input_tokens === 'number' ? cacheCreation.ephemeral_1h_input_tokens : 0;
+          }
+
+          // If granular breakdown is missing but we have cache_creation_input_tokens,
+          // assume all cache writes are 5-minute ephemeral (the default for prompt caching)
+          if (cacheCreationTokens > 0 && ephemeral5m === 0 && ephemeral1h === 0) {
+            ephemeral5m = cacheCreationTokens;
+          }
+
           tokenUsage = {
             input_tokens: usage.input_tokens,
             output_tokens: usage.output_tokens,
-            cache_creation_input_tokens: typeof usage.cache_creation_input_tokens === 'number' ? usage.cache_creation_input_tokens : 0,
+            cache_creation_input_tokens: cacheCreationTokens,
             cache_read_input_tokens: typeof usage.cache_read_input_tokens === 'number' ? usage.cache_read_input_tokens : 0,
             cache_creation: {
-              ephemeral_5m_input_tokens: typeof usage.cache_creation === 'object' && usage.cache_creation && typeof (usage.cache_creation as any).ephemeral_5m_input_tokens === 'number' ? (usage.cache_creation as any).ephemeral_5m_input_tokens : 0,
-              ephemeral_1h_input_tokens: typeof usage.cache_creation === 'object' && usage.cache_creation && typeof (usage.cache_creation as any).ephemeral_1h_input_tokens === 'number' ? (usage.cache_creation as any).ephemeral_1h_input_tokens : 0
+              ephemeral_5m_input_tokens: ephemeral5m,
+              ephemeral_1h_input_tokens: ephemeral1h
             },
             service_tier: typeof usage.service_tier === 'string' ? usage.service_tier : 'default'
           } as TokenUsage;
