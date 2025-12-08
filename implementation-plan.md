@@ -85,52 +85,62 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 ---
 
-## Phase 2: Implement Core Tool Definitions
+## Phase 2: Implement Core Tool Definitions ✅
 
 **Goal**: Implement custom tool definitions for Read, Write, Edit, and TodoWrite as specified in goal.md.
 
 ### Tasks
 
-- [ ] Create `src/tools/ReadTool.ts`
+- [x] Create `src/tools/ReadTool.ts`
   - Extract filename from `file_path` parameter for input display
   - Parse result content to count lines of output
   - Format result as: `[X lines]` where X is line count from result content
   - Handle both string and array content formats (see `Read-example.md`)
   - Register tool: `toolRegistry.register('Read', new ReadTool())`
-- [ ] Create `src/tools/WriteTool.ts`
+- [x] Create `src/tools/WriteTool.ts`
   - Extract filename from `file_path` parameter for input display
   - Check result content for success/creation message
   - Format result as: `[X lines]` based on content length written
   - Handle "File created" vs "File updated" cases (see `Write-example.md`)
   - Register tool: `toolRegistry.register('Write', new WriteTool())`
-- [ ] Create `src/tools/EditTool.ts`
+- [x] Create `src/tools/EditTool.ts`
   - Extract filename from `file_path` parameter for input display
   - Parse result content showing file edit confirmation
   - Format result as: `[X lines]` based on the snippet shown in result (see `Edit-example.md`)
   - Register tool: `toolRegistry.register('Edit', new EditTool())`
-- [ ] Create `src/tools/TodoWriteTool.ts`
+- [x] Create `src/tools/TodoWriteTool.ts`
   - Parse `todos` array from input to count total todos
   - Format input as: `X todos` (total count)
   - Parse result content to extract todo status counts
   - Format result as: `[X pending, Y in progress, Z completed]` (see `TodoWrite-example.md`)
   - Register tool: `toolRegistry.register('TodoWrite', new TodoWriteTool())`
-- [ ] Create `src/tools/index.ts` barrel export
+- [x] Create `src/tools/index.ts` barrel export
   - Import and register all tool definitions
   - Ensure registration happens on module load
 
 **Files Created:**
-- `src/tools/ReadTool.ts` (~60 lines)
-- `src/tools/WriteTool.ts` (~60 lines)
-- `src/tools/EditTool.ts` (~60 lines)
-- `src/tools/TodoWriteTool.ts` (~80 lines)
-- `src/tools/index.ts` (~15 lines)
+- `src/tools/ReadTool.ts` (69 lines)
+- `src/tools/WriteTool.ts` (47 lines)
+- `src/tools/EditTool.ts` (52 lines)
+- `src/tools/TodoWriteTool.ts` (61 lines)
+- `src/tools/index.ts` (22 lines)
+- `src/tools/phase2.test.ts` (234 lines - comprehensive test suite)
 
 **Verification:**
-- [ ] Create test file with sample tool calls and results from example files
-- [ ] Verify `Read(file.ts)` displays correctly with result `[250 lines]`
-- [ ] Verify `TodoWrite(8 todos)` displays with result `[3 pending, 1 in progress, 4 completed]`
-- [ ] Verify `Edit(file.tsx)` and `Write(file.ts)` display with line counts
-- [ ] Test edge cases: empty results, malformed data, missing parameters
+- [x] Create test file with sample tool calls and results from example files
+- [x] Verify `Read(file.ts)` displays correctly with result `[250 lines]`
+- [x] Verify `TodoWrite(8 todos)` displays with result `[3 pending, 1 in progress, 4 completed]`
+- [x] Verify `Edit(file.tsx)` and `Write(file.ts)` display with line counts
+- [x] Test edge cases: empty results, malformed data, missing parameters
+
+**Status**: COMPLETED
+- Created all four core tool definitions with proper input/result formatting
+- Implemented line counting for Read, Write, and Edit tools
+- Implemented status breakdown for TodoWrite tool
+- All tools registered successfully in barrel export
+- Comprehensive test suite with 11 tests covering all scenarios (all tests pass)
+- TypeScript compiles without errors
+- Build succeeds with no warnings
 
 ---
 
