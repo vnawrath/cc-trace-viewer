@@ -43,13 +43,13 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 ---
 
-## Phase 1: Create Tool Registry Foundation
+## Phase 1: Create Tool Registry Foundation ✅
 
 **Goal**: Build the core tool registry infrastructure with base tool definition class.
 
 ### Tasks
 
-- [ ] Create `src/utils/toolRegistry.ts` with base tool definition system
+- [x] Create `src/utils/toolRegistry.ts` with base tool definition system
   - Define `ToolDefinition` base class with the following methods:
     - `formatInput(input: Record<string, any>): string` - Format input parameters for display
     - `formatResult(input: Record<string, any>, result: ToolResultBlock): string | null` - Format result summary (returns null for no summary)
@@ -61,19 +61,27 @@ Result summaries are optional - only shown when custom logic is defined for that
     - `get(name: string): ToolDefinition`: Get tool definition (returns base if not found)
     - `formatToolCall(toolUse: ToolUseBlock): string`: Format tool call for display
     - `formatToolResult(toolUse: ToolUseBlock, result: ToolResultBlock): string`: Format tool result for display
-- [ ] Implement smart defaults in base `ToolDefinition` class
+- [x] Implement smart defaults in base `ToolDefinition` class
   - Default `formatInput()`: Extract first available parameter from common keys (`file_path`, `path`, `command`, `pattern`, `url`, `query`, `description`, `prompt`)
   - Default `formatResult()`: Return `null` (no result summary)
   - Default `getDisplayName()`: Return tool name as-is
-- [ ] Create singleton instance: `export const toolRegistry = new ToolRegistry()`
+- [x] Create singleton instance: `export const toolRegistry = new ToolRegistry()`
 
 **Files Created:**
-- `src/utils/toolRegistry.ts` (~150 lines)
+- `src/utils/toolRegistry.ts` (166 lines)
+- `src/utils/toolRegistry.test.ts` (138 lines - inline verification tests)
 
 **Verification:**
-- [ ] Import `toolRegistry` in test file and verify base definition works
-- [ ] Call `toolRegistry.formatToolCall()` with unknown tool name, verify it returns sensible default
-- [ ] Verify TypeScript types are correct and exports work
+- [x] Import `toolRegistry` in test file and verify base definition works
+- [x] Call `toolRegistry.formatToolCall()` with unknown tool name, verify it returns sensible default
+- [x] Verify TypeScript types are correct and exports work
+
+**Status**: COMPLETED
+- Created comprehensive tool registry system with base ToolDefinition class
+- Implemented all required methods with smart defaults
+- Added optional custom renderer support for future phases
+- TypeScript compiles without errors
+- Test file validates all core functionality
 
 ---
 
