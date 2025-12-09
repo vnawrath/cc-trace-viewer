@@ -455,6 +455,186 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 ---
 
+## Phase 8: Implement Custom Renderers for Core Tools
+
+**Goal**: Add custom React renderers for Read, Write, Edit, and TodoWrite tools to provide rich, tool-specific UI in the ToolCallModal.
+
+**Rationale**: While Phases 1-7 implemented text-based formatting for badges and list displays, the modal can benefit from custom visual components that better present tool inputs and results. This phase completes the original goal.md requirement for custom modal renderers.
+
+### Background Research
+
+**Infrastructure (already in place from Phase 6):**
+- `ToolCallModal.tsx` checks for custom renderers via `toolRegistry.hasCustomInputRenderer()` and `toolRegistry.hasCustomResultRenderer()`
+- Falls back to JSON/text display if no custom renderer is defined
+- Custom renderers receive the same styling containers as default renderers
+
+**Existing Utilities:**
+- `src/utils/messageFormatting.ts` provides `stripSystemReminders(text: string)` to clean tool output
+- System reminders follow format: `<system-reminder>...</system-reminder>`
+- Example files show real-world inputs/outputs: `Read-example.md`, `TodoWrite-example.md`, `Edit-example.md`, `Write-example.md`
+
+### Tasks
+
+#### Utility Functions
+
+- [ ] Create `src/utils/contentParsing.ts` with shared parsing utilities:
+  - `parseLineNumberedContent(content: string): Array<{lineNum: number, text: string}>` - Parse content with format `{spaces}{lineNum}→{text}`
+  - `stripSystemReminders(content: string): string` - Re-export from messageFormatting for convenience
+  - `extractSystemReminders(content: string): string[]` - Extract all system-reminder tags into array
+  - `countLines(content: string): number` - Count lines in content (handle both numbered and plain text)
+  - TypeScript types for return values
+
+#### ReadTool Custom Renderers
+
+- [ ] Update `src/tools/ReadTool.ts` to add custom renderers:
+  - **`renderCustomInput(input)`**:
+    - Display file path prominently with file icon
+    - Show optional parameters if present (`offset`, `limit`)
+    - Use cyan color for file path to match existing theme
+    - Layout: Vertical stack with labeled rows
+  - **`renderCustomResult(result)`**:
+    - Strip system reminders using `stripSystemReminders()`
+    - Parse line-numbered content using `parseLineNumberedContent()`
+    - Display in monospace font with line numbers
+    - Show file stats at top (total lines, range displayed if truncated)
+    - Use `text-gray-300` for content, `text-gray-500` for line numbers
+    - Consider adding a subtle border between line numbers and content
+    - Handle both full file reads and partial reads (offset/limit)
+
+#### WriteTool Custom Renderers
+
+- [ ] Update `src/tools/WriteTool.ts` to add custom renderers:
+  - **`renderCustomInput(input)`**:
+    - Display file path with "Create file" or "Overwrite file" indicator
+    - Show file size/line count from `content` parameter
+    - Use green accent for "create" operation
+    - Preview first 3-5 lines of content with "... and X more lines" indicator
+  - **`renderCustomResult(result)`**:
+    - Strip system reminders
+    - Parse success message to extract file path
+    - Display success indicator with checkmark icon
+    - Show operation type (created vs updated) with appropriate color
+    - Keep minimal since result content is brief
+
+#### EditTool Custom Renderers
+
+- [ ] Update `src/tools/EditTool.ts` to add custom renderers:
+  - **`renderCustomInput(input)`**:
+    - Display file path with "Edit file" indicator
+    - Show a diff-style view of the change:
+      - Old content in red background (`bg-red-950/30 border-red-700`)
+      - New content in green background (`bg-green-950/30 border-green-700`)
+      - Use `-` and `+` prefixes for clarity
+    - Truncate if content is very long (>20 lines), with expand option
+    - Handle multiline strings properly
+  - **`renderCustomResult(result)`**:
+    - Strip system reminders
+    - Parse success message and extract snippet
+    - Parse line-numbered snippet using `parseLineNumberedContent()`
+    - Highlight the edited section (around the change)
+    - Show context lines with muted styling
+    - Display edit summary at top (X lines changed)
+
+#### TodoWriteTool Custom Renderers
+
+- [ ] Update `src/tools/TodoWriteTool.ts` to add custom renderers:
+  - **`renderCustomInput(input)`**:
+    - Parse `todos` array from input
+    - Display as visual todo list with status indicators:
+      - **Pending**: Gray circle icon, `text-gray-400`
+      - **In Progress**: Yellow/amber spinner or dot, `text-amber-400`
+      - **Completed**: Green checkmark, `text-green-400`, strikethrough text
+    - Show `content` field for each todo
+    - Add progress bar at top showing completion percentage
+    - Group by status or show in provided order (experiment with both)
+  - **`renderCustomResult(result)`**:
+    - Strip system reminders (which contain JSON state)
+    - Parse result message for status counts
+    - Display as a compact summary with colored badges:
+      - "3 pending" in gray badge
+      - "1 in progress" in amber badge
+      - "4 completed" in green badge
+    - Show progress percentage or bar
+    - Keep minimal since the input view is more interesting
+
+#### Styling and Polish
+
+- [ ] Create shared component styles in custom renderers:
+  - Consistent spacing: `space-y-2` for compact sections, `space-y-4` for major sections
+  - File paths: `text-cyan-400 bg-gray-800/50 px-2 py-1 rounded font-mono text-sm`
+  - Section labels: `text-gray-400 text-xs uppercase tracking-wide`
+  - Success indicators: Use Heroicons checkmark with `text-green-400`
+  - Code blocks: `font-mono text-sm bg-gray-950 border border-gray-700 rounded p-2`
+  - Line numbers: `text-gray-500 text-xs select-none mr-3`
+  - Diff backgrounds: Match ToolCallModal success/error colors
+- [ ] Ensure responsive behavior:
+  - Wrap long file paths
+  - Truncate inline code snippets appropriately
+  - Add horizontal scroll for wide code blocks
+- [ ] Accessibility:
+  - Add `aria-label` to icons
+  - Ensure color is not the only indicator (use icons + text)
+  - Support keyboard navigation within custom components
+
+#### System Reminder Handling
+
+- [ ] Implement consistent system-reminder handling across all tools:
+  - Use `stripSystemReminders()` to remove from displayed content
+  - Never show system reminders in custom renderers (they're internal Claude context)
+  - If debugging is needed, optionally add a dev-only "Show raw output" toggle
+  - Test with real example files that contain system reminders
+
+### Files Modified
+
+- `src/tools/ReadTool.ts` - Add ~80 lines for custom renderers
+- `src/tools/WriteTool.ts` - Add ~60 lines for custom renderers
+- `src/tools/EditTool.ts` - Add ~100 lines for custom renderers
+- `src/tools/TodoWriteTool.ts` - Add ~90 lines for custom renderers
+
+### Files Created
+
+- `src/utils/contentParsing.ts` (~100 lines - shared parsing utilities)
+- `src/tools/phase8.test.tsx` (~400 lines - React component rendering tests)
+
+### Verification
+
+- [ ] Unit tests for parsing utilities:
+  - `parseLineNumberedContent()` with various formats
+  - `stripSystemReminders()` with nested/escaped tags
+  - `extractSystemReminders()` with multiple reminders
+  - Edge cases: empty content, malformed line numbers
+- [ ] Component rendering tests:
+  - Each tool's custom input renderer with example data
+  - Each tool's custom result renderer with example data
+  - Verify system reminders are stripped from output
+  - Test with real data from `*-example.md` files
+- [ ] Visual testing in browser:
+  - Open ToolCallModal for each tool type
+  - Verify custom renderers display correctly
+  - Check that copy/download buttons still work
+  - Test with long content (truncation, scrolling)
+  - Verify fallback to JSON/text for tools without custom renderers
+- [ ] Integration testing:
+  - Load real trace files with Read, Write, Edit, TodoWrite tools
+  - Click through multiple tool modals in sequence
+  - Verify consistent styling across all custom renderers
+  - Test responsive behavior with different viewport sizes
+- [ ] Accessibility audit:
+  - Screen reader testing on custom components
+  - Keyboard navigation through modals
+  - Color contrast checks
+  - Icon alt text verification
+- [ ] TypeScript and build:
+  - `npx tsc --noEmit` passes
+  - `npm run build` succeeds with no warnings
+  - No console errors in browser
+
+**Status**: NOT STARTED
+- Infrastructure ready from Phase 6
+- Waiting for implementation
+
+---
+
 ## Summary
 
 This implementation creates a clean, extensible tool registry system that unifies tool display across the entire application. The phased approach ensures:
@@ -462,7 +642,8 @@ This implementation creates a clean, extensible tool registry system that unifie
 1. **Phase 1-2**: Foundation and core tools (Read, Write, Edit, TodoWrite)
 2. **Phase 3**: Complete tool coverage following goal.md spec
 3. **Phase 4-5**: Integration into request list and badges
-4. **Phase 6**: Advanced modal customization
+4. **Phase 6**: Advanced modal customization infrastructure
 5. **Phase 7**: Polish and testing
+6. **Phase 8**: Custom modal renderers for core tools
 
-Each phase is independently testable and delivers incremental value. The total implementation adds ~1,500 lines of new code and modifies ~200 lines of existing code.
+Each phase is independently testable and delivers incremental value. The total implementation adds ~2,000 lines of new code and modifies ~250 lines of existing code.
