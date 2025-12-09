@@ -144,68 +144,81 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 ---
 
-## Phase 3: Implement Additional Tool Definitions
+## Phase 3: Implement Additional Tool Definitions ✅
 
 **Goal**: Add tool definitions for remaining tools following goal.md specification.
 
 ### Tasks
 
-- [ ] Create `src/tools/BashTool.ts`
+- [x] Create `src/tools/BashTool.ts`
   - Extract `command` parameter for input display
   - Truncate long commands to 40 characters
   - No result summary (return null)
   - Register tool: `toolRegistry.register('Bash', new BashTool())`
-- [ ] Create `src/tools/GrepTool.ts`
+- [x] Create `src/tools/GrepTool.ts`
   - Extract `pattern` parameter for input display
   - Count lines in result output
   - Format result as: `[X lines]`
   - Register tool: `toolRegistry.register('Grep', new GrepTool())`
-- [ ] Create `src/tools/GlobTool.ts`
+- [x] Create `src/tools/GlobTool.ts`
   - Extract `pattern` parameter for input display
   - Count lines in result output (matching files)
   - Format result as: `[X lines]`
   - Register tool: `toolRegistry.register('Glob', new GlobTool())`
-- [ ] Create `src/tools/TaskTool.ts`
+- [x] Create `src/tools/TaskTool.ts`
   - Extract `description` or `prompt` parameter for input display
   - Truncate to 40 characters
   - No result summary (return null)
   - Register tool: `toolRegistry.register('Task', new TaskTool())`
-- [ ] Create `src/tools/WebFetchTool.ts`
+- [x] Create `src/tools/WebFetchTool.ts`
   - Extract `url` parameter for input display
   - Truncate to 40 characters
   - No result summary (return null)
   - Register tool: `toolRegistry.register('WebFetch', new WebFetchTool())`
-- [ ] Create `src/tools/WebSearchTool.ts`
+- [x] Create `src/tools/WebSearchTool.ts`
   - Extract `query` parameter for input display
   - Truncate to 30 characters
   - No result summary (return null)
   - Register tool: `toolRegistry.register('WebSearch', new WebSearchTool())`
-- [ ] Create tool definitions for remaining tools from goal.md:
+- [x] Create tool definitions for remaining tools from goal.md:
   - `ExitPlanModeTool.ts`: Show truncated plan (5 words), no result
   - `NotebookEditTool.ts`: Show filename only, no result
   - `BashOutputTool.ts`: Show bash_id, no result
   - `KillShellTool.ts`: Show shell_id, no result
   - `SlashCommandTool.ts`: Show command, no result
-- [ ] Update `src/tools/index.ts` to register all new tools
+- [x] Update `src/tools/index.ts` to register all new tools
 
 **Files Created:**
-- `src/tools/BashTool.ts` (~40 lines)
-- `src/tools/GrepTool.ts` (~50 lines)
-- `src/tools/GlobTool.ts` (~50 lines)
-- `src/tools/TaskTool.ts` (~40 lines)
-- `src/tools/WebFetchTool.ts` (~40 lines)
-- `src/tools/WebSearchTool.ts` (~40 lines)
-- `src/tools/ExitPlanModeTool.ts` (~40 lines)
-- `src/tools/NotebookEditTool.ts` (~40 lines)
-- `src/tools/BashOutputTool.ts` (~30 lines)
-- `src/tools/KillShellTool.ts` (~30 lines)
-- `src/tools/SlashCommandTool.ts` (~35 lines)
+- `src/tools/BashTool.ts` (34 lines)
+- `src/tools/GrepTool.ts` (57 lines)
+- `src/tools/GlobTool.ts` (57 lines)
+- `src/tools/TaskTool.ts` (34 lines)
+- `src/tools/WebFetchTool.ts` (34 lines)
+- `src/tools/WebSearchTool.ts` (34 lines)
+- `src/tools/ExitPlanModeTool.ts` (38 lines)
+- `src/tools/NotebookEditTool.ts` (29 lines)
+- `src/tools/BashOutputTool.ts` (26 lines)
+- `src/tools/KillShellTool.ts` (26 lines)
+- `src/tools/SlashCommandTool.ts` (26 lines)
+- `src/tools/phase3.test.ts` (301 lines - comprehensive test suite with 30 tests)
+- Updated `src/tools/index.ts` (57 lines)
 
 **Verification:**
-- [ ] Test all tool definitions with sample data
-- [ ] Verify tools with result summaries show correct format
-- [ ] Verify tools without result summaries show nothing after tool call
-- [ ] Check truncation works correctly for long parameters
+- [x] Test all tool definitions with sample data (30 tests, all passing)
+- [x] Verify tools with result summaries show correct format (Grep and Glob)
+- [x] Verify tools without result summaries show nothing after tool call (Bash, Task, WebFetch, WebSearch, ExitPlanMode, NotebookEdit, BashOutput, KillShell, SlashCommand)
+- [x] Check truncation works correctly for long parameters (Bash, Task, WebFetch, WebSearch, ExitPlanMode)
+- [x] TypeScript compiles without errors
+- [x] Build succeeds with no warnings
+
+**Status**: COMPLETED
+- Created all 11 additional tool definitions with proper input formatting and result summaries
+- Implemented line counting for Grep and Glob tools
+- Implemented truncation for Bash (40 chars), Task (40 chars), WebFetch (40 chars), WebSearch (30 chars), and ExitPlanMode (5 words)
+- All tools registered successfully in barrel export
+- Comprehensive test suite with 30 tests covering all scenarios (all tests pass)
+- TypeScript compiles without errors
+- Build succeeds with no warnings
 
 ---
 
