@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { ToolUseBlock, ToolResultBlock } from '../services/conversationProcessor';
+import { toolRegistry } from '../tools';
 
 interface ToolCallModalProps {
   toolUse: ToolUseBlock | null;
@@ -125,7 +126,9 @@ export const ToolCallModal: React.FC<ToolCallModalProps> = ({ toolUse, toolResul
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
           <div>
-            <h2 className="text-xl font-semibold text-cyan-400">{toolUse.name}</h2>
+            <h2 className="text-xl font-semibold text-cyan-400">
+              {toolRegistry.get(toolUse.name).getDisplayName(toolUse.name)}
+            </h2>
             <p className="text-sm text-gray-400 mt-1">Tool ID: {toolUse.id}</p>
             <p className="text-xs text-gray-500 mt-1">Press ESC to close • Tab to switch sections</p>
           </div>
@@ -183,11 +186,19 @@ export const ToolCallModal: React.FC<ToolCallModalProps> = ({ toolUse, toolResul
                 )}
               </div>
               {inputExpanded && (
-                <pre className="bg-gray-950 border border-gray-700 rounded-md p-4 overflow-x-auto">
-                  <code className="text-sm text-gray-300">
-                    {JSON.stringify(toolUse.input, null, 2)}
-                  </code>
-                </pre>
+                <>
+                  {toolRegistry.hasCustomInputRenderer(toolUse.name) ? (
+                    <div className="bg-gray-950 border border-gray-700 rounded-md p-4 overflow-x-auto">
+                      {toolRegistry.renderCustomInput(toolUse.name, toolUse.input)}
+                    </div>
+                  ) : (
+                    <pre className="bg-gray-950 border border-gray-700 rounded-md p-4 overflow-x-auto">
+                      <code className="text-sm text-gray-300">
+                        {JSON.stringify(toolUse.input, null, 2)}
+                      </code>
+                    </pre>
+                  )}
+                </>
               )}
             </div>
 
@@ -249,15 +260,27 @@ export const ToolCallModal: React.FC<ToolCallModalProps> = ({ toolUse, toolResul
                   )}
                 </div>
                 {resultExpanded && (
-                  <pre className={`border rounded-md p-4 overflow-x-auto ${
-                    toolResult.is_error
-                      ? 'bg-red-950/30 border-red-700'
-                      : 'bg-green-950/30 border-green-700'
-                  }`}>
-                    <code className="text-sm text-gray-300 whitespace-pre-wrap break-words">
-                      {formatResultContent()}
-                    </code>
-                  </pre>
+                  <>
+                    {toolRegistry.hasCustomResultRenderer(toolUse.name) ? (
+                      <div className={`border rounded-md p-4 overflow-x-auto ${
+                        toolResult.is_error
+                          ? 'bg-red-950/30 border-red-700'
+                          : 'bg-green-950/30 border-green-700'
+                      }`}>
+                        {toolRegistry.renderCustomResult(toolUse.name, toolResult)}
+                      </div>
+                    ) : (
+                      <pre className={`border rounded-md p-4 overflow-x-auto ${
+                        toolResult.is_error
+                          ? 'bg-red-950/30 border-red-700'
+                          : 'bg-green-950/30 border-green-700'
+                      }`}>
+                        <code className="text-sm text-gray-300 whitespace-pre-wrap break-words">
+                          {formatResultContent()}
+                        </code>
+                      </pre>
+                    )}
+                  </>
                 )}
               </div>
             )}
