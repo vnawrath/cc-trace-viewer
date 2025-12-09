@@ -2,29 +2,13 @@
  * Utilities for extracting and formatting message content from Claude API messages
  */
 
-// Types for message content
-export interface TextBlock {
-  type: 'text';
-  text: string;
-}
+import { toolRegistry } from '../tools/index';
+import type { ToolUseBlock, ToolResultBlock, TextBlock } from '../services/conversationProcessor';
 
+// Additional types for message content not in conversationProcessor
 export interface ThinkingBlock {
   type: 'thinking';
   thinking: string;
-}
-
-export interface ToolUseBlock {
-  type: 'tool_use';
-  id: string;
-  name: string;
-  input: Record<string, any>;
-}
-
-export interface ToolResultBlock {
-  type: 'tool_result';
-  tool_use_id: string;
-  content: string | ContentBlock[];
-  is_error?: boolean;
 }
 
 export type ContentBlock = TextBlock | ThinkingBlock | ToolUseBlock | ToolResultBlock | {type: string; [key: string]: unknown};
@@ -35,6 +19,9 @@ export interface Message {
   role: "user" | "assistant";
   content: MessageContent;
 }
+
+// Re-export types from conversationProcessor for convenience
+export type { TextBlock, ToolUseBlock, ToolResultBlock } from '../services/conversationProcessor';
 
 /**
  * Extract text content from a user or assistant message
@@ -183,7 +170,7 @@ export function extractToolResultContent(content: MessageContent): string {
       // Extract text blocks from array content
       const textContent = block.content
         .filter(item => 'type' in item && item.type === 'text' && 'text' in item)
-        .map(item => (item as TextBlock).text)
+        .map(item => (item as any).text)
         .join(' ');
       if (textContent) {
         texts.push(textContent);
@@ -211,68 +198,18 @@ export function getToolResults(content: MessageContent): ToolResultBlock[] {
 
 /**
  * Format a tool call for display
- * Formats based on tool name and extracts key parameters
+ * Uses the tool registry for consistent formatting across the application
  */
 export function formatToolCall(block: ToolUseBlock): string {
-  const { name, input } = block;
+  return toolRegistry.formatToolCall(block);
+}
 
-  // Helper to truncate long strings
-  const truncateParam = (str: string, maxLen: number = 50): string => {
-    if (str.length <= maxLen) return str;
-    return str.slice(0, maxLen - 3) + '...';
-  };
-
-  // Helper to get just the filename from a path
-  const getFilename = (path: string): string => {
-    const parts = path.split('/');
-    return parts[parts.length - 1] || path;
-  };
-
-  // Format based on tool type
-  switch (name) {
-    case 'Read':
-      return input.file_path ? `Read(${getFilename(input.file_path)})` : 'Read';
-
-    case 'Write':
-      return input.file_path ? `Write(${getFilename(input.file_path)})` : 'Write';
-
-    case 'Edit':
-      return input.file_path ? `Edit(${getFilename(input.file_path)})` : 'Edit';
-
-    case 'Bash':
-      return input.command ? `Bash(${truncateParam(input.command, 40)})` : 'Bash';
-
-    case 'Grep':
-      return input.pattern && input.path
-        ? `Grep(${truncateParam(input.pattern, 20)} in ${getFilename(input.path)})`
-        : input.pattern
-        ? `Grep(${truncateParam(input.pattern, 30)})`
-        : 'Grep';
-
-    case 'Glob':
-      return input.pattern ? `Glob(${truncateParam(input.pattern, 30)})` : 'Glob';
-
-    case 'Task':
-      return input.description
-        ? `Task(${truncateParam(input.description, 40)})`
-        : input.prompt
-        ? `Task(${truncateParam(input.prompt, 40)})`
-        : 'Task';
-
-    case 'WebFetch':
-      return input.url ? `WebFetch(${truncateParam(input.url, 40)})` : 'WebFetch';
-
-    case 'WebSearch':
-      return input.query ? `WebSearch(${truncateParam(input.query, 40)})` : 'WebSearch';
-
-    default:
-      // For unknown tools, try to use the first key parameter
-      const firstKey = Object.keys(input)[0];
-      if (firstKey && typeof input[firstKey] === 'string') {
-        return `${name}(${truncateParam(input[firstKey], 30)})`;
-      }
-      return name;
-  }
+/**
+ * Format a tool call with its result for display
+ * Format: ToolName(input, [result_summary])
+ */
+export function formatToolWithResult(toolUse: ToolUseBlock, result: ToolResultBlock): string {
+  return toolRegistry.formatToolResult(toolUse, result);
 }
 
 /**

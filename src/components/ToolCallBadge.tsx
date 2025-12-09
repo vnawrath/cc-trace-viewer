@@ -1,36 +1,32 @@
 import React from 'react';
-import type { ToolUseBlock } from '../services/conversationProcessor';
+import type { ToolUseBlock, ToolResultBlock } from '../services/conversationProcessor';
+import { toolRegistry } from '../tools';
 
 interface ToolCallBadgeProps {
   toolUse: ToolUseBlock;
   hasResult: boolean;
   onClick: () => void;
+  toolResult?: ToolResultBlock;
 }
 
-export const ToolCallBadge: React.FC<ToolCallBadgeProps> = ({ toolUse, hasResult, onClick }) => {
+export const ToolCallBadge: React.FC<ToolCallBadgeProps> = ({ toolUse, hasResult, onClick, toolResult }) => {
   const badgeClasses = hasResult
     ? "inline-flex items-center gap-1.5 px-2 py-1 mx-1 text-xs font-medium rounded-md bg-green-500/10 text-green-400 border border-green-500/30 hover:bg-green-500/20 hover:border-green-500/50 transition-colors cursor-pointer"
     : "inline-flex items-center gap-1.5 px-2 py-1 mx-1 text-xs font-medium rounded-md bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-500/20 hover:border-cyan-500/50 transition-colors cursor-pointer";
 
-  // Generate informative tooltip with key parameter
-  const getKeyParameter = (): string => {
-    // Common parameter names by tool type
-    const keyParams = ['file_path', 'path', 'command', 'pattern', 'url', 'query'];
-    for (const param of keyParams) {
-      if (toolUse.input[param]) {
-        const value = String(toolUse.input[param]);
-        // Truncate long values
-        return value.length > 50 ? `${value.substring(0, 50)}...` : value;
-      }
-    }
-    return '';
-  };
+  // Format badge text using tool registry
+  const badgeText = toolResult
+    ? toolRegistry.formatToolResult(toolUse, toolResult)
+    : toolRegistry.formatToolCall(toolUse);
 
-  const keyParam = getKeyParameter();
+  // Truncate if too long for badge display (keep compact)
+  const maxLength = 60;
+  const displayText = badgeText.length > maxLength
+    ? `${badgeText.substring(0, maxLength)}...`
+    : badgeText;
+
   const status = hasResult ? 'completed' : 'pending';
-  const title = keyParam
-    ? `${toolUse.name} (${status})\n${keyParam}`
-    : `${toolUse.name} (${status})`;
+  const title = `${badgeText} (${status})`;
 
   return (
     <button
@@ -78,7 +74,7 @@ export const ToolCallBadge: React.FC<ToolCallBadgeProps> = ({ toolUse, hasResult
           />
         </svg>
       )}
-      <span>{toolUse.name}</span>
+      <span>{displayText}</span>
     </button>
   );
 };

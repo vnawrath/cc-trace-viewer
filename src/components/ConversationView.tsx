@@ -92,6 +92,7 @@ export function ConversationView({ entry }: ConversationViewProps) {
             toolUse={block}
             hasResult={hasResult}
             onClick={() => setSelectedTool({ toolUse: block, toolResult })}
+            toolResult={toolResult}
           />
         );
       }

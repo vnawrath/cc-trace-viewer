@@ -12,8 +12,11 @@ import {
   hasToolResults,
   extractToolResultContent,
   getFormattedToolCalls,
+  formatToolWithResult,
+  getToolResults,
   type Message,
-  type ContentBlock
+  type ContentBlock,
+  type ToolUseBlock
 } from '../utils/messageFormatting';
 
 interface MessagePreviewProps {
@@ -102,15 +105,52 @@ export function UserMessagePreview({
 
   // If no text content, check for tool results
   if (!textContent && hasToolResults(lastUserMsg.content)) {
-    const toolResultContent = extractToolResultContent(lastUserMsg.content);
-    if (toolResultContent) {
-      const truncatedContent = truncate(toolResultContent, maxLength);
-      return (
-        <div className={`truncate ${className}`} title={toolResultContent}>
-          <span className="text-gray-500 text-[10px]">[Tool result] </span>
-          <span>{truncatedContent}</span>
-        </div>
-      );
+    const toolResults = getToolResults(lastUserMsg.content);
+
+    if (toolResults.length > 0) {
+      // Build a map of tool_use_id to ToolUseBlock from previous assistant messages
+      const toolUseMap = new Map<string, ToolUseBlock>();
+      for (const msg of messages) {
+        if (msg.role === 'assistant' && Array.isArray(msg.content)) {
+          for (const block of msg.content) {
+            if (block.type === 'tool_use') {
+              const toolUse = block as ToolUseBlock;
+              toolUseMap.set(toolUse.id, toolUse);
+            }
+          }
+        }
+      }
+
+      // Format each tool result with its corresponding tool call
+      const formattedResults: string[] = [];
+      for (const toolResult of toolResults) {
+        const toolUse = toolUseMap.get(toolResult.tool_use_id);
+        if (toolUse) {
+          formattedResults.push(formatToolWithResult(toolUse, toolResult));
+        }
+      }
+
+      if (formattedResults.length > 0) {
+        const resultsText = formattedResults.join(', ');
+        const truncatedResults = truncate(resultsText, maxLength);
+        return (
+          <div className={`truncate ${className}`} title={resultsText}>
+            <span className="text-amber-400">{truncatedResults}</span>
+          </div>
+        );
+      }
+
+      // Fallback to old behavior if we couldn't format properly
+      const toolResultContent = extractToolResultContent(lastUserMsg.content);
+      if (toolResultContent) {
+        const truncatedContent = truncate(toolResultContent, maxLength);
+        return (
+          <div className={`truncate ${className}`} title={toolResultContent}>
+            <span className="text-gray-500 text-[10px]">[Tool result] </span>
+            <span>{truncatedContent}</span>
+          </div>
+        );
+      }
     }
   }
 
