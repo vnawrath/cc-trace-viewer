@@ -7,11 +7,13 @@ This plan unifies tool call and tool result display across the CC Trace Viewer a
 ### Current State
 
 **Display Locations:**
+
 - **Request List** (`src/components/MessagePreview.tsx`): Shows tool calls with amber highlighting, tool results with `[Tool Result]` prefix
 - **Request Details** (`src/components/ConversationView.tsx` + `src/components/ToolCallBadge.tsx`): Shows clickable badge chips for each tool
 - **Tool Modal** (`src/components/ToolCallModal.tsx`): Shows detailed input/output for individual tools
 
 **Current Implementation:**
+
 - `src/utils/messageFormatting.ts:216-276`: `formatToolCall()` function with switch statement for tool-specific formatting
 - Tool result display is generic, doesn't show tool-specific information
 - No consistent way to add custom display logic per tool
@@ -29,6 +31,7 @@ This plan unifies tool call and tool result display across the CC Trace Viewer a
 **Tool Results:** `ToolName(key_input_param, [result_summary])`
 
 Examples:
+
 - `Read(file.ts)` → `Read(file.ts, [250 lines])`
 - `TodoWrite(8 todos)` → `TodoWrite(8 todos, [3 pending, 1 in progress, 4 completed])`
 - `Bash(npm install)` → `Bash(npm install)` (no result summary)
@@ -68,15 +71,18 @@ Result summaries are optional - only shown when custom logic is defined for that
 - [x] Create singleton instance: `export const toolRegistry = new ToolRegistry()`
 
 **Files Created:**
+
 - `src/utils/toolRegistry.ts` (166 lines)
 - `src/utils/toolRegistry.test.ts` (138 lines - inline verification tests)
 
 **Verification:**
+
 - [x] Import `toolRegistry` in test file and verify base definition works
 - [x] Call `toolRegistry.formatToolCall()` with unknown tool name, verify it returns sensible default
 - [x] Verify TypeScript types are correct and exports work
 
 **Status**: COMPLETED
+
 - Created comprehensive tool registry system with base ToolDefinition class
 - Implemented all required methods with smart defaults
 - Added optional custom renderer support for future phases
@@ -119,6 +125,7 @@ Result summaries are optional - only shown when custom logic is defined for that
   - Ensure registration happens on module load
 
 **Files Created:**
+
 - `src/tools/ReadTool.ts` (69 lines)
 - `src/tools/WriteTool.ts` (47 lines)
 - `src/tools/EditTool.ts` (52 lines)
@@ -127,6 +134,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 - `src/tools/phase2.test.ts` (234 lines - comprehensive test suite)
 
 **Verification:**
+
 - [x] Create test file with sample tool calls and results from example files
 - [x] Verify `Read(file.ts)` displays correctly with result `[250 lines]`
 - [x] Verify `TodoWrite(8 todos)` displays with result `[3 pending, 1 in progress, 4 completed]`
@@ -134,6 +142,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 - [x] Test edge cases: empty results, malformed data, missing parameters
 
 **Status**: COMPLETED
+
 - Created all four core tool definitions with proper input/result formatting
 - Implemented line counting for Read, Write, and Edit tools
 - Implemented status breakdown for TodoWrite tool
@@ -189,6 +198,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 - [x] Update `src/tools/index.ts` to register all new tools
 
 **Files Created:**
+
 - `src/tools/BashTool.ts` (34 lines)
 - `src/tools/GrepTool.ts` (57 lines)
 - `src/tools/GlobTool.ts` (57 lines)
@@ -204,6 +214,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 - Updated `src/tools/index.ts` (57 lines)
 
 **Verification:**
+
 - [x] Test all tool definitions with sample data (30 tests, all passing)
 - [x] Verify tools with result summaries show correct format (Grep and Glob)
 - [x] Verify tools without result summaries show nothing after tool call (Bash, Task, WebFetch, WebSearch, ExitPlanMode, NotebookEdit, BashOutput, KillShell, SlashCommand)
@@ -212,6 +223,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 - [x] Build succeeds with no warnings
 
 **Status**: COMPLETED
+
 - Created all 11 additional tool definitions with proper input formatting and result summaries
 - Implemented line counting for Grep and Glob tools
 - Implemented truncation for Bash (40 chars), Task (40 chars), WebFetch (40 chars), WebSearch (30 chars), and ExitPlanMode (5 words)
@@ -252,13 +264,16 @@ Result summaries are optional - only shown when custom logic is defined for that
   - Truncate long formatted strings appropriately
 
 **Files Modified:**
+
 - `src/utils/messageFormatting.ts` (replaced ~65 lines with ~15 lines, removed switch statement)
 - `src/components/MessagePreview.tsx` (updated ~40 lines with tool result matching logic)
 
 **Files Created:**
+
 - `src/utils/phase4.test.ts` (145 lines - integration tests)
 
 **Verification:**
+
 - [x] All programmatic tests pass (6/6 tests)
   - Read tool call formatting: ✓
   - Bash tool call formatting: ✓
@@ -270,6 +285,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 - [x] Build succeeds with no warnings
 
 **Status**: COMPLETED
+
 - Successfully integrated tool registry into request list display
 - Tool calls now formatted using registry (removed ~60 lines of switch statement code)
 - Tool results now show proper format: `ToolName(input, [result_summary])`
@@ -301,13 +317,16 @@ Result summaries are optional - only shown when custom logic is defined for that
   - Update line ~94 to include result in badge props
 
 **Files Modified:**
+
 - `src/components/ToolCallBadge.tsx` (updated 30 lines - replaced manual parameter extraction with tool registry)
 - `src/components/ConversationView.tsx` (updated 1 line - added toolResult prop)
 
 **Files Created:**
+
 - `src/utils/phase5.test.ts` (223 lines - 11 integration tests)
 
 **Verification:**
+
 - [x] All programmatic tests pass (11/11 tests)
   - Read tool call and result formatting: ✓
   - TodoWrite tool call and result formatting: ✓
@@ -320,6 +339,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 - [x] Build succeeds with no warnings
 
 **Status**: COMPLETED
+
 - Successfully integrated tool registry into badge display
 - Badges now show formatted input for tool calls: `ToolName(input)`
 - Badges show formatted input + result summary for completed tools: `ToolName(input, [result])`
@@ -361,12 +381,15 @@ Result summaries are optional - only shown when custom logic is defined for that
   - Maintained keyboard shortcuts (ESC, Tab)
 
 **Files Modified:**
+
 - `src/components/ToolCallModal.tsx` (updated 30 lines - added custom renderer support)
 
 **Files Created:**
+
 - `src/utils/phase6.test.ts` (171 lines - 12 comprehensive tests)
 
 **Verification:**
+
 - [x] All programmatic tests pass (12/12 tests)
   - Custom renderer detection: ✓
   - Custom input/result rendering: ✓
@@ -377,6 +400,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 - [x] Build succeeds with no warnings
 
 **Status**: COMPLETED
+
 - Successfully integrated tool registry custom renderer support into ToolCallModal
 - Modal now checks for custom renderers before falling back to JSON/text display
 - Modal header uses getDisplayName() from registry
@@ -414,14 +438,17 @@ Result summaries are optional - only shown when custom logic is defined for that
   - Includes architecture overview, step-by-step guide, and best practices
 
 **Files Created:**
+
 - `src/tests/toolDisplay.test.ts` (406 lines - comprehensive integration tests)
 - `docs/tool-registry-guide.md` (342 lines - developer guide)
 
 **Files Modified:**
+
 - `src/utils/messageFormatting.ts` (already cleaned in Phase 4)
 - `src/utils/toolRegistry.ts` (JSDoc already present)
 
 **Verification:**
+
 - [x] Run all unit tests: All tests pass
   - `src/utils/toolRegistry.test.ts`: ✓ (10/10 tests)
   - `src/tools/phase2.test.ts`: ✓ (11/11 tests)
@@ -445,6 +472,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 - [ ] Cross-browser testing: Verify in Chrome, Firefox, Safari
 
 **Status**: COMPLETED (Programmatic Testing)
+
 - All deprecated code removed (completed in Phase 4)
 - Comprehensive unit and integration tests created and passing (80+ tests total)
 - Developer documentation created with examples and best practices
@@ -464,11 +492,13 @@ Result summaries are optional - only shown when custom logic is defined for that
 ### Background Research
 
 **Infrastructure (already in place from Phase 6):**
+
 - `ToolCallModal.tsx` checks for custom renderers via `toolRegistry.hasCustomInputRenderer()` and `toolRegistry.hasCustomResultRenderer()`
 - Falls back to JSON/text display if no custom renderer is defined
 - Custom renderers receive the same styling containers as default renderers
 
 **Existing Utilities:**
+
 - `src/utils/messageFormatting.ts` provides `stripSystemReminders(text: string)` to clean tool output
 - System reminders follow format: `<system-reminder>...</system-reminder>`
 - Example files show real-world inputs/outputs: `Read-example.md`, `TodoWrite-example.md`, `Edit-example.md`, `Write-example.md`
@@ -477,7 +507,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 #### Utility Functions
 
-- [ ] Create `src/utils/contentParsing.ts` with shared parsing utilities:
+- [x] Create `src/utils/contentParsing.ts` with shared parsing utilities:
   - `parseLineNumberedContent(content: string): Array<{lineNum: number, text: string}>` - Parse content with format `{spaces}{lineNum}→{text}`
   - `stripSystemReminders(content: string): string` - Re-export from messageFormatting for convenience
   - `extractSystemReminders(content: string): string[]` - Extract all system-reminder tags into array
@@ -486,7 +516,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 #### ReadTool Custom Renderers
 
-- [ ] Update `src/tools/ReadTool.ts` to add custom renderers:
+- [x] Update `src/tools/ReadTool.ts` to add custom renderers:
   - **`renderCustomInput(input)`**:
     - Display file path prominently with file icon
     - Show optional parameters if present (`offset`, `limit`)
@@ -503,7 +533,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 #### WriteTool Custom Renderers
 
-- [ ] Update `src/tools/WriteTool.ts` to add custom renderers:
+- [x] Update `src/tools/WriteTool.ts` to add custom renderers:
   - **`renderCustomInput(input)`**:
     - Display file path with "Create file" or "Overwrite file" indicator
     - Show file size/line count from `content` parameter
@@ -518,7 +548,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 #### EditTool Custom Renderers
 
-- [ ] Update `src/tools/EditTool.ts` to add custom renderers:
+- [x] Update `src/tools/EditTool.ts` to add custom renderers:
   - **`renderCustomInput(input)`**:
     - Display file path with "Edit file" indicator
     - Show a diff-style view of the change:
@@ -537,7 +567,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 #### TodoWriteTool Custom Renderers
 
-- [ ] Update `src/tools/TodoWriteTool.ts` to add custom renderers:
+- [x] Update `src/tools/TodoWriteTool.ts` to add custom renderers:
   - **`renderCustomInput(input)`**:
     - Parse `todos` array from input
     - Display as visual todo list with status indicators:
@@ -559,7 +589,7 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 #### Styling and Polish
 
-- [ ] Create shared component styles in custom renderers:
+- [x] Create shared component styles in custom renderers:
   - Consistent spacing: `space-y-2` for compact sections, `space-y-4` for major sections
   - File paths: `text-cyan-400 bg-gray-800/50 px-2 py-1 rounded font-mono text-sm`
   - Section labels: `text-gray-400 text-xs uppercase tracking-wide`
@@ -567,18 +597,18 @@ Result summaries are optional - only shown when custom logic is defined for that
   - Code blocks: `font-mono text-sm bg-gray-950 border border-gray-700 rounded p-2`
   - Line numbers: `text-gray-500 text-xs select-none mr-3`
   - Diff backgrounds: Match ToolCallModal success/error colors
-- [ ] Ensure responsive behavior:
+- [x] Ensure responsive behavior:
   - Wrap long file paths
   - Truncate inline code snippets appropriately
   - Add horizontal scroll for wide code blocks
-- [ ] Accessibility:
+- [x] Accessibility:
   - Add `aria-label` to icons
   - Ensure color is not the only indicator (use icons + text)
   - Support keyboard navigation within custom components
 
 #### System Reminder Handling
 
-- [ ] Implement consistent system-reminder handling across all tools:
+- [x] Implement consistent system-reminder handling across all tools:
   - Use `stripSystemReminders()` to remove from displayed content
   - Never show system reminders in custom renderers (they're internal Claude context)
   - If debugging is needed, optionally add a dev-only "Show raw output" toggle
@@ -598,12 +628,12 @@ Result summaries are optional - only shown when custom logic is defined for that
 
 ### Verification
 
-- [ ] Unit tests for parsing utilities:
+- [x] Unit tests for parsing utilities:
   - `parseLineNumberedContent()` with various formats
   - `stripSystemReminders()` with nested/escaped tags
   - `extractSystemReminders()` with multiple reminders
   - Edge cases: empty content, malformed line numbers
-- [ ] Component rendering tests:
+- [x] Component rendering tests:
   - Each tool's custom input renderer with example data
   - Each tool's custom result renderer with example data
   - Verify system reminders are stripped from output
@@ -624,14 +654,19 @@ Result summaries are optional - only shown when custom logic is defined for that
   - Keyboard navigation through modals
   - Color contrast checks
   - Icon alt text verification
-- [ ] TypeScript and build:
-  - `npx tsc --noEmit` passes
-  - `npm run build` succeeds with no warnings
-  - No console errors in browser
+- [x] TypeScript and build:
+  - `npx tsc --noEmit` passes ✓
+  - `npm run build` succeeds with no warnings ✓
+  - No console errors in browser (to be verified)
 
-**Status**: NOT STARTED
-- Infrastructure ready from Phase 6
-- Waiting for implementation
+**Status**: IMPLEMENTATION COMPLETE - AWAITING MANUAL TESTING
+
+- All utility functions implemented and tested
+- All custom renderers implemented for Read, Write, Edit, and TodoWrite tools
+- TypeScript compiles without errors
+- Build succeeds successfully
+- Comprehensive test suite created (phase8.test.tsx with 33+ tests)
+- Ready for browser-based visual testing and validation
 
 ---
 
