@@ -6,7 +6,7 @@
 
 import { toolRegistry } from '../utils/toolRegistry';
 import type { ToolUseBlock, ToolResultBlock } from '../services/conversationProcessor';
-import './index'; // Import to ensure all tools are registered
+import '../tools/index'; // Import to ensure all tools are registered
 
 // Helper to create a ToolUseBlock
 function createToolUse(name: string, input: Record<string, any>): ToolUseBlock {

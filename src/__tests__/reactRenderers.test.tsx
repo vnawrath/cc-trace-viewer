@@ -5,7 +5,7 @@
  * These tests verify that custom renderers are registered and can render without errors.
  */
 
-import { toolRegistry } from './index';
+import { toolRegistry } from '../tools/index';
 import type { ToolResultBlock } from '../services/conversationProcessor';
 import {
   parseLineNumberedContent,

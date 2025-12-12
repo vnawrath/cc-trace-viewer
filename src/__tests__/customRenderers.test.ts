@@ -3,7 +3,7 @@
  * Tests for custom renderer support in ToolCallModal via toolRegistry
  */
 
-import { toolRegistry, ToolDefinition } from './toolRegistry';
+import { toolRegistry, ToolDefinition } from '../utils/toolRegistry';
 import type { ToolResultBlock } from '../services/conversationProcessor';
 
 // Test custom tool definition with custom renderers

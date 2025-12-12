@@ -3,7 +3,7 @@
  * Tests the integration of tool registry into messageFormatting
  */
 
-import { formatToolCall, formatToolWithResult } from './messageFormatting';
+import { formatToolCall, formatToolWithResult } from '../utils/messageFormatting';
 import type { ToolUseBlock, ToolResultBlock } from '../services/conversationProcessor';
 
 console.log('=== Phase 4 Integration Tests ===\n');

@@ -3,7 +3,7 @@
  * Tests for Read, Write, Edit, and TodoWrite tools
  */
 
-import { toolRegistry } from './index';
+import { toolRegistry } from '../tools/index';
 import type { ToolUseBlock, ToolResultBlock } from '../services/conversationProcessor';
 
 console.log('=== Phase 2 Tool Registry Tests ===\n');

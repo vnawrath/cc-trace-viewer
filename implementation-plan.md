@@ -58,39 +58,39 @@ This plan outlines the steps to prepare the cc-trace-viewer project for public r
 
 ### Context
 **Current test files in `src/`:**
-- `src/tools/phase8.test.tsx`
-- `src/tools/phase3.test.ts`
-- `src/tools/phase2.test.ts`
-- `src/tests/toolDisplay.test.ts`
-- `src/tests/conversationDetection.test.ts`
-- `src/utils/phase4.test.ts`
-- `src/utils/phase5.test.ts`
-- `src/utils/toolRegistry.test.ts`
-- `src/utils/phase6.test.ts`
+- `src/tools/phase8.test.tsx` → renamed to `reactRenderers.test.tsx`
+- `src/tools/phase3.test.ts` → renamed to `additionalTools.test.ts`
+- `src/tools/phase2.test.ts` → renamed to `coreFileTools.test.ts`
+- `src/tests/toolDisplay.test.ts` → kept as `toolDisplay.test.ts`
+- `src/tests/conversationDetection.test.ts` → kept as `conversationDetection.test.ts`
+- `src/utils/phase4.test.ts` → renamed to `messageListDisplay.test.ts`
+- `src/utils/phase5.test.ts` → renamed to `badgeDisplay.test.ts`
+- `src/utils/toolRegistry.test.ts` → kept as `toolRegistry.test.ts`
+- `src/utils/phase6.test.ts` → renamed to `customRenderers.test.ts`
 
 **Root-level test scripts to delete:**
 - `test-cost-calculator.ts`
 - `test-toolregistry.js`
 
 ### Tasks
-- [ ] Create `src/__tests__/` directory
-- [ ] Move all test files from `src/tools/`, `src/tests/`, and `src/utils/` to `src/__tests__/`
-- [ ] Delete `test-cost-calculator.ts` from root
-- [ ] Delete `test-toolregistry.js` from root
-- [ ] Update any import paths in test files if needed (check for relative imports)
-- [ ] Delete empty `src/tests/` directory if it becomes empty
+- [x] Create `src/__tests__/` directory
+- [x] Move all test files from `src/tools/`, `src/tests/`, and `src/utils/` to `src/__tests__/`
+- [x] Delete `test-cost-calculator.ts` from root
+- [x] Delete `test-toolregistry.js` from root
+- [x] Update any import paths in test files if needed (check for relative imports)
+- [x] Delete empty `src/tests/` directory if it becomes empty
 
-### Files to Move
+### Files Moved and Renamed
 ```
-src/tools/phase8.test.tsx          → src/__tests__/phase8.test.tsx
-src/tools/phase3.test.ts           → src/__tests__/phase3.test.ts
-src/tools/phase2.test.ts           → src/__tests__/phase2.test.ts
+src/tools/phase8.test.tsx          → src/__tests__/reactRenderers.test.tsx
+src/tools/phase3.test.ts           → src/__tests__/additionalTools.test.ts
+src/tools/phase2.test.ts           → src/__tests__/coreFileTools.test.ts
 src/tests/toolDisplay.test.ts      → src/__tests__/toolDisplay.test.ts
 src/tests/conversationDetection.test.ts → src/__tests__/conversationDetection.test.ts
-src/utils/phase4.test.ts           → src/__tests__/phase4.test.ts
-src/utils/phase5.test.ts           → src/__tests__/phase5.test.ts
+src/utils/phase4.test.ts           → src/__tests__/messageListDisplay.test.ts
+src/utils/phase5.test.ts           → src/__tests__/badgeDisplay.test.ts
 src/utils/toolRegistry.test.ts     → src/__tests__/toolRegistry.test.ts
-src/utils/phase6.test.ts           → src/__tests__/phase6.test.ts
+src/utils/phase6.test.ts           → src/__tests__/customRenderers.test.ts
 ```
 
 ### Files to Delete
@@ -98,11 +98,25 @@ src/utils/phase6.test.ts           → src/__tests__/phase6.test.ts
 - `/test-toolregistry.js`
 
 ### Verification Steps
-1. Check that `src/__tests__/` directory exists and contains all 9 test files
-2. Verify `src/tests/` directory is deleted (if it was only containing test files)
-3. Verify root-level test scripts are deleted
-4. Run `ls -la src/` to confirm no test files remain in subdirectories
-5. Run `npm run build` to ensure no broken imports
+1. ✅ Check that `src/__tests__/` directory exists and contains all 9 test files
+2. ✅ Verify `src/tests/` directory is deleted (if it was only containing test files)
+3. ✅ Verify root-level test scripts are deleted
+4. ✅ Run `ls -la src/` to confirm no test files remain in subdirectories
+5. ✅ Run `npm run build` to ensure no broken imports
+
+**Phase 2 Completed:**
+- All 9 test files successfully moved to `src/__tests__/`
+- Renamed 6 test files to semantic names:
+  - `phase2.test.ts` → `coreFileTools.test.ts`
+  - `phase3.test.ts` → `additionalTools.test.ts`
+  - `phase4.test.ts` → `messageListDisplay.test.ts`
+  - `phase5.test.ts` → `badgeDisplay.test.ts`
+  - `phase6.test.ts` → `customRenderers.test.ts`
+  - `phase8.test.tsx` → `reactRenderers.test.tsx`
+- Fixed import paths in 6 test files
+- Deleted root-level test scripts: `test-cost-calculator.ts` and `test-toolregistry.js`
+- Deleted empty `src/tests/` directory
+- Build passes successfully with no broken imports
 
 ---
 

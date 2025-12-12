@@ -7,7 +7,7 @@
  * 2. Import in browser console and test interactively
  */
 
-import { toolRegistry, ToolDefinition } from './toolRegistry';
+import { toolRegistry, ToolDefinition } from '../utils/toolRegistry';
 import type { ToolUseBlock, ToolResultBlock } from '../services/conversationProcessor';
 
 // Test 1: Base definition with unknown tool
