@@ -19,18 +19,6 @@ export function Navigation() {
       <Link to="/" className={linkClass('/')}>
         Home
       </Link>
-      <Link
-        to="/sessions/demo-session/requests"
-        className={linkClass('/sessions/demo-session/requests')}
-      >
-        Demo Requests
-      </Link>
-      <Link
-        to="/sessions/demo-session/requests/123"
-        className={linkClass('/sessions/demo-session/requests/123')}
-      >
-        Demo Detail
-      </Link>
     </nav>
   );
 }

@@ -24,12 +24,6 @@ export function NotFoundPage() {
               >
                 Go back home
               </Link>
-              <Link
-                to="/sessions/demo-session/requests"
-                className="inline-flex items-center rounded px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] border border-[var(--color-border-default)] hover:bg-[var(--color-surface-medium)] hover:text-[var(--color-text-primary)] transition-colors duration-200"
-              >
-                View demo requests
-              </Link>
             </div>
           </div>
         </main>

@@ -33,13 +33,14 @@ This plan outlines the steps to prepare the cc-trace-viewer project for public r
 - **Routes:** `/sessions/demo-session/requests` and `/sessions/demo-session/requests/123`
 
 ### Tasks
-- [ ] Remove demo link elements from Navigation component
-- [ ] Keep only the "Home" link in navigation
-- [ ] Verify Navigation component renders correctly
+- [x] Remove demo link elements from Navigation component
+- [x] Keep only the "Home" link in navigation
+- [x] Verify Navigation component renders correctly
 - [ ] Test app in browser to ensure navigation works
 
 ### Files to Modify
 - `src/components/Navigation.tsx:22-33` - Remove demo link JSX elements
+- `src/pages/NotFoundPage.tsx:27-32` - Remove demo link JSX element
 
 ### Verification Steps
 1. Run `npm run dev`
