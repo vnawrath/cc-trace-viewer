@@ -25,6 +25,8 @@ export interface DirectoryContextValue {
 
 const DirectoryContext = createContext<DirectoryContextValue | null>(null);
 
+// Export hook function
+// eslint-disable-next-line react-refresh/only-export-components
 export function useDirectory(): DirectoryContextValue {
   const context = useContext(DirectoryContext);
   if (!context) {
@@ -90,7 +92,7 @@ export function DirectoryProvider({ children }: DirectoryProviderProps) {
 
       // Clear services (they'll set their directory to null internally via their cache clearing)
       sessionManagerService.clearCache();
-      fileSystemService.setCurrentDirectory(null as any);
+      fileSystemService.setCurrentDirectory(null as unknown as FileSystemDirectoryHandle);
     } catch (err) {
       console.error('Error clearing directory:', err);
     }
@@ -183,9 +185,11 @@ export function DirectoryProvider({ children }: DirectoryProviderProps) {
    */
   useEffect(() => {
     if (!restorationAttempted && !directoryHandle) {
-      restoreSavedDirectory();
+      // We need to call this async function on mount - it's intentional
+      void restoreSavedDirectory();
     }
-  }, [restorationAttempted, directoryHandle, restoreSavedDirectory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value: DirectoryContextValue = {
     directoryHandle,

@@ -77,11 +77,11 @@ console.assert(result6 === 'GenericTool(test.txt)', `Test 6 failed: expected "Ge
 
 // Test 7: Register custom tool definition
 class TestTool extends ToolDefinition {
-  formatInput(input: Record<string, any>): string {
-    return input.test_param || '';
+  formatInput(input: Record<string, unknown>): string {
+    return (input.test_param as string) || '';
   }
 
-  formatResult(_input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     return 'custom result';
   }
 }

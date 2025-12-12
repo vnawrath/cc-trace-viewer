@@ -92,7 +92,11 @@ function extractToolCallsFromResponse(response: TraceResponse): Array<{
           'type' in event.content_block &&
           event.content_block.type === 'tool_use') {
 
-        const toolBlock = event.content_block as any;
+        const toolBlock = event.content_block as unknown as {
+          id?: string;
+          name: string;
+          input?: Record<string, unknown>;
+        };
         const id = toolBlock.id || `tool-${toolCallMap.size}`;
 
         toolCallMap.set(id, {

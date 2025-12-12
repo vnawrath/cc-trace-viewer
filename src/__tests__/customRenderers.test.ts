@@ -8,33 +8,33 @@ import type { ToolResultBlock } from '../services/conversationProcessor';
 
 // Test custom tool definition with custom renderers
 class CustomRendererTool extends ToolDefinition {
-  formatInput(input: Record<string, any>): string {
-    return input.test_param || 'default';
+  formatInput(input: Record<string, unknown>): string {
+    return (input.test_param as string) || 'default';
   }
 
-  formatResult(_input: Record<string, any>, result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, result: ToolResultBlock): string | null {
     if (typeof result.content === 'string') {
       return `custom: ${result.content.substring(0, 10)}`;
     }
     return null;
   }
 
-  renderCustomInput(input: Record<string, any>): string {
-    return `Custom input rendering: ${input.test_param}`;
+  renderCustomInput(input: Record<string, unknown>): string {
+    return `Custom input rendering: ${input.test_param as string}`;
   }
 
   renderCustomResult(result: ToolResultBlock): string {
-    return `Custom result rendering: ${result.content}`;
+    return `Custom result rendering: ${result.content as string}`;
   }
 }
 
 // Test tool without custom renderers (uses defaults)
 class DefaultRendererTool extends ToolDefinition {
-  formatInput(input: Record<string, any>): string {
-    return input.file_path || '';
+  formatInput(input: Record<string, unknown>): string {
+    return (input.file_path as string) || '';
   }
 
-  formatResult(_input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     return 'test result';
   }
 }

@@ -32,37 +32,31 @@ export function HomePage() {
     reason?: string;
   }>({ supported: true });
 
-  const [error, setError] = useState<string | null>(null);
+  // Derive error from discoveryError and directoryError instead of using a separate state
+  const error = discoveryError || directoryError;
 
   useEffect(() => {
     const checkSupport = async () => {
       const support = await fileSystemService.checkBrowserSupport();
       setBrowserSupport(support);
     };
-    checkSupport();
+    void checkSupport();
   }, []);
-
-  useEffect(() => {
-    // Combine errors from both discovery and directory
-    setError(discoveryError || directoryError);
-  }, [discoveryError, directoryError]);
 
   const handleDirectorySelected = async (handle: FileSystemDirectoryHandle) => {
     try {
       await selectDir(handle);
       clearError();
-      setError(null);
     } catch (error) {
       console.error('Failed to select directory:', error);
     }
   };
 
   const handleError = (errorMessage: string) => {
-    setError(errorMessage);
+    console.error(errorMessage);
   };
 
   const handleClearDirectory = async () => {
-    setError(null);
     clearError();
     await clearDirectory();
   };
@@ -101,7 +95,7 @@ export function HomePage() {
                 <span className="text-error-300">{error}</span>
               </div>
               <button
-                onClick={() => setError(null)}
+                onClick={clearError}
                 className="text-error-400 hover:text-error-300 ml-4 transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

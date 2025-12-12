@@ -33,8 +33,8 @@ function it(name: string, fn: () => void) {
   }
 }
 
-const expect = (value: any) => ({
-  toBe: (expected: any) => {
+const expect = (value: unknown) => ({
+  toBe: (expected: unknown) => {
     if (value !== expected) {
       throw new Error(`Expected ${value} to be ${expected}`);
     }
@@ -62,11 +62,11 @@ const expect = (value: any) => ({
     }
   },
   toHaveLength: (length: number) => {
-    if (!value || value.length !== length) {
+    if (!value || typeof value !== 'object' || !('length' in value) || (value as { length: number }).length !== length) {
       throw new Error(`Expected ${value} to have length ${length}`);
     }
   },
-  toEqual: (expected: any) => {
+  toEqual: (expected: unknown) => {
     if (JSON.stringify(value) !== JSON.stringify(expected)) {
       throw new Error(`Expected ${JSON.stringify(value)} to equal ${JSON.stringify(expected)}`);
     }

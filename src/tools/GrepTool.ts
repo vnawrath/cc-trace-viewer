@@ -9,7 +9,7 @@ export class GrepTool extends ToolDefinition {
   /**
    * Extract pattern parameter.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const pattern = input.pattern;
     if (!pattern) return '';
 
@@ -19,7 +19,7 @@ export class GrepTool extends ToolDefinition {
   /**
    * Count lines in result output and format as "[X lines]"
    */
-  formatResult(_input: Record<string, any>, result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, result: ToolResultBlock): string | null {
     if (!result.content) return null;
 
     let lineCount = 0;
@@ -38,7 +38,7 @@ export class GrepTool extends ToolDefinition {
       lineCount = this.countLines(result.content);
     } else if (typeof result.content === 'object' && result.content !== null && 'text' in result.content) {
       // Handle object with text property
-      lineCount = this.countLines((result.content as any).text);
+      lineCount = this.countLines(String((result.content as { text: unknown }).text));
     }
 
     if (lineCount === 0) return null;

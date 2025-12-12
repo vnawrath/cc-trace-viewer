@@ -21,6 +21,27 @@ interface DailyBucket {
   totalCost: number;
 }
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: DailyBucket }>;
+}
+
+// Custom tooltip component - defined outside component to avoid recreating on render
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
+  if (active && payload && payload.length > 0) {
+    const data = payload[0].payload;
+    return (
+      <div className="bg-gray-800 border border-gray-700 rounded px-3 py-2">
+        <p className="text-xs text-gray-300">{data.dateDisplay}</p>
+        <p className="text-sm font-semibold text-white">
+          {formatCost(data.totalCost)}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function CostPlot({ sessions }: CostPlotProps) {
   // Process sessions into daily buckets
   const dailyBuckets = useMemo(() => {
@@ -81,22 +102,6 @@ export function CostPlot({ sessions }: CostPlotProps) {
       </div>
     );
   }
-
-  // Custom tooltip component
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length > 0) {
-      const data = payload[0].payload as DailyBucket;
-      return (
-        <div className="bg-gray-800 border border-gray-700 rounded px-3 py-2">
-          <p className="text-xs text-gray-300">{data.dateDisplay}</p>
-          <p className="text-sm font-semibold text-white">
-            {formatCost(data.totalCost)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="bg-gray-900 border border-gray-800 rounded-lg p-4">

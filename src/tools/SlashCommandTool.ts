@@ -10,7 +10,7 @@ export class SlashCommandTool extends ToolDefinition {
   /**
    * Extract command parameter.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const command = input.command;
     if (!command) return '';
 
@@ -20,7 +20,7 @@ export class SlashCommandTool extends ToolDefinition {
   /**
    * No result summary for SlashCommand tool.
    */
-  formatResult(_input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     return null;
   }
 }

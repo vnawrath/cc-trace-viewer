@@ -11,7 +11,7 @@ export class WriteTool extends ToolDefinition {
   /**
    * Extract filename from file_path parameter.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const filePath = input.file_path;
     if (!filePath) return '';
 
@@ -23,7 +23,7 @@ export class WriteTool extends ToolDefinition {
   /**
    * Count lines in the written content and format as "[X lines]"
    */
-  formatResult(input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     // Try to count lines from the input content (what was written)
     const content = input.content;
     if (!content) return null;
@@ -50,7 +50,7 @@ export class WriteTool extends ToolDefinition {
    * Custom input renderer for Write tool
    * Shows file path, operation type, size, and preview of content
    */
-  renderCustomInput(input: Record<string, any>): React.ReactNode {
+  renderCustomInput(input: Record<string, unknown>): React.ReactNode {
     const filePath = input.file_path;
     const content = input.content;
     if (!filePath || !content) return null;
@@ -79,7 +79,7 @@ export class WriteTool extends ToolDefinition {
         ),
         React.createElement('span', {
           className: 'text-cyan-400 bg-gray-800/50 px-2 py-1 rounded font-mono text-sm break-all'
-        }, filePath)
+        }, String(filePath))
       ),
       // File size
       React.createElement('div', { className: 'text-gray-400 text-xs' },

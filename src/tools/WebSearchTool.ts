@@ -10,7 +10,7 @@ export class WebSearchTool extends ToolDefinition {
   /**
    * Extract and truncate query parameter.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const query = input.query;
     if (!query) return '';
 
@@ -27,7 +27,7 @@ export class WebSearchTool extends ToolDefinition {
   /**
    * No result summary for WebSearch tool.
    */
-  formatResult(_input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     return null;
   }
 }

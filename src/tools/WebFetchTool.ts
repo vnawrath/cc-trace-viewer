@@ -10,7 +10,7 @@ export class WebFetchTool extends ToolDefinition {
   /**
    * Extract and truncate url parameter.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const url = input.url;
     if (!url) return '';
 
@@ -27,7 +27,7 @@ export class WebFetchTool extends ToolDefinition {
   /**
    * No result summary for WebFetch tool.
    */
-  formatResult(_input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     return null;
   }
 }

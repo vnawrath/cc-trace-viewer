@@ -10,7 +10,7 @@ export class NotebookEditTool extends ToolDefinition {
   /**
    * Extract filename from notebook_path parameter.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const notebookPath = input.notebook_path;
     if (!notebookPath) return '';
 
@@ -22,7 +22,7 @@ export class NotebookEditTool extends ToolDefinition {
   /**
    * No result summary for NotebookEdit tool.
    */
-  formatResult(_input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     return null;
   }
 }

@@ -10,7 +10,7 @@ export class TodoWriteTool extends ToolDefinition {
   /**
    * Count total todos from the input array.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const todos = input.todos;
     if (!Array.isArray(todos)) return '';
 
@@ -22,37 +22,25 @@ export class TodoWriteTool extends ToolDefinition {
    * Parse result content to extract todo status counts.
    * Format as: "[X pending, Y in progress, Z completed]"
    */
-  formatResult(input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     // Try to get counts from input todos since that's the source of truth
     const todos = input.todos;
     if (!Array.isArray(todos) || todos.length === 0) return null;
 
     // Count todos by status
-    let pending = 0;
-    let inProgress = 0;
     let completed = 0;
 
     for (const todo of todos) {
       if (typeof todo === 'object' && todo !== null && 'status' in todo) {
-        const status = todo.status;
-        if (status === 'pending') {
-          pending++;
-        } else if (status === 'in_progress') {
-          inProgress++;
-        } else if (status === 'completed') {
+        const status = (todo as { status: string }).status;
+        if (status === 'completed') {
           completed++;
         }
       }
     }
 
-    // Build result summary
+    // Build result summary showing completed count
     const parts: string[] = [];
-    if (pending > 0) {
-      parts.push(`${pending} pending`);
-    }
-    if (inProgress > 0) {
-      parts.push(`${inProgress} in progress`);
-    }
     if (completed > 0) {
       parts.push(`${completed} completed`);
     }
@@ -66,21 +54,17 @@ export class TodoWriteTool extends ToolDefinition {
    * Custom input renderer for TodoWrite tool
    * Shows todos as a visual list with status indicators and progress bar
    */
-  renderCustomInput(input: Record<string, any>): React.ReactNode {
+  renderCustomInput(input: Record<string, unknown>): React.ReactNode {
     const todos = input.todos;
     if (!Array.isArray(todos) || todos.length === 0) return null;
 
     // Count by status
-    let pending = 0;
-    let inProgress = 0;
     let completed = 0;
 
     for (const todo of todos) {
       if (typeof todo === 'object' && todo !== null && 'status' in todo) {
-        const status = todo.status;
-        if (status === 'pending') pending++;
-        else if (status === 'in_progress') inProgress++;
-        else if (status === 'completed') completed++;
+        const status = (todo as { status: string }).status;
+        if (status === 'completed') completed++;
       }
     }
 
@@ -153,9 +137,10 @@ export class TodoWriteTool extends ToolDefinition {
       ),
       // Todo list
       React.createElement('div', { className: 'space-y-2 max-h-64 overflow-y-auto' },
-        todos.map((todo: any, idx: number) => {
-          const status = todo.status || 'pending';
-          const content = todo.content || '';
+        todos.map((todo: unknown, idx: number) => {
+          const todoObj = todo as { status?: string; content?: string };
+          const status = todoObj.status || 'pending';
+          const content = todoObj.content || '';
           const isCompleted = status === 'completed';
 
           return React.createElement('div', {

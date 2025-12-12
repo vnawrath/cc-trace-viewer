@@ -9,7 +9,7 @@ import type { ToolUseBlock, ToolResultBlock } from '../services/conversationProc
 import '../tools/index'; // Import to ensure all tools are registered
 
 // Helper to create a ToolUseBlock
-function createToolUse(name: string, input: Record<string, any>): ToolUseBlock {
+function createToolUse(name: string, input: Record<string, unknown>): ToolUseBlock {
   return {
     type: 'tool_use',
     id: 'test-id',
@@ -19,7 +19,7 @@ function createToolUse(name: string, input: Record<string, any>): ToolUseBlock {
 }
 
 // Helper to create a ToolResultBlock
-function createToolResult(content: any): ToolResultBlock {
+function createToolResult(content: string): ToolResultBlock {
   return {
     type: 'tool_result',
     tool_use_id: 'test-id',

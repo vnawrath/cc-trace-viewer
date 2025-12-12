@@ -170,7 +170,7 @@ export function extractToolResultContent(content: MessageContent): string {
       // Extract text blocks from array content
       const textContent = block.content
         .filter(item => 'type' in item && item.type === 'text' && 'text' in item)
-        .map(item => (item as any).text)
+        .map(item => String((item as unknown as { text: unknown }).text))
         .join(' ');
       if (textContent) {
         texts.push(textContent);

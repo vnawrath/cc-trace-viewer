@@ -12,6 +12,63 @@ interface SessionTableProps {
 type SortColumn = "sessionId" | "totalTokens" | "duration" | "cost";
 type SortDirection = "asc" | "desc";
 
+interface SortIconProps {
+  column: SortColumn;
+  sortColumn: SortColumn;
+  sortDirection: SortDirection;
+}
+
+// Sort icon component - defined outside to avoid recreating on render
+const SortIcon = ({ column, sortColumn, sortDirection }: SortIconProps) => {
+  if (sortColumn !== column) {
+    return (
+      <svg
+        className="w-3 h-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+        />
+      </svg>
+    );
+  }
+
+  return sortDirection === "asc" ? (
+    <svg
+      className="w-3 h-3 text-data-400"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M5 15l7-7 7 7"
+      />
+    </svg>
+  ) : (
+    <svg
+      className="w-3 h-3 text-data-400"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M19 9l-7 7-7-7"
+      />
+    </svg>
+  );
+};
+
 export function SessionTable({ sessions }: SessionTableProps) {
   const [sortColumn, setSortColumn] = useState<SortColumn>("sessionId");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -55,56 +112,6 @@ export function SessionTable({ sessions }: SessionTableProps) {
     return sortDirection === "asc" ? comparison : -comparison;
   });
 
-  const SortIcon = ({ column }: { column: SortColumn }) => {
-    if (sortColumn !== column) {
-      return (
-        <svg
-          className="w-3 h-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-          />
-        </svg>
-      );
-    }
-
-    return sortDirection === "asc" ? (
-      <svg
-        className="w-3 h-3 text-data-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M5 15l7-7 7 7"
-        />
-      </svg>
-    ) : (
-      <svg
-        className="w-3 h-3 text-data-400"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M19 9l-7 7-7-7"
-        />
-      </svg>
-    );
-  };
-
   return (
     <div className="border border-base-800 rounded-lg shadow-md">
       <table className="w-full text-xs">
@@ -117,7 +124,7 @@ export function SessionTable({ sessions }: SessionTableProps) {
             >
               <div className="flex items-center gap-1.5">
                 <span>Session ID</span>
-                <SortIcon column="sessionId" />
+                <SortIcon column="sessionId" sortColumn={sortColumn} sortDirection={sortDirection} />
               </div>
             </th>
             <th
@@ -126,7 +133,7 @@ export function SessionTable({ sessions }: SessionTableProps) {
             >
               <div className="flex items-center justify-start gap-1.5">
                 <span>Tokens</span>
-                <SortIcon column="totalTokens" />
+                <SortIcon column="totalTokens" sortColumn={sortColumn} sortDirection={sortDirection} />
               </div>
             </th>
             <th
@@ -135,7 +142,7 @@ export function SessionTable({ sessions }: SessionTableProps) {
             >
               <div className="flex items-center justify-end gap-1.5">
                 <span>Duration</span>
-                <SortIcon column="duration" />
+                <SortIcon column="duration" sortColumn={sortColumn} sortDirection={sortDirection} />
               </div>
             </th>
             <th
@@ -144,7 +151,7 @@ export function SessionTable({ sessions }: SessionTableProps) {
             >
               <div className="flex items-center justify-end gap-1.5">
                 <span>Cost</span>
-                <SortIcon column="cost" />
+                <SortIcon column="cost" sortColumn={sortColumn} sortDirection={sortDirection} />
               </div>
             </th>
           </tr>

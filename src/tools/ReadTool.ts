@@ -15,7 +15,7 @@ export class ReadTool extends ToolDefinition {
   /**
    * Extract filename from file_path parameter.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const filePath = input.file_path;
     if (!filePath) return '';
 
@@ -27,7 +27,7 @@ export class ReadTool extends ToolDefinition {
   /**
    * Count lines in the result content and format as "[X lines]"
    */
-  formatResult(_input: Record<string, any>, result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, result: ToolResultBlock): string | null {
     if (!result.content) return null;
 
     let lineCount = 0;
@@ -46,7 +46,7 @@ export class ReadTool extends ToolDefinition {
       lineCount = this.countLines(result.content);
     } else if (typeof result.content === 'object' && result.content !== null && 'text' in result.content) {
       // Handle object with text property
-      lineCount = this.countLines((result.content as any).text);
+      lineCount = this.countLines(String((result.content as { text: unknown }).text));
     }
 
     if (lineCount === 0) return null;
@@ -77,7 +77,7 @@ export class ReadTool extends ToolDefinition {
    * Custom input renderer for Read tool
    * Shows file path with optional offset/limit parameters
    */
-  renderCustomInput(input: Record<string, any>): React.ReactNode {
+  renderCustomInput(input: Record<string, unknown>): React.ReactNode {
     const filePath = input.file_path;
     if (!filePath) return null;
 
@@ -102,13 +102,13 @@ export class ReadTool extends ToolDefinition {
         ),
         React.createElement('span', {
           className: 'text-cyan-400 bg-gray-800/50 px-2 py-1 rounded font-mono text-sm break-all'
-        }, filePath)
+        }, String(filePath))
       ),
       // Optional parameters
-      hasPartial && React.createElement('div', { className: 'text-gray-400 text-xs space-y-1' },
-        input.offset && React.createElement('div', null, `Offset: ${input.offset}`),
-        input.limit && React.createElement('div', null, `Limit: ${input.limit} lines`)
-      )
+      hasPartial ? React.createElement('div', { className: 'text-gray-400 text-xs space-y-1' },
+        input.offset ? React.createElement('div', null, `Offset: ${input.offset}`) : null,
+        input.limit ? React.createElement('div', null, `Limit: ${input.limit} lines`) : null
+      ) : null
     );
   }
 
@@ -134,7 +134,7 @@ export class ReadTool extends ToolDefinition {
         })
         .join('');
     } else if (typeof result.content === 'object' && result.content !== null && 'text' in result.content) {
-      textContent = String((result.content as any).text);
+      textContent = String((result.content as { text: unknown }).text);
     }
 
     // Strip system reminders

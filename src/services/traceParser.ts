@@ -416,7 +416,7 @@ export class TraceParserService {
         try {
           const parsed = JSON.parse(data);
           events.push(parsed);
-        } catch (error) {
+        } catch (_error) {
           // Silently skip malformed SSE data to reduce console noise
         }
       }
@@ -487,7 +487,7 @@ export class TraceParserService {
           if (block.type === "tool_use" && typeof block.input === "string") {
             try {
               block.input = JSON.parse(block.input as string);
-            } catch (e) {
+            } catch (_e) {
               // Keep as string if parsing fails - silently handle partial JSON
             }
           }
@@ -648,7 +648,7 @@ export class TraceParserService {
           ) {
             toolsUsed.add(parsed.content_block.name);
           }
-        } catch (error) {
+        } catch (_error) {
           // Silently skip malformed SSE data to reduce console noise
         }
       }
@@ -738,8 +738,9 @@ export class TraceParserService {
       }
 
       // Extract clean text (without system reminders) and normalize for grouping
-      const cleanMessage = extractCleanTextFromMessage(firstUserMessage.content);
-      const normalizedMessage = this.normalizeMessageForGrouping(firstUserMessage.content);
+      const messageContent = firstUserMessage.content as unknown as string | Array<{type: string; [key: string]: unknown}>;
+      const cleanMessage = extractCleanTextFromMessage(messageContent);
+      const normalizedMessage = this.normalizeMessageForGrouping(messageContent);
 
       // Extract system prompt (join all text blocks if array)
       let systemPrompt: string | undefined = undefined;
@@ -802,7 +803,7 @@ export class TraceParserService {
    * Helper function to compare messages for similarity
    * Used to detect if a compact conversation is a continuation of another
    */
-  private messagesRoughlyEqual(msg1: any, msg2: any): boolean {
+  private messagesRoughlyEqual(msg1: { role: string; content: unknown }, msg2: { role: string; content: unknown }): boolean {
     if (msg1.role !== msg2.role) return false;
 
     // Extract text content from both messages
@@ -817,8 +818,8 @@ export class TraceParserService {
       return '';
     };
 
-    const text1 = getText(msg1.content);
-    const text2 = getText(msg2.content);
+    const text1 = getText(msg1.content as unknown as string | Array<{type: string; [key: string]: unknown}>);
+    const text2 = getText(msg2.content as unknown as string | Array<{type: string; [key: string]: unknown}>);
 
     // Simple similarity check: normalize and compare length and first characters
     const normalize = (s: string) => s.trim().toLowerCase().substring(0, 100);

@@ -10,7 +10,7 @@ export class TaskTool extends ToolDefinition {
   /**
    * Extract and truncate description or prompt parameter.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const description = input.description || input.prompt;
     if (!description) return '';
 
@@ -27,7 +27,7 @@ export class TaskTool extends ToolDefinition {
   /**
    * No result summary for Task tool.
    */
-  formatResult(_input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     return null;
   }
 }

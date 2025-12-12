@@ -12,7 +12,7 @@ export class ToolDefinition {
    * @param input - Tool input parameters
    * @returns Formatted string representation of input parameters
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     // Common parameter keys to check in order of preference
     const commonKeys = [
       'file_path',
@@ -51,7 +51,7 @@ export class ToolDefinition {
    * @param result - Tool result block
    * @returns Formatted result summary or null if no summary should be shown
    */
-  formatResult(_input: Record<string, any>, _result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, _result: ToolResultBlock): string | null {
     return null;
   }
 
@@ -72,7 +72,7 @@ export class ToolDefinition {
    * @param input - Tool input parameters
    * @returns React node or null to use default JSON rendering
    */
-  renderCustomInput?(input: Record<string, any>): React.ReactNode | null;
+  renderCustomInput?(input: Record<string, unknown>): React.ReactNode | null;
 
   /**
    * Optional custom renderer for result content in the modal.
@@ -183,7 +183,7 @@ export class ToolRegistry {
    * @param input - Tool input parameters
    * @returns React node or null
    */
-  renderCustomInput(toolName: string, input: Record<string, any>): React.ReactNode | null {
+  renderCustomInput(toolName: string, input: Record<string, unknown>): React.ReactNode | null {
     const definition = this.get(toolName);
     if (definition.renderCustomInput) {
       return definition.renderCustomInput(input);

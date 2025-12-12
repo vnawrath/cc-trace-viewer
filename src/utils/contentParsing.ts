@@ -137,7 +137,7 @@ export function extractFilename(filePath: string): string {
  * @param input - Tool input parameters
  * @returns true if offset or limit was used
  */
-export function isPartialRead(input: Record<string, any>): boolean {
+export function isPartialRead(input: Record<string, unknown>): boolean {
   return 'offset' in input || 'limit' in input;
 }
 
@@ -148,7 +148,7 @@ export function isPartialRead(input: Record<string, any>): boolean {
  * @param totalLines - Total lines in result
  * @returns Object describing the range
  */
-export function getReadRange(input: Record<string, any>, totalLines: number): { start: number; end: number } {
+export function getReadRange(input: Record<string, unknown>, totalLines: number): { start: number; end: number } {
   const offset = input.offset ? parseInt(String(input.offset), 10) : 1;
 
   return {

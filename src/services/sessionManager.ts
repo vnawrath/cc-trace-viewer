@@ -34,11 +34,9 @@ export class SessionManagerService {
 
     const jsonlFiles = await fileSystemService.findJsonlFiles(this.currentDirectory);
     const sessionSummaries: SessionSummary[] = [];
-    let processed = 0;
 
     for (const fileHandle of jsonlFiles) {
       try {
-        processed++;
 
         const sessionId = this.extractSessionIdFromFilename(fileHandle.name);
 

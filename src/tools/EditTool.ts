@@ -15,7 +15,7 @@ export class EditTool extends ToolDefinition {
   /**
    * Extract filename from file_path parameter.
    */
-  formatInput(input: Record<string, any>): string {
+  formatInput(input: Record<string, unknown>): string {
     const filePath = input.file_path;
     if (!filePath) return '';
 
@@ -27,7 +27,7 @@ export class EditTool extends ToolDefinition {
   /**
    * Count lines in the edit result snippet and format as "[X lines]"
    */
-  formatResult(_input: Record<string, any>, result: ToolResultBlock): string | null {
+  formatResult(_input: Record<string, unknown>, result: ToolResultBlock): string | null {
     if (!result.content) return null;
 
     let text = '';
@@ -44,7 +44,7 @@ export class EditTool extends ToolDefinition {
     } else if (typeof result.content === 'string') {
       text = result.content;
     } else if (typeof result.content === 'object' && result.content !== null && 'text' in result.content) {
-      text = (result.content as any).text;
+      text = String((result.content as { text: unknown }).text);
     }
 
     // Count lines with the format "     N→" which shows the edited snippet
@@ -61,7 +61,7 @@ export class EditTool extends ToolDefinition {
    * Custom input renderer for Edit tool
    * Shows file path and diff-style view of the change
    */
-  renderCustomInput(input: Record<string, any>): React.ReactNode {
+  renderCustomInput(input: Record<string, unknown>): React.ReactNode {
     const filePath = input.file_path;
     const oldString = input.old_string;
     const newString = input.new_string;
@@ -91,35 +91,35 @@ export class EditTool extends ToolDefinition {
         ),
         React.createElement('span', {
           className: 'text-cyan-400 bg-gray-800/50 px-2 py-1 rounded font-mono text-sm break-all'
-        }, filePath)
+        }, String(filePath))
       ),
       // Diff view
-      oldString && React.createElement('div', { className: 'space-y-2' },
+      oldString ? React.createElement('div', { className: 'space-y-2' },
         // Old content (removed)
         React.createElement('div', { className: 'space-y-1' },
           React.createElement('div', { className: 'text-red-400 text-xs uppercase tracking-wide' }, '− Removed:'),
           React.createElement('div', {
             className: 'font-mono text-xs bg-red-950/30 border border-red-700/50 rounded p-2 text-red-200 overflow-x-auto'
           },
-            React.createElement('pre', null, oldTruncated?.text || oldString)
+            React.createElement('pre', null, (oldTruncated?.text || String(oldString)) as string)
           ),
-          oldTruncated?.truncated && React.createElement('div', { className: 'text-gray-500 text-xs' },
+          oldTruncated?.truncated ? React.createElement('div', { className: 'text-gray-500 text-xs' },
             `... and ${oldTruncated.totalLines - 10} more lines`
-          )
+          ) : null
         ),
         // New content (added)
-        newString && React.createElement('div', { className: 'space-y-1' },
+        newString ? React.createElement('div', { className: 'space-y-1' },
           React.createElement('div', { className: 'text-green-400 text-xs uppercase tracking-wide' }, '+ Added:'),
           React.createElement('div', {
             className: 'font-mono text-xs bg-green-950/30 border border-green-700/50 rounded p-2 text-green-200 overflow-x-auto'
           },
-            React.createElement('pre', null, newTruncated?.text || newString)
+            React.createElement('pre', null, (newTruncated?.text || String(newString)) as string)
           ),
-          newTruncated?.truncated && React.createElement('div', { className: 'text-gray-500 text-xs' },
+          newTruncated?.truncated ? React.createElement('div', { className: 'text-gray-500 text-xs' },
             `... and ${newTruncated.totalLines - 10} more lines`
-          )
-        )
-      )
+          ) : null
+        ) : null
+      ) : null
     );
   }
 

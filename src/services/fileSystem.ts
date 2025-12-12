@@ -29,7 +29,7 @@ export class FileSystemService {
     try {
       const permission = await handle.queryPermission({ mode: 'read' });
       return permission;
-    } catch (error) {
+    } catch (_error) {
       // If queryPermission fails, the handle might be stale
       return 'prompt';
     }
@@ -57,7 +57,7 @@ export class FileSystemService {
       const iterator = handle.entries();
       await iterator.next();
       return true;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }

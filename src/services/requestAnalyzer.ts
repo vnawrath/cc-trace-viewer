@@ -68,7 +68,7 @@ export class RequestAnalyzerService {
     let totalTokens = 0;
     let inputTokens = 0;
     let outputTokens = 0;
-    let cacheTokens = {
+    const cacheTokens = {
       creation: 0,
       read: 0,
       creation5m: 0,
