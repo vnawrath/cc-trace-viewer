@@ -2,13 +2,13 @@
 
 ## Overview
 
-This plan outlines the steps to prepare the cc-trace-viewer project for public release and deployment to Coolify. The work involves cleaning up the codebase by removing demo links, organizing test files, fixing lint issues, and creating Docker deployment configuration with proper SPA routing support.
+This plan outlines the steps to prepare the cc-trace-viewer project for public release and deployment to GitHub Pages. The work involves cleaning up the codebase by removing demo links, organizing test files, fixing lint issues, and setting up GitHub Actions for automated deployment.
 
 **Current State:**
 - React + TypeScript + Vite SPA application
 - 205 lint errors (mostly in `docs/claude-trace/` directory)
 - Build passes successfully
-- No Dockerfile exists
+- No GitHub Actions workflow exists
 - Demo navigation links hardcoded in Navigation component
 - Test files scattered throughout `src/` directory
 - Two root-level test scripts
@@ -17,8 +17,8 @@ This plan outlines the steps to prepare the cc-trace-viewer project for public r
 - Clean navigation without demo links
 - Organized test structure in `src/__tests__/`
 - Zero lint errors in main application code
-- Production-ready Dockerfile with nginx configuration
-- Ready for Coolify deployment
+- GitHub Actions workflow for automated deployment to GitHub Pages
+- Live site accessible via GitHub Pages
 
 ---
 
@@ -142,132 +142,152 @@ Based on previous lint output, main categories:
 
 ---
 
-## Phase 4: Create Docker Deployment Configuration
+## Phase 4: Set Up GitHub Pages Deployment
 
-**Objective:** Create production-ready Dockerfile and nginx configuration for deploying the Vite SPA to Coolify with proper client-side routing support.
+**Objective:** Configure Vite for GitHub Pages deployment and create a GitHub Actions workflow for automated deployment.
 
 ### Context
-**Research findings:**
-- Coolify supports both Nixpacks (auto-detection) and custom Dockerfile
-- Custom Dockerfile recommended for SPA routing control
-- Multi-stage build pattern: Node builder → nginx production
-- Critical requirement: nginx must route all paths to `index.html` for React Router
-- Vite builds to `dist/` directory by default
-
 **Deployment approach:**
-- Use multi-stage Dockerfile (smaller final image, better security)
-- nginx alpine image for production serving
-- Custom nginx.conf with `try_files` directive for SPA routing
-- Expose port 80 for Coolify/Traefik integration
+- GitHub Pages serves static files from a repository
+- Two deployment options:
+  1. Build locally and push to `gh-pages` branch (manual)
+  2. Use GitHub Actions to build and deploy automatically (recommended)
+- GitHub Pages can serve from root domain (username.github.io) or subpath (username.github.io/repo-name)
+- For subpath deployment, Vite needs `base` configuration
+- Vite builds to `dist/` directory by default
+- GitHub Actions has built-in GitHub Pages deployment actions
+
+**Assumptions:**
+- Repository name: `cc-trace-viewer`
+- Will be deployed to: `https://<username>.github.io/cc-trace-viewer/`
+- Need to configure `base: '/cc-trace-viewer/'` in vite.config.ts
 
 ### Tasks
-- [ ] Create `Dockerfile` at repository root
-- [ ] Create `nginx.conf` at repository root
-- [ ] Verify build process works locally
-- [ ] Test Docker build locally (optional but recommended)
-- [ ] Update `.gitignore` if needed (ensure `dist/` is already ignored)
+- [ ] Update `vite.config.ts` to add `base` configuration for GitHub Pages subpath
+- [ ] Create `.github/workflows/deploy.yml` for GitHub Actions deployment workflow
+- [ ] Verify build works locally with new base path
+- [ ] Document deployment setup in comments or README
+
+### Files to Modify
+
+#### `vite.config.ts`
+Add `base` property to the config:
+```typescript
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import tailwindcss from '@tailwindcss/vite'
+
+// https://vite.dev/config/
+export default defineConfig({
+  base: '/cc-trace-viewer/', // Required for GitHub Pages subpath deployment
+  plugins: [react(), tailwindcss()],
+  server: {
+    watch: {
+      ignored: ['**/.claude-trace/**']
+    }
+  }
+})
+```
+
+**Key configuration:**
+- `base: '/cc-trace-viewer/'` - Tells Vite to prefix all asset paths with the repo name
+- This ensures CSS, JS, and other assets load correctly when deployed to a subpath
+- If deploying to a custom domain or root path later, this can be removed
 
 ### Files to Create
 
-#### `Dockerfile`
-```dockerfile
-# Build stage
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+#### `.github/workflows/deploy.yml`
+```yaml
+name: Deploy to GitHub Pages
 
-# Production stage
-FROM nginx:stable-alpine
-COPY --from=builder /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+on:
+  push:
+    branches:
+      - main  # Deploy on push to main branch
+  workflow_dispatch:  # Allow manual deployment from Actions tab
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 ```
 
-**Key design decisions:**
-- `node:20-alpine` - Matches modern Node.js, minimal image
-- `npm ci` - Faster, more reliable than `npm install` for production
-- Multi-stage build - Keeps final image small (only dist + nginx)
-- `nginx:stable-alpine` - Production-grade nginx, minimal size
-- Port 80 - Standard HTTP, Coolify/Traefik handles SSL
-
-#### `nginx.conf`
-```nginx
-server {
-    listen 80;
-    server_name _;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    # Security headers
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    # Gzip compression
-    gzip on;
-    gzip_vary on;
-    gzip_min_length 1024;
-    gzip_types text/plain text/css text/xml text/javascript
-               application/x-javascript application/xml+rss
-               application/json application/javascript;
-
-    # Critical: Handle SPA routing
-    # Try to serve file directly, fall back to index.html
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    # Cache static assets aggressively
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-
-    # Prevent access to hidden files
-    location ~ /\. {
-        deny all;
-        access_log off;
-        log_not_found off;
-    }
-}
-```
-
-**Key nginx directives:**
-- `try_files $uri $uri/ /index.html` - Core SPA routing support
-- Security headers - Basic protection against common attacks
-- Gzip compression - Reduce bandwidth, improve load times
-- Asset caching - Vite uses content hashes, safe to cache aggressively
-- Hidden file protection - Security best practice
+**Key workflow features:**
+- Triggers on push to `main` branch and manual workflow dispatch
+- Two jobs: `build` (creates production build) and `deploy` (publishes to Pages)
+- Uses official GitHub Actions for Pages deployment
+- Caches npm dependencies for faster builds
+- Requires GitHub Pages to be enabled in repository settings
 
 ### Related Files
 - `package.json:8` - Build script already exists: `"build": "tsc -b && vite build"`
-- `vite.config.ts` - Default Vite config should work without changes
 - `.gitignore` - Should already ignore `dist/` (verify)
 
 ### Verification Steps
-1. Create both files at repository root
-2. Run `npm run build` to ensure build process works
+1. Update `vite.config.ts` with `base` configuration
+2. Run `npm run build` locally to ensure build works with new base path
 3. Check that `dist/` directory is created with expected files
-4. Verify `dist/index.html` exists
-5. (Optional) Test Docker build locally:
-   ```bash
-   docker build -t cc-trace-viewer:test .
-   docker run -p 8080:80 cc-trace-viewer:test
-   # Visit http://localhost:8080 and test routing
-   ```
-6. If Docker test not performed, mark as ready for Coolify deployment testing
+4. Verify `dist/index.html` contains correct asset paths (e.g., `/cc-trace-viewer/assets/...`)
+5. Create `.github/workflows/deploy.yml`
+6. Commit and push changes to trigger first deployment
 
-### Coolify Configuration Notes
-Once files are committed and pushed, configure in Coolify UI:
-- **Build Pack:** Dockerfile
-- **Dockerfile Location:** `/Dockerfile`
-- **Port:** 80
-- **Health Check:** Optional, HTTP GET to `/`
-- **Environment Variables:** Any `VITE_*` prefixed vars needed
+### GitHub Repository Configuration
+After pushing the workflow file, configure in GitHub:
+1. Go to repository **Settings** → **Pages**
+2. Under **Source**, select **GitHub Actions**
+3. The workflow will automatically deploy on the next push to `main`
+4. Site will be available at: `https://<username>.github.io/cc-trace-viewer/`
+
+### Post-Deployment Testing
+Once deployed, verify:
+- Homepage loads correctly
+- All assets (CSS, JS, images) load without 404 errors
+- React Router navigation works (no 404 on page refresh)
+- GitHub Pages automatically handles SPA routing (serves index.html for all paths)
 
 ---
 
@@ -281,7 +301,8 @@ Once files are committed and pushed, configure in Coolify UI:
 - [ ] Verify demo links are completely removed
 - [ ] Verify test files are organized in `src/__tests__/`
 - [ ] Verify root test scripts are deleted
-- [ ] Verify Dockerfile and nginx.conf exist at root
+- [ ] Verify GitHub Actions workflow exists at `.github/workflows/deploy.yml`
+- [ ] Verify `vite.config.ts` has correct `base` configuration
 - [ ] Review git status to ensure only intended changes
 - [ ] Update README.md if needed (optional)
 - [ ] Commit all changes with clear commit message
@@ -308,9 +329,13 @@ ls src/__tests__/
 ls test-*.{ts,js} 2>/dev/null
 # Expected: No such files
 
-# Docker files exist
-ls Dockerfile nginx.conf
-# Expected: Both files exist
+# GitHub Actions workflow exists
+ls .github/workflows/deploy.yml
+# Expected: File exists
+
+# Vite config has base path
+grep "base:" vite.config.ts
+# Expected: base: '/cc-trace-viewer/'
 
 # Check git status
 git status
@@ -321,20 +346,19 @@ git status
 - [ ] All phases completed and verified
 - [ ] Code committed to git
 - [ ] Repository ready to be made public
-- [ ] Dockerfile tested (locally or prepared for Coolify test)
+- [ ] GitHub Actions workflow configured
 - [ ] No sensitive data in codebase (API keys, credentials, etc.)
 
 ### Deployment Steps (Post-Implementation)
-1. Push changes to git repository
-2. Make repository public on GitHub/GitLab
-3. In Coolify:
-   - Create new resource
-   - Connect to repository
-   - Select "Dockerfile" build pack
-   - Set port to 80
-   - Deploy
-4. Test deployed application:
+1. Push changes to git repository (triggers GitHub Actions deployment)
+2. Make repository public on GitHub
+3. In GitHub repository settings:
+   - Go to **Settings** → **Pages**
+   - Under **Source**, select **GitHub Actions**
+4. Monitor GitHub Actions tab to see deployment progress
+5. Test deployed application at `https://<username>.github.io/cc-trace-viewer/`:
    - Homepage loads
+   - All assets load without 404 errors
    - Navigation works
    - Direct URL navigation works (SPA routing)
    - No 404 errors on routes
@@ -348,7 +372,7 @@ This implementation plan consists of 5 phases:
 1. **Remove Demo Navigation Links** - Clean up hardcoded demo routes
 2. **Reorganize Test Files** - Centralize tests in `src/__tests__/`
 3. **Fix Lint Configuration and Errors** - Achieve zero lint errors in `src/`
-4. **Create Docker Deployment Configuration** - Production-ready containerization
+4. **Set Up GitHub Pages Deployment** - Configure Vite and create GitHub Actions workflow
 5. **Final Verification** - Comprehensive pre-deployment checks
 
 Each phase is designed to be:
@@ -365,4 +389,4 @@ Each phase is designed to be:
 
 **Total:** ~2-2.5 hours
 
-Once completed, the project will be ready for public release and deployment to Coolify.
+Once completed, the project will be ready for public release and deployment to GitHub Pages.
