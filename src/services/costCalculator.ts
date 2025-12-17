@@ -67,13 +67,6 @@ export const CLAUDE_PRICING: Record<string, ModelPricing> = {
     cacheWrite1h: 30,      // 15 × 2.0
     cacheRead: 1.5,        // 15 × 0.1
   },
-  'claude-opus-4-5-20250514': {
-    input: 15,
-    output: 75,
-    cacheWrite5m: 18.75,
-    cacheWrite1h: 30,
-    cacheRead: 1.5,
-  },
   'claude-sonnet-4-5': {
     input: 3,
     output: 15,
@@ -85,16 +78,6 @@ export const CLAUDE_PRICING: Record<string, ModelPricing> = {
     outputLongContext: 30,
     longContextThreshold: 200000,
   },
-  'claude-sonnet-4-5-20250929': {
-    input: 3,
-    output: 15,
-    cacheWrite5m: 3.75,
-    cacheWrite1h: 6,
-    cacheRead: 0.3,
-    inputLongContext: 6,
-    outputLongContext: 30,
-    longContextThreshold: 200000,
-  },
   'claude-haiku-4-5': {
     input: 1,
     output: 5,
@@ -102,23 +85,9 @@ export const CLAUDE_PRICING: Record<string, ModelPricing> = {
     cacheWrite1h: 2,       // 1 × 2.0
     cacheRead: 0.1,        // 1 × 0.1
   },
-  'claude-haiku-4-5-20250514': {
-    input: 1,
-    output: 5,
-    cacheWrite5m: 1.25,
-    cacheWrite1h: 2,
-    cacheRead: 0.1,
-  },
 
-  // Claude 4 Models (Legacy)
+  // Claude 4 Models
   'claude-opus-4': {
-    input: 15,
-    output: 75,
-    cacheWrite5m: 18.75,
-    cacheWrite1h: 30,
-    cacheRead: 1.5,
-  },
-  'claude-opus-4-20241113': {
     input: 15,
     output: 75,
     cacheWrite5m: 18.75,
@@ -132,58 +101,37 @@ export const CLAUDE_PRICING: Record<string, ModelPricing> = {
     cacheWrite1h: 6,
     cacheRead: 0.3,
   },
-  'claude-sonnet-4-20241022': {
-    input: 3,
-    output: 15,
-    cacheWrite5m: 3.75,
-    cacheWrite1h: 6,
-    cacheRead: 0.3,
-  },
-  'claude-sonnet-4-20250514': {
-    input: 3,
-    output: 15,
-    cacheWrite5m: 3.75,
-    cacheWrite1h: 6,
-    cacheRead: 0.3,
-  },
 
-  // Claude 3 Models (Deprecated/Retiring)
-  'claude-3-opus-20240229': {
+  // Claude 3 Models
+  'claude-3-opus': {
     input: 15,
     output: 75,
     cacheWrite5m: 18.75,
     cacheWrite1h: 30,
     cacheRead: 1.5,
   },
-  'claude-3-5-sonnet-20241022': {
+  'claude-3-5-sonnet': {
     input: 3,
     output: 15,
     cacheWrite5m: 3.75,
     cacheWrite1h: 6,
     cacheRead: 0.3,
   },
-  'claude-3-5-sonnet-20240620': {
-    input: 3,
-    output: 15,
-    cacheWrite5m: 3.75,
-    cacheWrite1h: 6,
-    cacheRead: 0.3,
-  },
-  'claude-3-5-haiku-20241022': {
+  'claude-3-5-haiku': {
     input: 1,
     output: 5,
     cacheWrite5m: 1.25,
     cacheWrite1h: 2,
     cacheRead: 0.1,
   },
-  'claude-3-haiku-20240307': {
+  'claude-3-haiku': {
     input: 0.25,
     output: 1.25,
     cacheWrite5m: 0.3125,  // 0.25 × 1.25
     cacheWrite1h: 0.5,     // 0.25 × 2.0
     cacheRead: 0.025,      // 0.25 × 0.1
   },
-  'claude-3-sonnet-20240229': {
+  'claude-3-sonnet': {
     input: 3,
     output: 15,
     cacheWrite5m: 3.75,
