@@ -215,6 +215,21 @@ export function formatCost(cost: number): string {
 }
 
 /**
+ * Normalizes a model name by removing date suffixes
+ *
+ * @param model - The full model identifier (e.g., "claude-haiku-4-5-20251001")
+ * @returns Normalized model name (e.g., "claude-haiku-4-5")
+ *
+ * @example
+ * normalizeModelName('claude-haiku-4-5-20251001') // "claude-haiku-4-5"
+ * normalizeModelName('claude-sonnet-4-5') // "claude-sonnet-4-5"
+ */
+function normalizeModelName(model: string): string {
+  // Remove date suffix pattern (8 digits at end)
+  return model.replace(/-\d{8}$/, '');
+}
+
+/**
  * Calculates the cost of a Claude API request based on token usage and model
  *
  * @param model - The Claude model identifier (e.g., "claude-sonnet-4-5")
@@ -257,8 +272,11 @@ export function calculateRequestCost(
   tokens: TokenUsage,
   totalInputTokens?: number
 ): number | null {
-  // Look up pricing for the model
-  const pricing = CLAUDE_PRICING[model];
+  // Normalize model name to strip date suffix
+  const normalizedModel = normalizeModelName(model);
+
+  // Look up pricing for the normalized model
+  const pricing = CLAUDE_PRICING[normalizedModel];
 
   if (!pricing) {
     // Unknown model - return null
