@@ -1,7 +1,8 @@
-import type { ClaudeTraceEntry, TokenUsage } from '../types/trace';
+import type { ClaudeTraceEntry, TokenUsage, ConversationThreadGroup } from '../types/trace';
 import { traceParserService } from './traceParser';
 import type { ContentBlock } from '../utils/messageFormatting';
 import { calculateRequestCost, aggregateRequestCosts } from './costCalculator';
+import { conversationGrouperService } from './conversationGrouper';
 
 export interface RequestMetrics {
   id: string;
@@ -35,6 +36,7 @@ export interface RequestMetrics {
   rawRequest: import('../types/trace').TraceRequest;
   rawResponse: import('../types/trace').TraceResponse;
   cost: number | null; // Cost in USD, null if model pricing is unknown
+  conversationThreadGroup?: ConversationThreadGroup; // Phase 2: Conversation grouping for visual styling
 }
 
 export interface RequestFilters {
@@ -228,7 +230,30 @@ export class RequestAnalyzerService {
   }
 
   analyzeRequests(requests: ClaudeTraceEntry[]): RequestMetrics[] {
-    return requests.map((request, index) => this.analyzeRequest(request, index));
+    // First, analyze all requests
+    const metrics = requests.map((request, index) => this.analyzeRequest(request, index));
+
+    // Then, group conversations and assign conversation groups to metrics
+    const conversationGroups = conversationGrouperService.groupConversations(requests);
+
+    // Create a map of request timestamps to conversation groups
+    const requestToGroupMap = new Map<string, ConversationThreadGroup>();
+    for (const [, group] of conversationGroups) {
+      for (let i = 0; i < group.requestIds.length; i++) {
+        const requestId = group.requestIds[i];
+        requestToGroupMap.set(requestId, group);
+      }
+    }
+
+    // Assign conversation groups to metrics
+    for (const metric of metrics) {
+      const group = requestToGroupMap.get(metric.id);
+      if (group) {
+        metric.conversationThreadGroup = group;
+      }
+    }
+
+    return metrics;
   }
 
   filterRequests(requests: RequestMetrics[], filters: Partial<RequestFilters>): RequestMetrics[] {

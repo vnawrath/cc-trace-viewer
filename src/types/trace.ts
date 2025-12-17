@@ -152,3 +152,15 @@ export interface ConversationMetadata {
     messageCount: number;
   } | null;
 }
+
+// Phase 2: Conversation grouping for visual styling
+export interface ConversationThreadGroup {
+  groupId: string;          // Hash of system+model+firstMessage
+  groupIndex: number;       // Sequential index (0, 1, 2...)
+  requestIds: string[];     // All request IDs in this group
+  isSingleTurn: boolean;    // True if messages.length <= 2
+  systemPrompt: string;     // System prompt text
+  model: string;            // Model name
+  firstUserMessage: string; // Normalized first user message
+  color?: string;           // Generated color (hsl format)
+}
