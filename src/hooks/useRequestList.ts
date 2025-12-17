@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { sessionManagerService } from '../services/sessionManager';
 import { requestAnalyzerService, type RequestMetrics, type RequestFilters, type SortField, type SortDirection } from '../services/requestAnalyzer';
 import type { SessionData } from '../types/trace';
@@ -42,6 +42,9 @@ export interface UseRequestListReturn {
   setSort: (field: SortField, direction: SortDirection) => void;
   clearFilters: () => void;
   refreshData: () => Promise<void>;
+
+  // Navigation
+  getAdjacentRequests: (currentRequestId: string) => { prevRequestId: string | null; nextRequestId: string | null };
 }
 
 export function useRequestList(sessionId: string): UseRequestListReturn {
@@ -127,6 +130,21 @@ export function useRequestList(sessionId: string): UseRequestListReturn {
     await loadSessionData();
   };
 
+  // Get adjacent requests for navigation (uses filtered requests)
+  const getAdjacentRequests = useCallback((currentRequestId: string): { prevRequestId: string | null; nextRequestId: string | null } => {
+    // Find current request in filtered list
+    const currentIndex = filteredRequests.findIndex(req => req.id === currentRequestId);
+
+    if (currentIndex === -1) {
+      return { prevRequestId: null, nextRequestId: null };
+    }
+
+    return {
+      prevRequestId: currentIndex > 0 ? filteredRequests[currentIndex - 1].id : null,
+      nextRequestId: currentIndex < filteredRequests.length - 1 ? filteredRequests[currentIndex + 1].id : null
+    };
+  }, [filteredRequests]);
+
   return {
     sessionData,
     requests,
@@ -143,6 +161,7 @@ export function useRequestList(sessionId: string): UseRequestListReturn {
     setFilters,
     setSort,
     clearFilters,
-    refreshData
+    refreshData,
+    getAdjacentRequests
   };
 }

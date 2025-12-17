@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router';
+import { useParams, Link, useNavigate } from 'react-router';
 import { DocumentHead } from '../components/DocumentHead';
 import { SessionSummary } from '../components/SessionSummary';
 import { RequestFilters } from '../components/RequestFilters';
 import { RequestCard } from '../components/RequestCard';
 import { useRequestList } from '../hooks/useRequestList';
 import { useDirectory } from '../contexts/DirectoryContext';
+import { useSessionData } from '../hooks/useSessionData';
 
 export function RequestListPage() {
   const params = useParams();
   const sessionId = params.sessionId!;
+  const navigate = useNavigate();
   const [filtersVisible, setFiltersVisible] = useState(false);
   const { isDirectorySelected, isRestoring } = useDirectory();
+  const { getAdjacentSessions } = useSessionData();
 
   const {
     sessionData,
@@ -30,18 +33,35 @@ export function RequestListPage() {
     clearFilters
   } = useRequestList(sessionId);
 
-  // Keyboard shortcut for filter toggle (Ctrl/Cmd+F)
+  // Get adjacent sessions for navigation
+  const { prevSessionId, nextSessionId } = getAdjacentSessions(sessionId);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Filter toggle (Ctrl/Cmd+F)
       if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
         e.preventDefault();
         setFiltersVisible(prev => !prev);
+        return;
+      }
+
+      // Session navigation (Alt+Left/Right)
+      if (e.altKey && e.key === 'ArrowLeft' && prevSessionId) {
+        e.preventDefault();
+        navigate(`/sessions/${prevSessionId}/requests`);
+        return;
+      }
+      if (e.altKey && e.key === 'ArrowRight' && nextSessionId) {
+        e.preventDefault();
+        navigate(`/sessions/${nextSessionId}/requests`);
+        return;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [prevSessionId, nextSessionId, navigate]);
 
   // Count active filters
   const activeFilterCount = Object.values(filters).filter(value => {
@@ -173,6 +193,32 @@ export function RequestListPage() {
       <div className="flex gap-6">
         {/* Main Content Area */}
         <div className="flex-1 min-w-0 space-y-4">
+          {/* Session Navigation */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => prevSessionId && navigate(`/sessions/${prevSessionId}/requests`)}
+              disabled={!prevSessionId}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
+              title="Previous session (Alt+Left)"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="text-sm text-gray-200">Previous Session</span>
+            </button>
+            <button
+              onClick={() => nextSessionId && navigate(`/sessions/${nextSessionId}/requests`)}
+              disabled={!nextSessionId}
+              className="flex items-center gap-2 px-3 py-2 bg-gray-900 border border-gray-700 rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-900"
+              title="Next session (Alt+Right)"
+            >
+              <span className="text-sm text-gray-200">Next Session</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
           {/* Collapsible Filter Panel */}
           <div className="relative">
             <button

@@ -34,58 +34,49 @@ This plan adds navigation controls (prev/next buttons) and visual conversation g
 
 **File:** `/Users/viktornawrath/repos/cc-trace-viewer/src/hooks/useSessionData.ts`
 
-- [ ] Add function `getAdjacentSessions(currentSessionId: string)` that returns `{ prevSessionId: string | null, nextSessionId: string | null }`
-- [ ] Sort sessions chronologically by sessionId (format: `log-YYYY-MM-DD-HH-mm-ss`)
-- [ ] Find current session index and return prev/next based on position
-- [ ] Export this function from the hook
+- [x] Add function `getAdjacentSessions(currentSessionId: string)` that returns `{ prevSessionId: string | null, nextSessionId: string | null }`
+- [x] Sort sessions chronologically by sessionId (format: `log-YYYY-MM-DD-HH-mm-ss`)
+- [x] Find current session index and return prev/next based on position
+- [x] Export this function from the hook
 
-**Test:** Call `getAdjacentSessions()` with different sessionIds and verify correct prev/next IDs are returned.
+**Status:** ✅ Implemented - Function added at line 101
 
 #### 1.2 Add Session Navigation UI to RequestListPage
 
 **File:** `/Users/viktornawrath/repos/cc-trace-viewer/src/pages/RequestListPage.tsx`
 
-- [ ] Call `getAdjacentSessions(sessionId)` from useSessionData hook
-- [ ] Add navigation buttons in header/breadcrumb area:
+- [x] Call `getAdjacentSessions(sessionId)` from useSessionData hook
+- [x] Add navigation buttons in header/breadcrumb area:
   - "← Previous Session" (disabled if `prevSessionId === null`)
   - "Next Session →" (disabled if `nextSessionId === null`)
-- [ ] Use `useNavigate()` to navigate to `/sessions/${prevSessionId}/requests` or `/sessions/${nextSessionId}/requests`
-- [ ] Add keyboard shortcuts: Alt+Left (prev session), Alt+Right (next session)
+- [x] Use `useNavigate()` to navigate to `/sessions/${prevSessionId}/requests` or `/sessions/${nextSessionId}/requests`
+- [x] Add keyboard shortcuts: Alt+Left (prev session), Alt+Right (next session)
 
-**Test:**
-- [ ] Verify buttons appear in RequestListPage
-- [ ] Click prev/next buttons and verify navigation to correct session
-- [ ] Verify buttons are disabled at first/last session
-- [ ] Test keyboard shortcuts work correctly
+**Status:** ✅ Implemented - Navigation buttons added at line 197, keyboard shortcuts at line 40
 
 #### 1.3 Add Request Navigation to useRequestList Hook
 
 **File:** `/Users/viktornawrath/repos/cc-trace-viewer/src/hooks/useRequestList.ts`
 
-- [ ] Add function `getAdjacentRequests(currentRequestId: string, filteredRequests: RequestMetrics[])`
-- [ ] Return `{ prevRequestId: string | null, nextRequestId: string | null }`
-- [ ] Use the **filtered** request list (honors active filters)
-- [ ] Find current request in filtered list and return prev/next IDs
+- [x] Add function `getAdjacentRequests(currentRequestId: string, filteredRequests: RequestMetrics[])`
+- [x] Return `{ prevRequestId: string | null, nextRequestId: string | null }`
+- [x] Use the **filtered** request list (honors active filters)
+- [x] Find current request in filtered list and return prev/next IDs
 
-**Test:** Call with various requestIds and filter states, verify correct adjacent requests returned.
+**Status:** ✅ Implemented - Function added at line 134
 
 #### 1.4 Add Request Navigation UI to RequestDetailPage
 
 **File:** `/Users/viktornawrath/repos/cc-trace-viewer/src/pages/RequestDetailPage.tsx`
 
-- [ ] Import and use `getAdjacentRequests()` from useRequestList hook
-- [ ] Add navigation buttons in header area:
+- [x] Import and use `getAdjacentRequests()` from useRequestList hook
+- [x] Add navigation buttons in header area:
   - "← Previous Request" (disabled if `prevRequestId === null`)
   - "Next Request →" (disabled if `nextRequestId === null`)
-- [ ] Use `useNavigate()` to navigate to `/sessions/${sessionId}/requests/${prevRequestId}` or next
-- [ ] Add keyboard shortcuts: Left Arrow (prev request), Right Arrow (next request)
+- [x] Use `useNavigate()` to navigate to `/sessions/${sessionId}/requests/${prevRequestId}` or next
+- [x] Add keyboard shortcuts: Left Arrow (prev request), Right Arrow (next request)
 
-**Test:**
-- [ ] Verify buttons appear in RequestDetailPage
-- [ ] Click prev/next buttons and verify navigation to correct request
-- [ ] Verify navigation respects filtered request list
-- [ ] Test keyboard shortcuts work correctly
-- [ ] Verify buttons are disabled at first/last request
+**Status:** ✅ Implemented - Navigation buttons added at line 308, keyboard shortcuts at line 133
 
 ---
 

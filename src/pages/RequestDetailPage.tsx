@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useNavigate } from 'react-router';
 import { DocumentHead } from '../components/DocumentHead';
 import { CopyableText } from '../components/CopyableText';
 import { ConversationView } from '../components/ConversationView';
 import { useRequestDetail } from '../hooks/useRequestDetail';
+import { useRequestList } from '../hooks/useRequestList';
 import { useDirectory } from '../contexts/DirectoryContext';
 import { traceParserService } from '../services/traceParser';
 import type { TraceResponse, TokenUsage } from '../types/trace';
@@ -119,11 +120,16 @@ export function RequestDetailPage() {
   const params = useParams();
   const sessionId = params.sessionId!;
   const requestId = params.requestId!;
+  const navigate = useNavigate();
   const { request, loading, error } = useRequestDetail(sessionId, requestId);
+  const { getAdjacentRequests } = useRequestList(sessionId);
   const { isDirectorySelected, isRestoring } = useDirectory();
   const [activeTab, setActiveTab] = useState<TabType>('messages');
 
-  // Keyboard shortcuts for tabs
+  // Get adjacent requests for navigation
+  const { prevRequestId, nextRequestId } = getAdjacentRequests(requestId);
+
+  // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
       // Don't trigger if user is typing in an input or textarea
@@ -131,6 +137,19 @@ export function RequestDetailPage() {
         return;
       }
 
+      // Request navigation (Left/Right arrow keys)
+      if (e.key === 'ArrowLeft' && prevRequestId && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        navigate(`/sessions/${sessionId}/requests/${prevRequestId}`);
+        return;
+      }
+      if (e.key === 'ArrowRight' && nextRequestId && !e.altKey && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        navigate(`/sessions/${sessionId}/requests/${nextRequestId}`);
+        return;
+      }
+
+      // Tab shortcuts
       switch (e.key) {
         case '1':
           setActiveTab('messages');
@@ -152,7 +171,7 @@ export function RequestDetailPage() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, []);
+  }, [prevRequestId, nextRequestId, navigate, sessionId]);
 
   // Show restoration message
   if (isRestoring) {
@@ -273,8 +292,8 @@ export function RequestDetailPage() {
       <div className="flex gap-6">
         {/* Main Content Area */}
         <div className="flex-1 min-w-0">
-          {/* Back Navigation */}
-          <div className="mb-4">
+          {/* Back Navigation and Request Navigation */}
+          <div className="mb-4 flex items-center justify-between">
             <Link
               to={`/sessions/${sessionId}/requests`}
               className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-terminal-cyan transition-colors"
@@ -284,6 +303,32 @@ export function RequestDetailPage() {
               </svg>
               Back to Requests
             </Link>
+
+            {/* Request Navigation Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => prevRequestId && navigate(`/sessions/${sessionId}/requests/${prevRequestId}`)}
+                disabled={!prevRequestId}
+                className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-md hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-800 text-sm"
+                title="Previous request (Left Arrow)"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="text-gray-200">Previous</span>
+              </button>
+              <button
+                onClick={() => nextRequestId && navigate(`/sessions/${sessionId}/requests/${nextRequestId}`)}
+                disabled={!nextRequestId}
+                className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-md hover:bg-gray-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-gray-800 text-sm"
+                title="Next request (Right Arrow)"
+              >
+                <span className="text-gray-200">Next</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Tab Navigation */}

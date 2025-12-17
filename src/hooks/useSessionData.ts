@@ -19,6 +19,9 @@ export interface UseSessionDataReturn {
   refreshSessions: () => Promise<void>;
   loadSession: (sessionId: string) => Promise<SessionData>;
   clearError: () => void;
+
+  // Navigation
+  getAdjacentSessions: (currentSessionId: string) => { prevSessionId: string | null; nextSessionId: string | null };
 }
 
 export function useSessionData(): UseSessionDataReturn {
@@ -94,6 +97,24 @@ export function useSessionData(): UseSessionDataReturn {
     setSessionLoadError(null);
   }, []);
 
+  // Get adjacent sessions for navigation
+  const getAdjacentSessions = useCallback((currentSessionId: string): { prevSessionId: string | null; nextSessionId: string | null } => {
+    // Sort sessions chronologically by sessionId (format: log-YYYY-MM-DD-HH-mm-ss)
+    const sortedSessions = [...sessions].sort((a, b) => a.sessionId.localeCompare(b.sessionId));
+
+    // Find current session index
+    const currentIndex = sortedSessions.findIndex(session => session.sessionId === currentSessionId);
+
+    if (currentIndex === -1) {
+      return { prevSessionId: null, nextSessionId: null };
+    }
+
+    return {
+      prevSessionId: currentIndex > 0 ? sortedSessions[currentIndex - 1].sessionId : null,
+      nextSessionId: currentIndex < sortedSessions.length - 1 ? sortedSessions[currentIndex + 1].sessionId : null
+    };
+  }, [sessions]);
+
   return {
     // Session discovery
     sessions,
@@ -109,6 +130,9 @@ export function useSessionData(): UseSessionDataReturn {
     refreshSessions,
     loadSession,
     clearError,
+
+    // Navigation
+    getAdjacentSessions,
   };
 }
 
