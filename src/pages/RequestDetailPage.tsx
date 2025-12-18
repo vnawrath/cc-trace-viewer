@@ -121,7 +121,7 @@ export function RequestDetailPage() {
   const sessionId = params.sessionId!;
   const requestId = params.requestId!;
   const navigate = useNavigate();
-  const { request, loading, error } = useRequestDetail(sessionId, requestId);
+  const { request, metrics, loading, error } = useRequestDetail(sessionId, requestId);
   const { getAdjacentRequests } = useRequestList(sessionId);
   const { isDirectorySelected, isRestoring } = useDirectory();
   const [activeTab, setActiveTab] = useState<TabType>('messages');
@@ -285,13 +285,21 @@ export function RequestDetailPage() {
     }
   }
 
+  // Conversation group styling
+  const conversationGroup = metrics?.conversationThreadGroup;
+  const borderStyle = conversationGroup?.isSingleTurn
+    ? '4px solid rgb(156, 163, 175)'  // Grey for single-turn
+    : conversationGroup?.color
+      ? `4px solid ${conversationGroup.color}`  // Color for multi-turn
+      : '4px solid transparent';  // Transparent fallback to prevent layout shift
+
   return (
     <>
       <DocumentHead title={`Request ${requestId} - Session ${sessionId}`} description={`Detailed view of request ${requestId} in session ${sessionId}`} />
 
       <div className="flex gap-6">
         {/* Main Content Area */}
-        <div className="flex-1 min-w-0">
+        <div className={`flex-1 min-w-0 transition-all duration-200 ${conversationGroup?.isSingleTurn ? 'opacity-60' : ''}`} style={{ borderLeft: borderStyle }}>
           {/* Back Navigation and Request Navigation */}
           <div className="mb-4 flex items-center justify-between">
             <Link

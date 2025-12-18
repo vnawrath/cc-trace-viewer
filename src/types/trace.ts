@@ -158,7 +158,8 @@ export interface ConversationThreadGroup {
   groupId: string;          // Hash of system+model+firstMessage
   groupIndex: number;       // Sequential index (0, 1, 2...)
   requestIds: string[];     // All request IDs in this group
-  isSingleTurn: boolean;    // True if messages.length <= 2
+  finalRequestId: string;   // ID of the request with longest message array
+  isSingleTurn: boolean;    // True if messages.length <= 2 (checked on final request)
   systemPrompt: string;     // System prompt text
   model: string;            // Model name
   firstUserMessage: string; // Normalized first user message

@@ -238,7 +238,7 @@ export class RequestAnalyzerService {
 
     // Create a map of request timestamps to conversation groups
     const requestToGroupMap = new Map<string, ConversationThreadGroup>();
-    for (const [, group] of conversationGroups) {
+    for (const [groupId, group] of conversationGroups) {
       for (let i = 0; i < group.requestIds.length; i++) {
         const requestId = group.requestIds[i];
         requestToGroupMap.set(requestId, group);

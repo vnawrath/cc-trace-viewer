@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { sessionManagerService } from '../services/sessionManager';
+import { requestAnalyzerService, type RequestMetrics } from '../services/requestAnalyzer';
 import type { ClaudeTraceEntry } from '../types/trace';
 import { useDirectory } from '../contexts/DirectoryContext';
 
 export interface UseRequestDetailReturn {
   request: ClaudeTraceEntry | null;
+  metrics: RequestMetrics | null;
   loading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
@@ -12,9 +14,10 @@ export interface UseRequestDetailReturn {
 
 export function useRequestDetail(sessionId: string, requestId: string): UseRequestDetailReturn {
   const [request, setRequest] = useState<ClaudeTraceEntry | null>(null);
+  const [metrics, setMetrics] = useState<RequestMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Directory context for restoration state
   const { restorationAttempted, isDirectorySelected } = useDirectory();
 
@@ -37,6 +40,14 @@ export function useRequestDetail(sessionId: string, requestId: string): UseReque
       }
 
       setRequest(requestEntry);
+
+      // Analyze all requests to get metrics with conversation groups
+      const allMetrics = requestAnalyzerService.analyzeRequests(sessionData.requests);
+
+      // Find the metrics for this specific request
+      const requestMetrics = allMetrics.find(m => m.id === requestId);
+
+      setMetrics(requestMetrics || null);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load request data';
       setError(errorMessage);
@@ -60,6 +71,7 @@ export function useRequestDetail(sessionId: string, requestId: string): UseReque
 
   return {
     request,
+    metrics,
     loading,
     error,
     refreshData

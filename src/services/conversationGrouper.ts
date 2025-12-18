@@ -1,5 +1,11 @@
 import type { ClaudeTraceEntry, ConversationThreadGroup } from '../types/trace';
 
+// MessageParam type matching Anthropic API structure
+interface MessageParam {
+  role: "user" | "assistant";
+  content: string | Array<{type: string; text?: string; [key: string]: unknown}>;
+}
+
 /**
  * Service for grouping conversation threads based on system prompt, model, and first user message
  * Phase 2: Conversation Grouping Logic
@@ -9,12 +15,15 @@ export class ConversationGrouperService {
    * Group conversations by system prompt + model + normalized first user message
    */
   groupConversations(requests: ClaudeTraceEntry[]): Map<string, ConversationThreadGroup> {
-    // Group requests by conversation key
-    const conversationMap = new Map<string, ClaudeTraceEntry[]>();
+    // Group requests by conversation key, with their global indices
+    const conversationMap = new Map<string, Array<{entry: ClaudeTraceEntry, globalIndex: number}>>();
 
-    for (const request of requests) {
+    for (let i = 0; i < requests.length; i++) {
+      const request = requests[i];
       const messages = request.request.body.messages;
-      if (!messages || messages.length === 0) continue;
+      if (!messages || messages.length === 0) {
+        continue;
+      }
 
       // Extract system prompt
       const systemPrompt = this.extractSystemPrompt(request);
@@ -22,11 +31,16 @@ export class ConversationGrouperService {
       // Extract model
       const model = request.request.body.model;
 
-      // Extract and normalize first user message
-      const firstUserMessage = this.extractFirstUserMessage(request);
-      const normalizedFirstMessage = this.normalizeMessage(firstUserMessage);
+      // Extract first user message as MessageParam (preserving structure)
+      const firstUserMessage = this.extractFirstUserMessageParam(request);
+      if (!firstUserMessage) {
+        continue;
+      }
 
-      // Create conversation key
+      // Normalize the MessageParam (preserves structure)
+      const normalizedFirstMessage = this.normalizeMessageForGrouping(firstUserMessage);
+
+      // Create conversation key from normalized MessageParam
       const conversationKey = JSON.stringify({
         system: systemPrompt,
         model,
@@ -39,7 +53,7 @@ export class ConversationGrouperService {
       if (!conversationMap.has(groupId)) {
         conversationMap.set(groupId, []);
       }
-      conversationMap.get(groupId)!.push(request);
+      conversationMap.get(groupId)!.push({ entry: request, globalIndex: i });
     }
 
     // Convert to ConversationThreadGroup objects with sequential indices
@@ -47,18 +61,32 @@ export class ConversationGrouperService {
     let groupIndex = 0;
 
     for (const [groupId, groupRequests] of conversationMap) {
-      const firstRequest = groupRequests[0];
-      const messages = firstRequest.request.body.messages;
-      const isSingleTurn = messages.length <= 2;
+      // Find the "final pair" - the request with the longest message array
+      const finalRequest = groupRequests.reduce((longest, current) => {
+        const currentMessages = current.entry.request.body.messages || [];
+        const longestMessages = longest.entry.request.body.messages || [];
+        return currentMessages.length > longestMessages.length ? current : longest;
+      }, groupRequests[0]);
+
+      // Check single-turn on the final request (not the first)
+      const finalMessages = finalRequest.entry.request.body.messages;
+      const isSingleTurn = finalMessages.length <= 2;
+
+      // Generate request IDs using global indices
+      const requestIds = groupRequests.map(req => `${req.entry.request.timestamp}-${req.globalIndex}`);
+
+      // Find the final request ID
+      const finalRequestId = `${finalRequest.entry.request.timestamp}-${finalRequest.globalIndex}`;
 
       const group: ConversationThreadGroup = {
         groupId,
         groupIndex: groupIndex++,
-        requestIds: groupRequests.map((req, idx) => `${req.request.timestamp}-${idx}`),
+        requestIds,
+        finalRequestId,
         isSingleTurn,
-        systemPrompt: this.extractSystemPrompt(firstRequest),
-        model: firstRequest.request.body.model,
-        firstUserMessage: this.extractFirstUserMessage(firstRequest),
+        systemPrompt: this.extractSystemPrompt(finalRequest.entry),
+        model: finalRequest.entry.request.body.model,
+        firstUserMessage: this.extractFirstUserMessage(finalRequest.entry),
         color: this.generateColorFromHash(groupId)
       };
 
@@ -79,7 +107,22 @@ export class ConversationGrouperService {
   }
 
   /**
-   * Extract first user message from request
+   * Extract first user message as MessageParam (preserving structure)
+   */
+  private extractFirstUserMessageParam(entry: ClaudeTraceEntry): MessageParam | null {
+    const messages = entry.request.body.messages;
+    const firstUserMessage = messages.find(msg => msg.role === 'user');
+
+    if (!firstUserMessage) return null;
+
+    return {
+      role: firstUserMessage.role,
+      content: firstUserMessage.content
+    };
+  }
+
+  /**
+   * Extract first user message from request (as string for display)
    */
   private extractFirstUserMessage(entry: ClaudeTraceEntry): string {
     const messages = entry.request.body.messages;
@@ -102,7 +145,44 @@ export class ConversationGrouperService {
   }
 
   /**
-   * Normalize message content by stripping dynamic patterns
+   * Normalize MessageParam for grouping (preserves structure, normalizes text content)
+   * Matches claude-trace implementation
+   */
+  private normalizeMessageForGrouping(message: MessageParam): MessageParam {
+    if (!message || !message.content) return message;
+
+    let normalizedContent: string | Array<{type: string; text?: string; [key: string]: unknown}>;
+
+    if (Array.isArray(message.content)) {
+      normalizedContent = message.content.map((block) => {
+        if (block.type === "text" && "text" in block) {
+          let text = String(block.text);
+
+          // Normalize timestamps
+          text = text.replace(/Generated \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/g, "Generated [TIMESTAMP]");
+
+          // Normalize file paths
+          text = text.replace(/The user opened the file [^\s]+ in the IDE\./g, "The user opened file in IDE.");
+
+          // Normalize system reminders
+          text = text.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, "[SYSTEM-REMINDER]");
+
+          return { ...block, type: "text", text: text };
+        }
+        return block;
+      });
+    } else {
+      normalizedContent = message.content;
+    }
+
+    return {
+      role: message.role,
+      content: normalizedContent,
+    };
+  }
+
+  /**
+   * Normalize message content by stripping dynamic patterns (legacy method for testing)
    * Public for testing purposes
    */
   normalizeMessage(content: string): string {

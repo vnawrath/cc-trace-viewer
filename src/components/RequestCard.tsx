@@ -13,6 +13,15 @@ interface RequestCardProps {
 }
 
 export function RequestCard({ request, sessionId, showDetailedView = false }: RequestCardProps) {
+  // Extract conversation group for styling
+  const conversationGroup = request.conversationThreadGroup;
+
+  const borderStyle = conversationGroup?.isSingleTurn
+    ? '4px solid rgb(156, 163, 175)'  // Grey for single-turn
+    : conversationGroup?.color
+      ? `4px solid ${conversationGroup.color}`  // Color for multi-turn
+      : '4px solid transparent';  // Transparent fallback to prevent layout shift
+
   const formatDuration = (seconds: number) => {
     if (seconds < 1) return `${(seconds * 1000).toFixed(0)}ms`;
     if (seconds < 60) return `${seconds.toFixed(1)}s`;
@@ -187,7 +196,7 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
       {/* First row: User Message + Stats */}
       <tr className="hover:bg-gray-800/50 transition-colors group border-b-0" title={request.stopReason ? `Stop reason: ${request.stopReason}` : undefined}>
         {/* User Message Preview - Takes available space */}
-        <td className="px-3 py-2 max-w-0">
+        <td className="px-3 py-2 max-w-0 transition-all duration-200" style={{ borderLeft: borderStyle }}>
           <Link
             to={`/sessions/${sessionId}/requests/${request.id}`}
             className="block"
@@ -195,7 +204,7 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
             <UserMessagePreview
               messages={messages}
               maxLength={150}
-              className="text-xs text-gray-300 italic"
+              className={`text-xs text-gray-300 italic ${conversationGroup?.isSingleTurn ? 'opacity-60' : ''}`}
             />
           </Link>
         </td>
@@ -262,18 +271,18 @@ export function RequestCard({ request, sessionId, showDetailedView = false }: Re
       {/* Second row: Assistant Response Preview */}
       <tr className="hover:bg-gray-800/50 transition-colors group bg-gray-900/40 border-b border-gray-800">
         {/* Assistant Response Preview */}
-        <td className="px-3 py-2 max-w-0">
+        <td className="px-3 py-2 max-w-0 transition-all duration-200" style={{ borderLeft: borderStyle }}>
           <Link
             to={`/sessions/${sessionId}/requests/${request.id}`}
             className="block pl-4"
           >
             {request.isTokenCountRequest ? (
-              <div className="text-xs text-gray-500 italic">Token count request - no assistant response</div>
+              <div className={`text-xs text-gray-500 italic ${conversationGroup?.isSingleTurn ? 'opacity-60' : ''}`}>Token count request - no assistant response</div>
             ) : (
               <AssistantMessagePreview
                 content={assistantContent}
                 maxLength={200}
-                className="text-xs text-gray-400"
+                className={`text-xs text-gray-400 ${conversationGroup?.isSingleTurn ? 'opacity-60' : ''}`}
                 isError={request.hasError}
                 errorMessage={errorMessage}
               />
