@@ -287,11 +287,6 @@ export function RequestDetailPage() {
 
   // Conversation group styling
   const conversationGroup = metrics?.conversationThreadGroup;
-  const borderStyle = conversationGroup?.isSingleTurn
-    ? '4px solid rgb(156, 163, 175)'  // Grey for single-turn
-    : conversationGroup?.color
-      ? `4px solid ${conversationGroup.color}`  // Color for multi-turn
-      : '4px solid transparent';  // Transparent fallback to prevent layout shift
 
   return (
     <>
@@ -299,18 +294,33 @@ export function RequestDetailPage() {
 
       <div className="flex gap-6">
         {/* Main Content Area */}
-        <div className={`flex-1 min-w-0 transition-all duration-200 ${conversationGroup?.isSingleTurn ? 'opacity-60' : ''}`} style={{ borderLeft: borderStyle }}>
+        <div className="flex-1 min-w-0">
           {/* Back Navigation and Request Navigation */}
           <div className="mb-4 flex items-center justify-between">
-            <Link
-              to={`/sessions/${sessionId}/requests`}
-              className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-terminal-cyan transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back to Requests
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link
+                to={`/sessions/${sessionId}/requests`}
+                className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-terminal-cyan transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to Requests
+              </Link>
+
+              {/* Conversation Group Badge */}
+              {conversationGroup && (
+                <div className="flex items-center gap-2 px-2.5 py-1 bg-gray-800/50 border border-gray-700 rounded-md">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: conversationGroup.isSingleTurn ? 'rgb(156, 163, 175)' : conversationGroup.color }}
+                  />
+                  <span className="text-xs text-gray-400">
+                    {conversationGroup.isSingleTurn ? 'Single-turn request' : 'Multi-turn conversation'}
+                  </span>
+                </div>
+              )}
+            </div>
 
             {/* Request Navigation Buttons */}
             <div className="flex gap-2">
