@@ -205,6 +205,13 @@ New files to create:
 
 **Goal:** Apply colored left borders and styling to distinguish single-turn from multi-turn conversations in the UI.
 
+**📋 Detailed Strategy Document:** See [phase-3-detailed-strategy.md](./phase-3-detailed-strategy.md) for comprehensive implementation approach, including:
+- Architecture overview and data flow
+- Component-by-component analysis
+- Implementation steps with code examples
+- Testing strategy and success criteria
+- Rollback plan and future enhancements
+
 ### Context & Files
 
 **Components to Update:**
