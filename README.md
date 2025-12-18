@@ -41,3 +41,13 @@ npm install -g @mariozechner/claude-trace
 ```
 
 And then use `claude-trace` instead of your `claude` command.
+
+## Screenshots
+
+![Home](screenshots/home.png)
+
+![Session](screenshots/session.png)
+
+![Request](screenshots/request.png)
+
+![Tool Detail](screenshots/tool.png)
