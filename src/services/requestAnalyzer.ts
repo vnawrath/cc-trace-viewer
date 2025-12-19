@@ -190,10 +190,6 @@ export class RequestAnalyzerService {
         inputTokens
       );
 
-      // Log warning for unknown models
-      if (cost === null) {
-        console.warn(`Unknown pricing for model: ${request.body.model}`);
-      }
     }
 
     // Generate unique ID from timestamp and index
@@ -239,8 +235,7 @@ export class RequestAnalyzerService {
     // Create a map of request timestamps to conversation groups
     const requestToGroupMap = new Map<string, ConversationThreadGroup>();
     for (const [, group] of conversationGroups) {
-      for (let i = 0; i < group.requestIds.length; i++) {
-        const requestId = group.requestIds[i];
+      for (const requestId of group.requestIds) {
         requestToGroupMap.set(requestId, group);
       }
     }

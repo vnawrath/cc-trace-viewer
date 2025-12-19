@@ -21,6 +21,7 @@ export class ConversationGrouperService {
     for (let i = 0; i < requests.length; i++) {
       const request = requests[i];
       const messages = request.request.body.messages;
+
       if (!messages || messages.length === 0) {
         continue;
       }
@@ -167,9 +168,11 @@ export class ConversationGrouperService {
           // Normalize system reminders
           text = text.replace(/<system-reminder>[\s\S]*?<\/system-reminder>/g, "[SYSTEM-REMINDER]");
 
-          return { ...block, type: "text", text: text };
+          // Return only type and text, excluding cache_control and other metadata
+          return { type: "text", text: text };
         }
-        return block;
+        // For non-text blocks, return only type (strip cache_control and other metadata)
+        return { type: block.type };
       });
     } else {
       normalizedContent = message.content;
